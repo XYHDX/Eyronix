@@ -73,7 +73,17 @@ class MockDatabase {
 
             const storedSession = localStorage.getItem(this.STORAGE_KEYS.SESSION);
             if (storedSession) {
-                this.currentUser = JSON.parse(storedSession);
+                const session = JSON.parse(storedSession);
+                // Force re-validation of admin privileges on load
+                // This ensures that if we update the code to make someone an admin,
+                // their existing persistent session gets upgraded immediately.
+                const isAdmin = session.email === 'admin@gmail.com' || session.email === 'admin@eyronix';
+
+                this.currentUser = {
+                    ...session,
+                    isAdmin: isAdmin,
+                    role: isAdmin ? 'admin' : 'user'
+                };
             }
 
             const storedSettings = localStorage.getItem('eyronix_settings');

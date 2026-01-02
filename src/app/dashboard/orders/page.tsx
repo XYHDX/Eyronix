@@ -1,5 +1,6 @@
 'use client';
 
+import * as React from 'react';
 import {
     Card,
     CardContent,
@@ -16,58 +17,226 @@ import {
     TableRow,
 } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
-import { useCollection } from '@/firebase';
 import { Skeleton } from '@/components/ui/skeleton';
 import { format } from 'date-fns';
+import { supabase } from '@/lib/supabase/client';
+import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuLabel,
+    DropdownMenuSeparator,
+    DropdownMenuTrigger
+} from '@/components/ui/dropdown-menu';
+import { Button } from '@/components/ui/button';
+import { MoreHorizontal, Filter } from 'lucide-react';
+import {
+    Tabs,
+    TabsContent,
+    TabsList,
+    TabsTrigger,
+} from "@/components/ui/tabs"
+import { useToast } from '@/hooks/use-toast';
+
+type Sale = {
+    id: string;
+    created_at: string;
+    user_id: string;
+    item_details: any;
+    type: string;
+    amount: number;
+    status: string;
+    address?: string;
+    phone?: string;
+    profiles?: { display_name: string; email: string }; // joined data
+};
 
 export default function OrdersPage() {
-    const { data: sales, isLoading } = useCollection('sales');
+    const [sales, setSales] = React.useState<Sale[]>([]);
+    const [loading, setLoading] = React.useState(true);
+    const [filterStatus, setFilterStatus] = React.useState<string>('all');
+    const { toast } = useToast();
+
+    const fetchOrders = React.useCallback(async () => {
+        try {
+            setLoading(true);
+
+            // We need to join with profiles to get user info if possible
+            // Note: Supabase JS select can join if relationship exists. 
+            // Assuming 'sales.user_id' references 'profiles.id'
+
+            let query = supabase
+                .from('sales')
+                .select(`
+                    *,
+                    profiles:user_id ( display_name, email )
+                `)
+                .order('created_at', { ascending: false });
+
+            if (filterStatus !== 'all') {
+                if (filterStatus === 'pending') {
+                    query = query.eq('status', 'Pending Approval');
+                } else if (filterStatus === 'active') {
+                    query = query.in('status', ['Preparing', 'Shipping']);
+                } else if (filterStatus === 'completed') {
+                    query = query.eq('status', 'Completed');
+                }
+            }
+
+            const { data, error } = await query;
+            if (error) throw error;
+            setSales(data || []);
+
+        } catch (error) {
+            console.error('Error fetching admin orders:', error);
+        } finally {
+            setLoading(false);
+        }
+    }, [filterStatus]);
+
+    React.useEffect(() => {
+        fetchOrders();
+    }, [fetchOrders]);
+
+    const updateStatus = async (id: string, newStatus: string) => {
+        try {
+            const { error } = await supabase
+                .from('sales')
+                .update({ status: newStatus })
+                .eq('id', id);
+
+            if (error) throw error;
+
+            toast({ title: "Status Updated", description: `Order status changed to ${newStatus}` });
+            fetchOrders();
+        } catch (error) {
+            console.error("Failed to update status", error);
+            toast({ variant: "destructive", title: "Error", description: "Failed to update status." });
+        }
+    }
+
+    const getStatusBadge = (status: string) => {
+        switch (status) {
+            case 'Pending Info':
+                return <Badge variant="outline" className="text-gray-500">Pending Info</Badge>;
+            case 'Pending Approval':
+                return <Badge variant="outline" className="bg-yellow-100 text-yellow-800 border-yellow-200">Needs Approval</Badge>;
+            case 'Preparing':
+                return <Badge variant="outline" className="bg-blue-100 text-blue-800 border-blue-200">Preparing</Badge>;
+            case 'Shipping':
+                return <Badge variant="outline" className="bg-indigo-100 text-indigo-800 border-indigo-200">Shipping</Badge>;
+            case 'Completed':
+                return <Badge variant="outline" className="bg-green-100 text-green-800 border-green-200">Completed</Badge>;
+            case 'Rejected':
+                return <Badge variant="destructive">Rejected</Badge>;
+            default:
+                return <Badge variant="secondary">{status}</Badge>;
+        }
+    }
 
     return (
         <Card>
             <CardHeader>
-                <CardTitle>All Orders</CardTitle>
-                <CardDescription>View all transactions and sales history.</CardDescription>
+                <div className="flex items-center justify-between">
+                    <div>
+                        <CardTitle>All Orders</CardTitle>
+                        <CardDescription>Manage and track all customer orders.</CardDescription>
+                    </div>
+                    <Tabs defaultValue="all" onValueChange={setFilterStatus} className="w-[400px]">
+                        <TabsList className="grid w-full grid-cols-4">
+                            <TabsTrigger value="all">All</TabsTrigger>
+                            <TabsTrigger value="pending">Pending</TabsTrigger>
+                            <TabsTrigger value="active">Active</TabsTrigger>
+                            <TabsTrigger value="completed">Done</TabsTrigger>
+                        </TabsList>
+                    </Tabs>
+                </div>
             </CardHeader>
             <CardContent>
                 <Table>
                     <TableHeader>
                         <TableRow>
-                            <TableHead>Order ID</TableHead>
                             <TableHead>Date</TableHead>
                             <TableHead>Customer</TableHead>
-                            <TableHead>Item</TableHead>
-                            <TableHead>Type</TableHead>
-                            <TableHead>Amount</TableHead>
+                            <TableHead>Details</TableHead>
+                            <TableHead>Amnt</TableHead>
+                            <TableHead>Info</TableHead>
                             <TableHead>Status</TableHead>
+                            <TableHead className="text-right">Actions</TableHead>
                         </TableRow>
                     </TableHeader>
                     <TableBody>
-                        {isLoading ? (
+                        {loading ? (
                             Array.from({ length: 5 }).map((_, i) => (
                                 <TableRow key={i}>
                                     <TableCell><Skeleton className="h-5 w-20" /></TableCell>
                                     <TableCell><Skeleton className="h-5 w-24" /></TableCell>
-                                    <TableCell><Skeleton className="h-5 w-24" /></TableCell>
                                     <TableCell><Skeleton className="h-5 w-32" /></TableCell>
                                     <TableCell><Skeleton className="h-5 w-16" /></TableCell>
-                                    <TableCell><Skeleton className="h-5 w-16" /></TableCell>
+                                    <TableCell><Skeleton className="h-5 w-24" /></TableCell>
                                     <TableCell><Skeleton className="h-6 w-20 rounded-full" /></TableCell>
+                                    <TableCell><Skeleton className="h-8 w-8 ml-auto" /></TableCell>
                                 </TableRow>
                             ))
                         ) : sales && sales.length > 0 ? (
-                            sales.sort((a: any, b: any) => b.date - a.date).map((sale: any) => (
+                            sales.map((sale) => (
                                 <TableRow key={sale.id}>
-                                    <TableCell className="font-mono text-xs">{sale.id}</TableCell>
-                                    <TableCell>{format(sale.date, 'MMM dd, yyyy')}</TableCell>
-                                    <TableCell>{sale.userId === 'guest' ? 'Guest' : sale.userId}</TableCell>
-                                    <TableCell className="font-medium">{sale.item.name}</TableCell>
-                                    <TableCell className="capitalize">{sale.type}</TableCell>
+                                    <TableCell className="text-xs text-muted-foreground">{format(new Date(sale.created_at), 'MMM dd, HH:mm')}</TableCell>
+                                    <TableCell>
+                                        <div className="flex flex-col">
+                                            <span className="font-medium text-sm">{sale.profiles?.display_name || 'Guest/Unknown'}</span>
+                                            <span className="text-xs text-muted-foreground">{sale.profiles?.email || sale.user_id}</span>
+                                        </div>
+                                    </TableCell>
+                                    <TableCell className="font-medium text-sm">
+                                        {sale.item_details?.name}
+                                    </TableCell>
                                     <TableCell>${sale.amount.toLocaleString()}</TableCell>
                                     <TableCell>
-                                        <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">
-                                            {sale.status || 'Completed'}
-                                        </Badge>
+                                        {sale.address ? (
+                                            <div className="flex flex-col text-xs">
+                                                <span>{sale.address}</span>
+                                                <span className="text-muted-foreground">{sale.phone}</span>
+                                            </div>
+                                        ) : (
+                                            <span className="text-xs text-muted-foreground italic">No details</span>
+                                        )}
+                                    </TableCell>
+                                    <TableCell>
+                                        {getStatusBadge(sale.status)}
+                                    </TableCell>
+                                    <TableCell className="text-right">
+                                        <DropdownMenu>
+                                            <DropdownMenuTrigger asChild>
+                                                <Button variant="ghost" className="h-8 w-8 p-0">
+                                                    <span className="sr-only">Open menu</span>
+                                                    <MoreHorizontal className="h-4 w-4" />
+                                                </Button>
+                                            </DropdownMenuTrigger>
+                                            <DropdownMenuContent align="end">
+                                                <DropdownMenuLabel>Update Status</DropdownMenuLabel>
+                                                <DropdownMenuSeparator />
+                                                {sale.status === 'Pending Approval' && (
+                                                    <DropdownMenuItem onClick={() => updateStatus(sale.id, 'Preparing')}>
+                                                        Approve & Prepare
+                                                    </DropdownMenuItem>
+                                                )}
+                                                {sale.status === 'Preparing' && (
+                                                    <DropdownMenuItem onClick={() => updateStatus(sale.id, 'Shipping')}>
+                                                        Mark Shipped
+                                                    </DropdownMenuItem>
+                                                )}
+                                                {sale.status === 'Shipping' && (
+                                                    <DropdownMenuItem onClick={() => updateStatus(sale.id, 'Completed')}>
+                                                        Mark Delivered
+                                                    </DropdownMenuItem>
+                                                )}
+                                                <DropdownMenuSeparator />
+                                                <DropdownMenuItem className="text-red-600" onClick={() => updateStatus(sale.id, 'Rejected')}>
+                                                    Reject Order
+                                                </DropdownMenuItem>
+                                            </DropdownMenuContent>
+                                        </DropdownMenu>
                                     </TableCell>
                                 </TableRow>
                             ))

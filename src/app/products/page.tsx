@@ -112,7 +112,7 @@ export default function ProductsPage() {
                               item_details: product,
                               type: 'product',
                               amount: product.price,
-                              status: 'Completed'
+                              status: 'Pending Info' // Initial status requiring user input
                             }]);
 
                             if (error) throw error;
@@ -120,7 +120,7 @@ export default function ProductsPage() {
                             // Decrement Stock
                             await supabase.from('products').update({ stock: product.stock - 1 }).eq('id', product.id);
 
-                            toast({ title: 'Order Placed!', description: `You bought ${product.name}.` });
+                            toast({ title: 'Added to Cart', description: `Please go to My Orders to complete your purchase.` });
                             // Optimistically update UI
                             setProducts(prev => prev.map(p => p.id === product.id ? { ...p, stock: p.stock - 1 } : p));
 

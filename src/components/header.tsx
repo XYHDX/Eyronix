@@ -25,6 +25,38 @@ export default function Header() {
   const { user, loading, isAdmin } = useUser();
   const auth = useAuth();
   const { setTheme, theme } = useTheme();
+  const [pendingCount, setPendingCount] = React.useState(0);
+
+  const fetchPendingOrders = React.useCallback(async () => {
+    if (!user) {
+      setPendingCount(0);
+      return;
+    }
+    const { count, error } = await supabase
+      .from('sales')
+      .select('*', { count: 'exact', head: true })
+      .eq('user_id', user.uid) // useUser provides firebase user, map to supabase user id if needed or consistent
+      .eq('status', 'Pending Info');
+
+    if (!error && count !== null) {
+      setPendingCount(count);
+    }
+  }, [user]);
+
+  React.useEffect(() => {
+    fetchPendingOrders();
+
+    const channel = supabase
+      .channel('header-notification')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'sales' }, () => {
+        fetchPendingOrders();
+      })
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    }
+  }, [fetchPendingOrders]);
 
   const handleLogout = async () => {
     try {
@@ -55,9 +87,12 @@ export default function Header() {
         <div className="flex ml-auto items-center justify-end space-x-2">
 
           {user && (
-            <Button variant="ghost" size="icon" asChild className="mr-2">
+            <Button variant="ghost" size="icon" asChild className="mr-2 relative">
               <Link href="/dashboard/my-orders">
                 <ShoppingBag className="h-5 w-5" />
+                {pendingCount > 0 && (
+                  <span className="absolute top-1 right-1 h-2.5 w-2.5 rounded-full bg-red-600 ring-2 ring-background animate-pulse" />
+                )}
                 <span className="sr-only">My Orders</span>
               </Link>
             </Button>

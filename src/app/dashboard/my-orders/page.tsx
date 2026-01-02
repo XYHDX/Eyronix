@@ -20,6 +20,30 @@ import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { format } from 'date-fns';
 import { supabase } from '@/lib/supabase/client';
+import { Button } from '@/components/ui/button';
+import {
+    Dialog,
+    DialogContent,
+    DialogDescription,
+    DialogFooter,
+    DialogHeader,
+    DialogTitle,
+    DialogTrigger,
+} from "@/components/ui/dialog"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import { useForm } from "react-hook-form"
+import { zodResolver } from "@hookform/resolvers/zod"
+import * as z from "zod"
+import {
+    Form,
+    FormControl,
+    FormField,
+    FormItem,
+    FormLabel,
+    FormMessage,
+} from "@/components/ui/form"
+import { useToast } from '@/hooks/use-toast';
 
 type Sale = {
     id: string;
@@ -28,7 +52,99 @@ type Sale = {
     type: string;
     amount: number;
     status: string;
+    address?: string;
+    phone?: string;
 };
+
+const checkoutSchema = z.object({
+    address: z.string().min(5, "Address must be at least 5 characters."),
+    phone: z.string().min(8, "Phone number must be at least 8 characters."),
+})
+
+function CompleteOrderDialog({ orderId, onSuccess }: { orderId: string, onSuccess: () => void }) {
+    const [open, setOpen] = React.useState(false);
+    const { toast } = useToast();
+    const form = useForm<z.infer<typeof checkoutSchema>>({
+        resolver: zodResolver(checkoutSchema),
+        defaultValues: {
+            address: "",
+            phone: "",
+        },
+    })
+
+    async function onSubmit(values: z.infer<typeof checkoutSchema>) {
+        try {
+            const { error } = await supabase
+                .from('sales')
+                .update({
+                    address: values.address,
+                    phone: values.phone,
+                    status: 'Pending Approval'
+                })
+                .eq('id', orderId);
+
+            if (error) throw error;
+
+            toast({ title: "Order Updated", description: "Your order details have been submitted for approval." });
+            setOpen(false);
+            onSuccess();
+        } catch (error) {
+            console.error("Failed to update order", error);
+            toast({ variant: "destructive", title: "Error", description: "Could not submit order details." });
+        }
+    }
+
+    return (
+        <Dialog open={open} onOpenChange={setOpen}>
+            <DialogTrigger asChild>
+                <Button size="sm" variant="default" className="bg-red-600 hover:bg-red-700 text-white animate-pulse">
+                    Complete Order
+                </Button>
+            </DialogTrigger>
+            <DialogContent className="sm:max-w-[425px]">
+                <DialogHeader>
+                    <DialogTitle>Complete Your Order</DialogTitle>
+                    <DialogDescription>
+                        Please provide your delivery details to proceed.
+                    </DialogDescription>
+                </DialogHeader>
+                <Form {...form}>
+                    <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+                        <FormField
+                            control={form.control}
+                            name="address"
+                            render={({ field }) => (
+                                <FormItem>
+                                    <FormLabel>Shipping Address</FormLabel>
+                                    <FormControl>
+                                        <Input placeholder="123 Main St, City" {...field} />
+                                    </FormControl>
+                                    <FormMessage />
+                                </FormItem>
+                            )}
+                        />
+                        <FormField
+                            control={form.control}
+                            name="phone"
+                            render={({ field }) => (
+                                <FormItem>
+                                    <FormLabel>Phone Number</FormLabel>
+                                    <FormControl>
+                                        <Input placeholder="+963 9..." {...field} />
+                                    </FormControl>
+                                    <FormMessage />
+                                </FormItem>
+                            )}
+                        />
+                        <DialogFooter>
+                            <Button type="submit">Submit Order</Button>
+                        </DialogFooter>
+                    </form>
+                </Form>
+            </DialogContent>
+        </Dialog>
+    )
+}
 
 export default function MyOrdersPage() {
     const [sales, setSales] = React.useState<Sale[]>([]);
@@ -62,7 +178,36 @@ export default function MyOrdersPage() {
 
     React.useEffect(() => {
         fetchOrders();
+        const channel = supabase
+            .channel('my-orders-realtime')
+            .on('postgres_changes', { event: '*', schema: 'public', table: 'sales' }, () => {
+                fetchOrders();
+            })
+            .subscribe();
+
+        return () => {
+            supabase.removeChannel(channel);
+        }
     }, [fetchOrders]);
+
+    const getStatusBadge = (status: string) => {
+        switch (status) {
+            case 'Pending Info':
+                return <Badge variant="outline" className="border-red-200 text-red-600 bg-red-50">Action Required</Badge>;
+            case 'Pending Approval':
+                return <Badge variant="outline" className="border-yellow-200 text-yellow-700 bg-yellow-50">Waiting Approval</Badge>;
+            case 'Preparing':
+                return <Badge variant="outline" className="border-blue-200 text-blue-700 bg-blue-50">Preparing</Badge>;
+            case 'Shipping':
+                return <Badge variant="outline" className="border-indigo-200 text-indigo-700 bg-indigo-50">Shipping</Badge>;
+            case 'Completed':
+                return <Badge variant="outline" className="border-green-200 text-green-700 bg-green-50">Completed</Badge>;
+            case 'Rejected':
+                return <Badge variant="destructive">Rejected</Badge>;
+            default:
+                return <Badge variant="secondary">{status}</Badge>;
+        }
+    }
 
     return (
         <Card>
@@ -79,6 +224,7 @@ export default function MyOrdersPage() {
                             <TableHead>Type</TableHead>
                             <TableHead>Amount</TableHead>
                             <TableHead>Status</TableHead>
+                            <TableHead className="text-right">Action</TableHead>
                         </TableRow>
                     </TableHeader>
                     <TableBody>
@@ -90,6 +236,7 @@ export default function MyOrdersPage() {
                                     <TableCell><Skeleton className="h-5 w-16" /></TableCell>
                                     <TableCell><Skeleton className="h-5 w-16" /></TableCell>
                                     <TableCell><Skeleton className="h-6 w-20 rounded-full" /></TableCell>
+                                    <TableCell><Skeleton className="h-8 w-24 ml-auto" /></TableCell>
                                 </TableRow>
                             ))
                         ) : sales && sales.length > 0 ? (
@@ -102,15 +249,18 @@ export default function MyOrdersPage() {
                                     <TableCell className="capitalize">{sale.type}</TableCell>
                                     <TableCell>${sale.amount.toLocaleString()}</TableCell>
                                     <TableCell>
-                                        <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">
-                                            {sale.status || 'Completed'}
-                                        </Badge>
+                                        {getStatusBadge(sale.status)}
+                                    </TableCell>
+                                    <TableCell className="text-right">
+                                        {sale.status === 'Pending Info' && (
+                                            <CompleteOrderDialog orderId={sale.id} onSuccess={fetchOrders} />
+                                        )}
                                     </TableCell>
                                 </TableRow>
                             ))
                         ) : (
                             <TableRow>
-                                <TableCell colSpan={5} className="h-24 text-center text-muted-foreground">
+                                <TableCell colSpan={6} className="h-24 text-center text-muted-foreground">
                                     You haven't placed any orders yet.
                                 </TableCell>
                             </TableRow>

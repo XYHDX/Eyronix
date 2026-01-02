@@ -23,20 +23,13 @@ import {
   FormLabel,
   FormMessage,
 } from '@/components/ui/form';
-import {
-  useAuth,
-  useUser,
-  useFirestore,
-  useStorage,
-} from '@/firebase';
+
 import { useToast } from '@/hooks/use-toast';
-import { updateProfile } from 'firebase/auth';
-import { updateUserProfile } from '@/firebase/firestore/users';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { getInitials } from '@/lib/utils';
-import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import { User as UserIcon, Upload, Shield } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
+import { supabase } from '@/lib/supabase/client';
 
 const profileFormSchema = z.object({
   displayName: z.string().min(2, {
@@ -47,24 +40,43 @@ const profileFormSchema = z.object({
 });
 
 export default function ProfilePage() {
-  const { user, isAdmin } = useUser();
-  const auth = useAuth();
-  const firestore = useFirestore();
-  const storage = useStorage();
   const { toast } = useToast();
   const [isSaving, setIsSaving] = React.useState(false);
   const [photoPreview, setPhotoPreview] = React.useState<string | null>(null);
   const fileInputRef = React.useRef<HTMLInputElement>(null);
+  const [user, setUser] = React.useState<any>(null);
+  const [isAdmin, setIsAdmin] = React.useState(false);
+
+  // Fetch initial user data
+  React.useEffect(() => {
+    async function loadProfile() {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('*')
+          .eq('id', user.id)
+          .single();
+
+        setUser({ ...user, ...profile, displayName: profile?.full_name || user.email });
+        setIsAdmin(profile?.role === 'admin');
+        setPhotoPreview(profile?.avatar_url || null);
+      }
+    }
+    loadProfile();
+  }, []);
+
 
   const form = useForm<z.infer<typeof profileFormSchema>>({
     resolver: zodResolver(profileFormSchema),
-    values: {
-      displayName: user?.displayName || '',
-      email: user?.email || '',
+    defaultValues: {
+      displayName: '',
+      email: '',
       photo: null,
     },
   });
 
+  // Update form when user data loads
   React.useEffect(() => {
     if (user) {
       form.reset({
@@ -72,7 +84,6 @@ export default function ProfilePage() {
         email: user.email || '',
         photo: null,
       });
-      setPhotoPreview(user.photoURL);
     }
   }, [user, form]);
 
@@ -89,42 +100,48 @@ export default function ProfilePage() {
   };
 
   async function onSubmit(data: z.infer<typeof profileFormSchema>) {
-    const currentUser = auth?.currentUser;
-    if (!currentUser || !firestore || !storage) {
-      toast({
-        variant: 'destructive',
-        title: 'Error',
-        description: 'Services not available. Please try again later.',
-      });
-      return;
-    }
+    const { data: { user: currentUser } } = await supabase.auth.getUser();
+    if (!currentUser) return;
 
     setIsSaving(true);
-    let photoURL = user?.photoURL || null;
+    let avatar_url = user?.avatar_url;
 
     try {
-      // Handle photo upload separately
+      // Handle photo upload
       if (data.photo) {
-        const storageRef = ref(storage, `users/${currentUser.uid}/profile.jpg`);
-        const snapshot = await uploadBytes(storageRef, data.photo);
-        photoURL = await getDownloadURL(snapshot.ref);
+        const fileExt = data.photo.name.split('.').pop();
+        const fileName = `${currentUser.id}-${Math.random()}.${fileExt}`;
+        const filePath = `${fileName}`;
+
+        // Upload to Supabase Storage
+        const { error: uploadError } = await supabase.storage
+          .from('avatars')
+          .upload(filePath, data.photo);
+
+        if (uploadError) throw uploadError;
+
+        // Get Public URL
+        const { data: { publicUrl } } = supabase.storage
+          .from('avatars')
+          .getPublicUrl(filePath);
+
+        avatar_url = publicUrl;
       }
 
-      // Update Auth profile
-      await updateProfile(currentUser, {
-        displayName: data.displayName,
-        photoURL: photoURL,
-      });
+      // Update Profile Table
+      const { error: updateError } = await supabase
+        .from('profiles')
+        .update({
+          full_name: data.displayName,
+          avatar_url: avatar_url
+        })
+        .eq('id', currentUser.id);
 
-      const userProfileData = {
-        uid: currentUser.uid,
-        email: currentUser.email,
-        displayName: data.displayName,
-        photoURL: photoURL,
-      };
+      if (updateError) throw updateError;
 
-      // Update Firestore profile
-      await updateUserProfile(firestore, userProfileData);
+      // Update local state and preview immediately
+      setUser(prev => ({ ...prev, displayName: data.displayName, avatar_url }));
+      setPhotoPreview(avatar_url);
 
       toast({
         title: 'Profile Updated',
@@ -132,7 +149,11 @@ export default function ProfilePage() {
       });
       form.reset({ ...data, photo: null });
 
+      // Reload window to update header
+      window.location.reload();
+
     } catch (error: any) {
+      console.error(error);
       toast({
         variant: 'destructive',
         title: 'Update Failed',

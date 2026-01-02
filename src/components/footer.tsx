@@ -4,39 +4,60 @@
 import Link from 'next/link';
 import { Mail, Phone, MapPin, Facebook, Twitter, Instagram } from 'lucide-react';
 import Image from 'next/image';
-import { useDoc, useFirestore, useMemoFirebase } from '@/firebase';
-import { doc } from 'firebase/firestore';
+import { useEffect, useState } from 'react';
+import { supabase } from '@/lib/supabase/client';
 
 type SiteSettings = {
-    id: string;
-    facebookUrl?: string;
-    twitterUrl?: string;
-    instagramUrl?: string;
-    phoneNumber?: string;
-    email?: string;
-    address?: string;
-    termsUrl?: string;
-    privacyUrl?: string;
+  id: string;
+  facebook_url?: string;
+  twitter_url?: string;
+  instagram_url?: string;
+  phone_number?: string;
+  email?: string;
+  address?: string;
+  terms_url?: string;
+  privacy_url?: string;
 };
 
 
 export default function Footer() {
-  const firestore = useFirestore();
-  const settingsDocRef = useMemoFirebase(() => {
-    if (!firestore) return null;
-    return doc(firestore, 'settings', 'footer');
-  }, [firestore]);
+  const [settings, setSettings] = useState<SiteSettings | null>(null);
 
-  const { data: settings, isLoading } = useDoc<SiteSettings>(settingsDocRef);
-  
-  const facebook = settings?.facebookUrl || '#';
-  const twitter = settings?.twitterUrl || '#';
-  const instagram = settings?.instagramUrl || '#';
-  const phone = settings?.phoneNumber || '+963 912 345 678';
+  useEffect(() => {
+    async function fetchSettings() {
+      const { data } = await supabase
+        .from('settings')
+        .select('*')
+        .eq('id', 'footer')
+        .single();
+      if (data) {
+        setSettings(data);
+      }
+    }
+
+    fetchSettings();
+
+    // Subscribe to changes
+    const channel = supabase
+      .channel('public:settings')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'settings', filter: 'id=eq.footer' }, (payload) => {
+        setSettings(payload.new as SiteSettings);
+      })
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    }
+  }, []);
+
+  const facebook = settings?.facebook_url || '#';
+  const twitter = settings?.twitter_url || '#';
+  const instagram = settings?.instagram_url || '#';
+  const phone = settings?.phone_number || '+963 912 345 678';
   const email = settings?.email || 'contact@eyronix.sy';
   const address = settings?.address || 'Damascus, Syria';
-  const terms = settings?.termsUrl || '#';
-  const privacy = settings?.privacyUrl || '#';
+  const terms = settings?.terms_url || '#';
+  const privacy = settings?.privacy_url || '#';
 
 
   return (
@@ -83,7 +104,7 @@ export default function Footer() {
               </li>
             </ul>
           </div>
-           <div>
+          <div>
             <h3 className="text-lg font-semibold font-headline mb-4">Legal</h3>
             <ul className="space-y-2">
               <li><Link href={privacy} className="text-muted-foreground hover:text-primary">Privacy Policy</Link></li>

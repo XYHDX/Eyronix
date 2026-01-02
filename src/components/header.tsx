@@ -53,6 +53,16 @@ export default function Header() {
           <Link href="/#survey" className="transition-colors hover:text-foreground/80 text-foreground/60">Contact</Link>
         </nav>
         <div className="flex ml-auto items-center justify-end space-x-2">
+
+          {user && (
+            <Button variant="ghost" size="icon" asChild className="mr-2">
+              <Link href="/dashboard/my-orders">
+                <ShoppingBag className="h-5 w-5" />
+                <span className="sr-only">My Orders</span>
+              </Link>
+            </Button>
+          )}
+
           {loading ? (
             <Skeleton className="h-10 w-10 rounded-full" />
           ) : user ? (
@@ -142,6 +152,7 @@ export default function Header() {
                   </DropdownMenuItem>
                 )}
 
+                {/* Removed duplicate My Orders from dropdown if desired, or keep both. Keeping for now as redundant is fine */}
                 <DropdownMenuItem asChild>
                   <Link href="/dashboard/my-orders">
                     <ShoppingBag className="mr-2 h-4 w-4" />

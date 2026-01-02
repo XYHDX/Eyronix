@@ -13,8 +13,7 @@ if (!supabaseUrl || !supabaseAnonKey) {
 // Real Supabase Anon Keys are JWTs and start with 'eyJ'.
 const isValid = supabaseUrl &&
     supabaseAnonKey &&
-    supabaseUrl.startsWith('http') &&
-    supabaseAnonKey.startsWith('eyJ');
+    supabaseUrl.startsWith('http');
 
 const createMockBuilder = () => {
     const builder: any = {

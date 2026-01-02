@@ -10,7 +10,7 @@
  */
 
 import { ai } from '@/ai/genkit';
-import { z, Message } from 'genkit';
+import { z } from 'genkit';
 import { servicesTool, productsTool, pricingTool } from '../tools/data-tools';
 
 const ChatbotConversationInputSchema = z.object({
@@ -77,7 +77,7 @@ const chatbotConversationFlow = ai.defineFlow(
   async input => {
     // The history is now passed to the prompt along with the new message.
     const { output } = await prompt({
-      history: input.history as Message[],
+      history: input.history,
       message: input.message,
     });
     return { response: output!.response };

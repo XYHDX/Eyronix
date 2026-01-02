@@ -1,4 +1,4 @@
-import { createClient } from '@supabase/supabase-js';
+import { createBrowserClient } from '@supabase/ssr';
 
 // User specified prefix is EYRONIX
 const supabaseUrl = process.env.NEXT_PUBLIC_EYRONIX_URL || process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -32,7 +32,7 @@ const createMockBuilder = () => {
 };
 
 export const supabase = isValid
-    ? createClient(supabaseUrl, supabaseAnonKey)
+    ? createBrowserClient(supabaseUrl, supabaseAnonKey)
     : {
         from: () => createMockBuilder(),
         auth: {

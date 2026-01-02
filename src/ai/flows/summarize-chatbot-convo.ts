@@ -75,11 +75,19 @@ const chatbotConversationFlow = ai.defineFlow(
     outputSchema: ChatbotConversationOutputSchema,
   },
   async input => {
-    // The history is now passed to the prompt along with the new message.
-    const { output } = await prompt({
-      history: input.history,
-      message: input.message,
-    });
-    return { response: output!.response };
+    try {
+      // The history is now passed to the prompt along with the new message.
+      const { output } = await prompt({
+        history: input.history,
+        message: input.message,
+      });
+      return { response: output!.response };
+    } catch (error: any) {
+      console.error('AI Conversation Error:', error);
+      // Fallback response so the UI doesn't crash
+      return {
+        response: "I apologize, but I'm currently unable to connect to my AI brain due to a configuration issue. Please contact our support team directly via email or phone for assistance with our products."
+      };
+    }
   }
 );

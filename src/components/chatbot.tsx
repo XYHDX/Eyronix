@@ -152,7 +152,7 @@ export default function Chatbot() {
               <X className="h-4 w-4" />
             </Button>
           </CardHeader>
-          <CardContent className="flex-grow p-0">
+          <CardContent className="flex-grow p-0 min-h-0 overflow-hidden">
             <ScrollArea className="h-full p-4">
               <div className="space-y-4">
                 {messages.map((message) => (

@@ -9,20 +9,33 @@ if (!supabaseUrl || !supabaseAnonKey) {
 }
 
 // Safe client creation
-// If url/key are missing, we mock the client to prevent a crash,
-// but requests will fail safely.
-const isValid = supabaseUrl && supabaseAnonKey && supabaseUrl.startsWith('http');
+// If url/key are missing or invalid (non-JWT), we mock the client to prevent a crash.
+// Real Supabase Anon Keys are JWTs and start with 'eyJ'.
+const isValid = supabaseUrl &&
+    supabaseAnonKey &&
+    supabaseUrl.startsWith('http') &&
+    supabaseAnonKey.startsWith('eyJ');
+
+const createMockBuilder = () => {
+    const builder: any = {
+        select: () => builder,
+        insert: () => builder,
+        update: () => builder,
+        delete: () => builder,
+        eq: () => builder,
+        single: () => builder,
+        maybeSingle: () => builder,
+        order: () => builder,
+        limit: () => builder,
+        then: (resolve: any) => resolve({ data: [], error: { message: 'Supabase keys missing' } })
+    };
+    return builder;
+};
 
 export const supabase = isValid
     ? createClient(supabaseUrl, supabaseAnonKey)
     : {
-        from: () => ({
-            select: () => Promise.resolve({ data: [], error: { message: 'Supabase keys missing' } }),
-            insert: () => Promise.resolve({ error: { message: 'Supabase keys missing' } }),
-            update: () => Promise.resolve({ error: { message: 'Supabase keys missing' } }),
-            delete: () => Promise.resolve({ error: { message: 'Supabase keys missing' } }),
-            eq: () => ({ single: () => Promise.resolve({ data: null, error: { message: 'Supabase keys missing' } }) })
-        }),
+        from: () => createMockBuilder(),
         auth: {
             getUser: () => Promise.resolve({ data: { user: null }, error: { message: 'Supabase keys missing' } }),
             getSession: () => Promise.resolve({ data: { session: null }, error: { message: 'Supabase keys missing' } }),
@@ -30,5 +43,10 @@ export const supabase = isValid
             signInWithPassword: () => Promise.resolve({ error: { message: 'Supabase keys missing' } }),
             signInWithOAuth: () => Promise.resolve({ error: { message: 'Supabase keys missing' } }),
             signOut: () => Promise.resolve({ error: null })
-        }
+        },
+        channel: () => ({
+            on: () => ({ subscribe: () => { } }),
+            subscribe: () => { }
+        }),
+        removeChannel: () => { }
     } as any;

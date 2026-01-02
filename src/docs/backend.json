@@ -1,0 +1,236 @@
+
+{
+  "entities": {
+    "UserProfile": {
+      "title": "User Profile",
+      "description": "Represents a user's profile in the system.",
+      "type": "object",
+      "properties": {
+        "uid": {
+          "type": "string",
+          "description": "The user's unique ID from Firebase Auth."
+        },
+        "email": {
+          "type": "string",
+          "format": "email",
+          "description": "The user's email address."
+        },
+        "displayName": {
+          "type": "string",
+          "description": "The user's display name."
+        },
+        "photoURL": {
+          "type": "string",
+          "format": "uri",
+          "description": "URL of the user's profile picture."
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "The timestamp when the user profile was created."
+        },
+        "lastUpdatedAt": {
+            "type": "string",
+            "format": "date-time",
+            "description": "The timestamp when the user profile was last updated."
+        },
+        "role": {
+          "type": "string",
+          "enum": ["admin", "user"],
+          "description": "The user's role in the system. This is for display purposes; the authoritative role is in the auth token."
+        }
+      },
+      "required": ["uid", "email", "role"]
+    },
+    "Service": {
+      "title": "Service",
+      "description": "Represents a service offered by the company.",
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string",
+          "description": "The name of the service."
+        },
+        "description": {
+          "type": "string",
+          "description": "A short description of the service."
+        },
+        "icon": {
+          "type": "string",
+          "description": "The name of the lucide-react icon for the service."
+        },
+        "imageUrl": {
+            "type": "string",
+            "format": "uri",
+            "description": "URL of the uploaded service image."
+        }
+      },
+      "required": ["name", "description", "icon"]
+    },
+    "Product": {
+      "title": "Product",
+      "description": "Represents a product in the inventory.",
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string",
+          "description": "The name of the product."
+        },
+        "sku": {
+          "type": "string",
+          "description": "The stock keeping unit."
+        },
+        "price": {
+          "type": "number",
+          "description": "The price of the product."
+        },
+        "stock": {
+          "type": "number",
+          "description": "The current stock level."
+        },
+        "status": {
+          "type": "string",
+          "enum": ["In Stock", "Low Stock", "Out of Stock"],
+          "description": "The stock status of the product."
+        },
+        "imageId": {
+          "type": "string",
+          "description": "The ID of the placeholder image for the product."
+        },
+        "imageUrl": {
+            "type": "string",
+            "format": "uri",
+            "description": "URL of the uploaded product image."
+        }
+      },
+      "required": ["name", "sku", "price", "stock", "status"]
+    },
+    "PricingPackage": {
+      "title": "Pricing Package",
+      "description": "Represents a pricing package for services.",
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string",
+          "description": "The name of the package (e.g., Basic, Standard)."
+        },
+        "price": {
+          "type": "number",
+          "description": "The price of the package. 0 for custom."
+        },
+        "features": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "A list of features included in the package."
+        },
+        "status": {
+          "type": "string",
+          "enum": ["Active", "Draft"],
+          "description": "The status of the pricing package."
+        },
+        "popular": {
+          "type": "boolean",
+          "description": "Whether this package is marked as popular."
+        }
+      },
+      "required": ["name", "price", "features", "status", "popular"]
+    },
+    "SurveyRequest": {
+      "title": "Survey Request",
+      "description": "Represents a site survey request from a potential customer.",
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string",
+          "description": "The customer's full name."
+        },
+        "email": {
+          "type": "string",
+          "format": "email",
+          "description": "The customer's email address."
+        },
+        "phone": {
+          "type": "string",
+          "description": "The customer's phone number."
+        },
+        "message": {
+          "type": "string",
+          "description": "The customer's message about their needs."
+        },
+        "status": {
+          "type": "string",
+          "enum": ["New", "Contacted", "Completed", "Archived"],
+          "description": "The current status of the survey request."
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "The timestamp when the request was submitted."
+        }
+      },
+      "required": ["name", "email", "message", "status", "createdAt"]
+    },
+    "SiteSettings": {
+        "title": "Site Settings",
+        "description": "Global settings for the website, like footer content.",
+        "type": "object",
+        "properties": {
+            "facebookUrl": { "type": "string", "format": "uri" },
+            "twitterUrl": { "type": "string", "format": "uri" },
+            "instagramUrl": { "type": "string", "format": "uri" },
+            "phoneNumber": { "type": "string" },
+            "email": { "type": "string", "format": "email" },
+            "address": { "type": "string" },
+            "termsUrl": { "type": "string", "format": "uri" },
+            "privacyUrl": { "type": "string", "format": "uri" }
+        }
+    }
+  },
+  "auth": {
+    "providers": ["google.com", "password"]
+  },
+  "storage": {
+    "rules": "rules_version = '2';\nservice firebase.storage {\n  match /b/{bucket}/o {\n    function isAdmin() {\n      return get(/databases/(default)/documents/users/$(request.auth.uid)).data.role == 'admin';\n    }\n\n    match /{allPaths=**} {\n      allow read: if true;\n    }\n\n    match /services/{allPaths=**} {\n      allow write: if request.auth != null && isAdmin();\n    }\n\n    match /products/{allPaths=**} {\n      allow write: if request.auth != null && isAdmin();\n    }\n\n    match /users/{userId}/{allPaths=**} {\n      allow write: if request.auth != null && request.auth.uid == userId;\n    }\n  }\n}\n"
+  },
+  "firestore": {
+    "rules": "rules_version = '2';\nservice cloud.firestore {\n  match /databases/{database}/documents {\n    function isAdmin() {\n      return request.auth != null && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';\n    }\n\n    match /users/{userId} {\n      allow get: if request.auth != null && (request.auth.uid == userId || isAdmin());\n      allow list: if request.auth != null;\n      allow create: if request.auth != null && request.auth.uid == request.resource.data.uid;\n      allow update, delete: if request.auth != null && (request.auth.uid == userId || isAdmin());\n    }\n    match /services/{serviceId} {\n      allow get, list: if true;\n      allow create, update, delete: if isAdmin();\n    }\n    match /products/{productId} {\n      allow get, list: if true;\n      allow create, update, delete: if isAdmin();\n    }\n    match /pricing/{packageId} {\n      allow get, list: if true;\n      allow create, update, delete: if isAdmin();\n    }\n    match /survey-requests/{requestId} {\n      allow create: if true;\n      allow get, list, update, delete: if isAdmin();\n    }\n    match /settings/{settingId} {\n        allow get, list: if request.auth != null;\n        allow create, update, delete: if isAdmin();\n    }\n  }\n}",
+    "/users/{userId}": {
+      "schema": {
+        "$ref": "#/entities/UserProfile"
+      },
+      "description": "Stores public information about a user."
+    },
+    "/services/{serviceId}": {
+      "schema": {
+        "$ref": "#/entities/Service"
+      },
+      "description": "Stores the services offered by the company."
+    },
+    "/products/{productId}": {
+      "schema": {
+        "$ref": "#/entities/Product"
+      },
+      "description": "Stores the products available for sale."
+    },
+    "/pricing/{packageId}": {
+      "schema": {
+        "$ref": "#/entities/PricingPackage"
+      },
+      "description": "Stores the pricing packages offered."
+    },
+    "/survey-requests/{requestId}": {
+      "schema": {
+        "$ref": "#/entities/SurveyRequest"
+      },
+      "description": "Stores survey requests from potential customers."
+    },
+    "/settings/footer": {
+        "schema": {
+            "$ref": "#/entities/SiteSettings"
+        },
+        "description": "Stores the configuration for the site footer."
+    }
+  }
+}

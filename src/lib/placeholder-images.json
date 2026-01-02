@@ -1,0 +1,52 @@
+{
+  "placeholderImages": [
+    {
+      "id": "cctv-service",
+      "description": "A modern CCTV camera mounted on a wall.",
+      "imageUrl": "https://images.unsplash.com/photo-1549109926-58f039549485?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwxfHxzZWN1cml0eSUyMGNhbWVyYXxlbnwwfHx8fDE3NjE4MDUxODN8MA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "security camera"
+    },
+    {
+      "id": "dashcam-service",
+      "description": "A dashcam recording the view from inside a car.",
+      "imageUrl": "https://images.unsplash.com/photo-1562618817-253b06cf2b6e?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw1fHxjYXIlMjBkYXNoYm9hcmR8ZW58MHx8fHwxNzYxODM4ODM1fDA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "car dashboard"
+    },
+    {
+      "id": "maintenance-service",
+      "description": "A technician performing maintenance on a security system.",
+      "imageUrl": "https://images.unsplash.com/photo-1744302570940-0f44e1b2a9f6?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw3fHx0ZWNobmljaWFuJTIwdG9vbHN8ZW58MHx8fHwxNzYxODg5MzgwfDA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "technician tools"
+    },
+    {
+      "id": "ai-motion-detection",
+      "description": "A security camera view of a parking lot at night.",
+      "imageUrl": "https://images.unsplash.com/photo-1672061795240-0934b4653abc?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw2fHxuaWdodCUyMHBhcmtpbmd8ZW58MHx8fHwxNzYxODg5MzgwfDA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "night parking"
+    },
+    {
+      "id": "hero-background",
+      "description": "An abstract, futuristic image representing technology and security.",
+      "imageUrl": "https://images.unsplash.com/photo-1604011237320-8e0506614fdf?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw3fHxhYnN0cmFjdCUyMHRlY2hub2xvZ3l8ZW58MHx8fHwxNzYxODMwNzQzfDA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "abstract technology"
+    },
+    {
+      "id": "product-1",
+      "description": "A dome security camera.",
+      "imageUrl": "https://images.unsplash.com/photo-1648703071615-c7f2d348fac0?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw3fHxkb21lJTIwY2FtZXJhfGVufDB8fHx8MTc2MTgyMTA2M3ww&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "dome camera"
+    },
+    {
+      "id": "product-2",
+      "description": "A bullet security camera.",
+      "imageUrl": "https://images.unsplash.com/photo-1616906313090-8f2c2c101c83?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwxfHxidWxsZXQlMjBjYW1lcmF8ZW58MHx8fHwxNzYxODIxMDYzfDA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "bullet camera"
+    },
+    {
+      "id": "product-3",
+      "description": "A network video recorder (NVR).",
+      "imageUrl": "https://images.unsplash.com/photo-1584012123175-57cb844ff01a?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwzfHxuZXR3b3JrJTIwcmVjb3JkZXJ8ZW58MHx8fHwxNzYxODg5MzgwfDA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "network recorder"
+    }
+  ]
+}

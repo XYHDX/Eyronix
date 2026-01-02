@@ -4,17 +4,14 @@
 import * as React from 'react';
 import Image from 'next/image';
 import { ShoppingBag } from 'lucide-react';
-import { collection } from 'firebase/firestore';
 
 import Header from '@/components/header';
 import Footer from '@/components/footer';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { PlaceHolderImages, ImagePlaceholder } from '@/lib/placeholder-images';
-import { useCollection, useFirestore, useMemoFirebase } from '@/firebase';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
-import { mockDb } from '@/lib/mock-db';
 import { Button } from '@/components/ui/button';
 import { supabase } from '@/lib/supabase/client';
 
@@ -23,19 +20,37 @@ type Product = {
   name: string;
   price: number;
   status: 'In Stock' | 'Low Stock' | 'Out of Stock';
-  imageUrl?: string | null;
-  imageId?: string | null;
+  stock: number;
+  image_url?: string | null;
+  image_id?: string | null;
 };
 
 export default function ProductsPage() {
-  const firestore = useFirestore();
-  const productsCollection = 'products';
-  const { data: products, isLoading: productsLoading } = useCollection<Product>(productsCollection);
+  const [products, setProducts] = React.useState<Product[]>([]);
+  const [loading, setLoading] = React.useState(true);
   const { toast } = useToast();
 
+  React.useEffect(() => {
+    async function fetchProducts() {
+      setLoading(true);
+      const { data, error } = await supabase
+        .from('products')
+        .select('*')
+        .order('created_at', { ascending: false });
+
+      if (error) {
+        console.error('Error fetching products', error);
+      } else {
+        setProducts(data || []);
+      }
+      setLoading(false);
+    }
+    fetchProducts();
+  }, []);
+
   const getProductImage = (product: Product): ImagePlaceholder | undefined => {
-    if (!product.imageId) return undefined;
-    return PlaceHolderImages.find((img) => img.id === product.imageId);
+    if (!product.image_id) return undefined;
+    return PlaceHolderImages.find((img) => img.id === product.image_id);
   };
 
   return (
@@ -53,7 +68,7 @@ export default function ProductsPage() {
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
-            {productsLoading ? (
+            {loading ? (
               Array.from({ length: 8 }).map((_, i) => (
                 <Card key={i} className="text-left overflow-hidden">
                   <Skeleton className="h-56 w-full" />
@@ -68,7 +83,7 @@ export default function ProductsPage() {
               ))
             ) : products && products.length > 0 ? (
               products.map((product) => {
-                const image = product.imageUrl ? { imageUrl: product.imageUrl, imageHint: product.name } : getProductImage(product);
+                const image = product.image_url ? { imageUrl: product.image_url, imageHint: product.name } : getProductImage(product);
                 return (
                   <Card key={product.id} className="text-left overflow-hidden flex flex-col group transform transition-transform duration-300 hover:scale-105 hover:shadow-xl">
                     <div className="relative h-56 w-full">
@@ -91,8 +106,9 @@ export default function ProductsPage() {
                       <Button className="w-full" onClick={async () => {
                         if (product.stock > 0) {
                           try {
+                            const { data: { user } } = await supabase.auth.getUser();
                             const { error } = await supabase.from('sales').insert([{
-                              user_id: (supabase.auth.getUser() as any)?.id || null, // Best effort to get user
+                              user_id: user?.id || null,
                               item_details: product,
                               type: 'product',
                               amount: product.price,
@@ -101,10 +117,13 @@ export default function ProductsPage() {
 
                             if (error) throw error;
 
-                            // Decrement Stock (Naive)
+                            // Decrement Stock
                             await supabase.from('products').update({ stock: product.stock - 1 }).eq('id', product.id);
 
                             toast({ title: 'Order Placed!', description: `You bought ${product.name}.` });
+                            // Optimistically update UI
+                            setProducts(prev => prev.map(p => p.id === product.id ? { ...p, stock: p.stock - 1 } : p));
+
                           } catch (e) {
                             console.error("Order failed", e);
                             toast({ variant: 'destructive', title: 'Order Failed', description: 'Could not place order.' });

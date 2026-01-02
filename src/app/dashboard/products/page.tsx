@@ -22,17 +22,7 @@ import {
 import { Badge } from '@/components/ui/badge';
 import { PlusCircle, Database, MoreHorizontal, ShoppingBag } from 'lucide-react';
 import { PlaceHolderImages, ImagePlaceholder } from '@/lib/placeholder-images';
-import {
-  useCollection,
-  useFirestore,
-  useStorage,
-  useMemoFirebase,
-  errorEmitter,
-  FirestorePermissionError,
-  useUser,
-} from '@/firebase';
 import { supabase } from '@/lib/supabase/client';
-import { mockDb } from '@/lib/mock-db'; // Keep for seed data reference if needed, or remove.
 import { useToast } from '@/hooks/use-toast';
 import { revalidateProducts } from '../../actions';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -82,20 +72,17 @@ import {
   DropdownMenuTrigger,
   DropdownMenuSeparator,
 } from '@/components/ui/dropdown-menu';
-import { ref, uploadBytes, getDownloadURL, deleteObject } from "firebase/storage";
-import { collection, addDoc, doc, updateDoc, deleteDoc, writeBatch } from 'firebase/firestore';
-
 
 type Product = {
   id: string;
   name: string;
   sku: string;
   price: number;
-  netPrice: number;
+  net_price: number; // Changed to match Supabase schema snake_case
   stock: number;
   status: 'In Stock' | 'Low Stock' | 'Out of Stock';
-  imageUrl?: string | null;
-  imageId?: string | null;
+  image_url?: string | null; // Changed to snake_case
+  image_id?: string | null; // Changed to snake_case
 };
 
 const productSchema = z.object({
@@ -116,9 +103,6 @@ function ProductForm({
   product?: Product;
 }) {
   const { toast } = useToast();
-  const firestore = useFirestore();
-  const storage = useStorage();
-  const { user } = useUser();
   const [isSaving, setIsSaving] = React.useState(false);
 
   const form = useForm<z.infer<typeof productSchema>>({
@@ -127,7 +111,7 @@ function ProductForm({
       name: initialProductData?.name ?? '',
       sku: initialProductData?.sku ?? '',
       price: initialProductData?.price ?? 0,
-      netPrice: initialProductData?.netPrice ?? 0,
+      netPrice: initialProductData?.net_price ?? 0,
       stock: initialProductData?.stock ?? 0,
       status: initialProductData?.status ?? 'In Stock',
       image: null,
@@ -139,7 +123,7 @@ function ProductForm({
       name: initialProductData?.name ?? '',
       sku: initialProductData?.sku ?? '',
       price: initialProductData?.price ?? 0,
-      netPrice: initialProductData?.netPrice ?? 0,
+      netPrice: initialProductData?.net_price ?? 0,
       stock: initialProductData?.stock ?? 0,
       status: initialProductData?.status ?? 'In Stock',
       image: null,
@@ -147,63 +131,56 @@ function ProductForm({
   }, [initialProductData, form]);
 
   async function onSubmit(values: z.infer<typeof productSchema>) {
-    // Basic check for user context
-    if (!user) {
-      toast({
-        variant: 'destructive',
-        title: 'Error',
-        description: 'User not authenticated.',
-      });
-      return;
-    }
     setIsSaving(true);
-    let imageUrl: string | null = initialProductData?.imageUrl || null;
-
-    // Handle Image Upload (Base64 for now)
-    if (values.image) {
-      try {
-        imageUrl = await fileToBase64(values.image);
-      } catch (e) {
-        console.error("Failed to convert image", e);
-        toast({ variant: 'destructive', title: 'Image Error', description: 'Failed to process image.' });
-        setIsSaving(false);
-        return;
-      }
-    }
+    let image_url: string | null = initialProductData?.image_url || null;
 
     try {
+      if (values.image) {
+        // Upload to Supabase Storage
+        const fileExt = values.image.name.split('.').pop();
+        const fileName = `${Date.now()}.${fileExt}`;
+        const filePath = `${fileName}`;
+
+        const { error: uploadError } = await supabase.storage
+          .from('products')
+          .upload(filePath, values.image);
+
+        if (uploadError) throw uploadError;
+
+        const { data: { publicUrl } } = supabase.storage
+          .from('products')
+          .getPublicUrl(filePath);
+
+        image_url = publicUrl;
+      }
+
       const productData = {
         name: values.name,
         sku: values.sku,
         price: values.price,
+        net_price: values.netPrice,
         stock: values.stock,
         status: values.status,
-        image_url: imageUrl,
+        image_url: image_url,
       };
 
       if (initialProductData) {
-        // Update
         const { error } = await supabase
           .from('products')
-          .update({ ...productData, net_price: values.netPrice }) // Map camelCase to snake_case if needed
+          .update(productData)
           .eq('id', initialProductData.id);
-
         if (error) throw error;
         toast({ title: 'Product updated', description: `${values.name} has been updated.` });
       } else {
-        // Create
         const { error } = await supabase
           .from('products')
-          .insert([{ ...productData, net_price: values.netPrice }]);
-
+          .insert([productData]);
         if (error) throw error;
         toast({ title: 'Product created', description: `${values.name} has been added.` });
       }
 
-      // setOpen(false); // This variable is not defined in this component's scope
       form.reset();
-      // setInitialProductData(null); // This variable is not defined in this component's scope
-      onSuccess(); // Call onSuccess to close dialog and refresh data
+      onSuccess();
     } catch (error: any) {
       console.error('Error saving product:', error);
       toast({ variant: 'destructive', title: 'Error', description: error.message || 'Failed to save product.' });
@@ -348,50 +325,68 @@ function ProductForm({
 
 
 export default function ProductsPage() {
-  const firestore = useFirestore();
-  const productsCollection = 'products';
-  const { data: products, isLoading: loading } = useCollection<Product>(productsCollection);
-  const storage = useStorage();
+  const [products, setProducts] = React.useState<Product[]>([]);
+  const [loading, setLoading] = React.useState(true);
   const { toast } = useToast();
+
   const [isSeeding, setIsSeeding] = React.useState(false);
   const [isDeleting, setIsDeleting] = React.useState(false);
   const [isFormOpen, setFormOpen] = React.useState(false);
   const [itemToEdit, setItemToEdit] = React.useState<Product | undefined>(undefined);
   const [itemToDelete, setItemToDelete] = React.useState<Product | null>(null);
 
+  const fetchProducts = React.useCallback(async () => {
+    try {
+      setLoading(true);
+      const { data, error } = await supabase
+        .from('products')
+        .select('*')
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+      setProducts(data || []);
+    } catch (error) {
+      console.error('Error fetching products:', error);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  React.useEffect(() => {
+    fetchProducts();
+    // Realtime
+    const channel = supabase
+      .channel('public:products')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'products' }, () => {
+        fetchProducts();
+      })
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    }
+  }, [fetchProducts]);
+
   const getProductImage = (product: Product): ImagePlaceholder | undefined => {
-    if (!product.imageId) return undefined;
-    return PlaceHolderImages.find((img) => img.id === product.imageId);
+    if (!product.image_id) return undefined;
+    return PlaceHolderImages.find((img) => img.id === product.image_id);
   }
 
   const sampleProducts = [
-    { name: 'Dome Security Camera', sku: 'CAM-DOME-HD', price: 199.99, netPrice: 120.00, stock: 50, status: 'In Stock' as const, imageId: 'product-1' },
-    { name: 'Bullet Outdoor Camera', sku: 'CAM-BULL-4K', price: 249.50, netPrice: 150.00, stock: 8, status: 'Low Stock' as const, imageId: 'product-2' },
-    { name: '8-Channel NVR', sku: 'NVR-08CH-2TB', price: 499.00, netPrice: 300.00, stock: 20, status: 'In Stock' as const, imageId: 'product-3' },
-    { name: 'Micro Dashcam', sku: 'DASH-MICRO-1080P', price: 99.00, netPrice: 60.00, stock: 0, status: 'Out of Stock' as const, imageId: 'dashcam-service' },
+    { name: 'Dome Security Camera', sku: 'CAM-DOME-HD', price: 199.99, net_price: 120.00, stock: 50, status: 'In Stock' as const, image_id: 'product-1' },
+    { name: 'Bullet Outdoor Camera', sku: 'CAM-BULL-4K', price: 249.50, net_price: 150.00, stock: 8, status: 'Low Stock' as const, image_id: 'product-2' },
+    { name: '8-Channel NVR', sku: 'NVR-08CH-2TB', price: 499.00, net_price: 300.00, stock: 20, status: 'In Stock' as const, image_id: 'product-3' },
+    { name: 'Micro Dashcam', sku: 'DASH-MICRO-1080P', price: 99.00, net_price: 60.00, stock: 0, status: 'Out of Stock' as const, image_id: 'dashcam-service' },
   ];
 
   const handleSeedData = async () => {
     setIsSeeding(true);
-
     try {
-      if (firestore) {
-        const productsCollectionRef = collection(firestore, 'products');
-        const batch = writeBatch(firestore);
-        sampleProducts.forEach((product) => {
-          const docRef = doc(productsCollectionRef);
-          batch.set(docRef, product);
-        });
-        await batch.commit();
-      } else {
-        // Mock Seed
-        await new Promise(resolve => setTimeout(resolve, 1000));
-        sampleProducts.forEach(p => mockDb.addProduct(p));
-      }
-
-      await revalidateProducts();
+      const { error } = await supabase.from('products').insert(sampleProducts);
+      if (error) throw error;
       toast({ title: 'Success', description: 'Sample products have been added.' });
-    } catch (error) {
+      fetchProducts();
+    } catch (error: any) {
       console.error("Error seeding products:", error);
       toast({ variant: 'destructive', title: 'Error', description: 'Failed to seed products.' });
     } finally {
@@ -407,11 +402,11 @@ export default function ProductsPage() {
       const { error } = await supabase.from('products').delete().eq('id', itemToDelete.id);
       if (error) throw error;
 
-      await revalidateProducts();
       toast({
         title: 'Product Deleted',
         description: `${itemToDelete.name} has been successfully deleted.`,
       });
+      fetchProducts();
     } catch (error: any) {
       console.error('Error deleting product:', error);
       toast({ variant: 'destructive', title: 'Error', description: 'Failed to delete product.' });
@@ -429,6 +424,7 @@ export default function ProductsPage() {
   const closeForm = () => {
     setFormOpen(false);
     setItemToEdit(undefined);
+    fetchProducts();
   }
 
   return (
@@ -493,7 +489,7 @@ export default function ProductsPage() {
                 ))
               ) : products && products.length > 0 ? (
                 products.map((product) => {
-                  const image = product.imageUrl ? { imageUrl: product.imageUrl, imageHint: product.name } : getProductImage(product);
+                  const image = product.image_url ? { imageUrl: product.image_url, imageHint: product.name } : getProductImage(product);
                   return (
                     <TableRow key={product.id}>
                       <TableCell className="hidden sm:table-cell">
@@ -518,7 +514,7 @@ export default function ProductsPage() {
                           {product.status}
                         </Badge>
                       </TableCell>
-                      <TableCell className="hidden md:table-cell text-muted-foreground">${(product.netPrice || 0).toFixed(2)}</TableCell>
+                      <TableCell className="hidden md:table-cell text-muted-foreground">${(product.net_price || 0).toFixed(2)}</TableCell>
                       <TableCell className="hidden md:table-cell font-bold">${product.price.toFixed(2)}</TableCell>
                       <TableCell className="hidden md:table-cell">{product.stock}</TableCell>
                       <TableCell>
@@ -563,7 +559,7 @@ export default function ProductsPage() {
                 })
               ) : (
                 <TableRow>
-                  <TableCell colSpan={6} className="h-24 text-center">
+                  <TableCell colSpan={7} className="h-24 text-center">
                     No products found. Try seeding sample data or add a new product.
                   </TableCell>
                 </TableRow>

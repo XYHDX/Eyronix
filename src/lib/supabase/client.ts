@@ -8,17 +8,27 @@ if (!supabaseUrl || !supabaseAnonKey) {
     console.error('Supabase env vars missing. Check .env.local');
 }
 
-// Create a safe client or a mock to prevent app crash if keys are missing
-export const supabase = (supabaseUrl && supabaseAnonKey)
+// Safe client creation
+// If url/key are missing, we mock the client to prevent a crash,
+// but requests will fail safely.
+const isValid = supabaseUrl && supabaseAnonKey && supabaseUrl.startsWith('http');
+
+export const supabase = isValid
     ? createClient(supabaseUrl, supabaseAnonKey)
     : {
-        from: () => ({ select: () => Promise.resolve({ data: [], error: new Error('Missing Supabase Keys') }), insert: () => Promise.resolve({ error: new Error('Missing Supabase Keys') }), update: () => Promise.resolve({ error: new Error('Missing Supabase Keys') }), delete: () => Promise.resolve({ error: new Error('Missing Supabase Keys') }), eq: () => ({ single: () => Promise.resolve({ data: null, error: new Error('Missing Supabase Keys') }) }) }),
+        from: () => ({
+            select: () => Promise.resolve({ data: [], error: { message: 'Supabase keys missing' } }),
+            insert: () => Promise.resolve({ error: { message: 'Supabase keys missing' } }),
+            update: () => Promise.resolve({ error: { message: 'Supabase keys missing' } }),
+            delete: () => Promise.resolve({ error: { message: 'Supabase keys missing' } }),
+            eq: () => ({ single: () => Promise.resolve({ data: null, error: { message: 'Supabase keys missing' } }) })
+        }),
         auth: {
-            getUser: () => Promise.resolve({ data: { user: null }, error: new Error('Missing Supabase Keys') }),
-            getSession: () => Promise.resolve({ data: { session: null }, error: new Error('Missing Supabase Keys') }),
-            signInWithPassword: () => Promise.resolve({ data: { user: null }, error: new Error('Missing Supabase Keys') }),
-            signInWithOAuth: () => Promise.resolve({ data: {}, error: new Error('Missing Supabase Keys') }),
-            signOut: () => Promise.resolve({ error: null }),
-            onAuthStateChange: () => ({ data: { subscription: { unsubscribe: () => { } } } })
+            getUser: () => Promise.resolve({ data: { user: null }, error: { message: 'Supabase keys missing' } }),
+            getSession: () => Promise.resolve({ data: { session: null }, error: { message: 'Supabase keys missing' } }),
+            onAuthStateChange: () => ({ data: { subscription: { unsubscribe: () => { } } } }),
+            signInWithPassword: () => Promise.resolve({ error: { message: 'Supabase keys missing' } }),
+            signInWithOAuth: () => Promise.resolve({ error: { message: 'Supabase keys missing' } }),
+            signOut: () => Promise.resolve({ error: null })
         }
     } as any;

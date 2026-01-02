@@ -13,7 +13,7 @@ export async function GET(request: NextRequest) {
     }
 
     const supabaseAdmin = createClient(
-        process.env.NEXT_PUBLIC_SUPABASE_URL!,
+        process.env.NEXT_PUBLIC_EYRONIX_URL || process.env.NEXT_PUBLIC_SUPABASE_URL || '',
         serviceRoleKey
     );
 

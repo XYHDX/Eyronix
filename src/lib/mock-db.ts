@@ -129,7 +129,7 @@ class MockDatabase {
     signIn(email: string) {
         // Find user or create a mock one. Currently just matching email or defaulting to user role
         // Check if it's the admin
-        const isAdmin = email === 'admin@gmail.com';
+        const isAdmin = email === 'admin@gmail.com' || email === 'admin@eyronix';
 
         this.currentUser = {
             uid: isAdmin ? 'mock-admin-uid-123' : `user-${Date.now()}`,

@@ -17,6 +17,10 @@ export const ROUTE_PERMISSIONS: Record<string, Role[]> = {
     '/dashboard/services': ['admin'],
     '/dashboard/products': ['admin'],
     '/dashboard/settings': ['admin'], // Assuming settings is admin only for now
+
+    // User & Admin
+    '/dashboard/my-orders': ['admin', 'user'],
+    '/dashboard/orders': ['admin'], // All orders for admin
 };
 
 export function hasPermission(role: Role | undefined, path: string): boolean {

@@ -161,21 +161,26 @@ function ProductForm({
     let imageUrl: string | null = initialProductData?.imageUrl || null;
     let imageId: string | null = initialProductData?.imageId || null;
 
-    // Handle mock image upload (just simulate)
+    // Handle mock image upload (simulate with Base64 for persistence)
     if (values.image) {
-      // Only try unique file upload if we have real storage, otherwise mock url
       if (storage) {
+        // Real storage implementation
         const storageRef = ref(storage, `products/${Date.now()}-${values.image.name}`);
         try {
           const snapshot = await uploadBytes(storageRef, values.image);
           imageUrl = await getDownloadURL(snapshot.ref);
         } catch (e) {
           console.warn("Real storage upload failed, using fallback mock URL");
-          imageUrl = URL.createObjectURL(values.image);
+          imageUrl = await fileToBase64(values.image);
         }
       } else {
-        // Fallback for mock environment
-        imageUrl = URL.createObjectURL(values.image);
+        // Fallback for mock environment - Use Base64 to persist in localStorage
+        try {
+          imageUrl = await fileToBase64(values.image);
+        } catch (e) {
+          console.error("Failed to convert image", e);
+          imageUrl = URL.createObjectURL(values.image);
+        }
       }
       imageId = null;
     }
@@ -594,4 +599,13 @@ export default function ProductsPage() {
       </Card>
     </>
   );
+}
+
+function fileToBase64(file: File): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.readAsDataURL(file);
+    reader.onload = () => resolve(reader.result as string);
+    reader.onerror = error => reject(error);
+  });
 }

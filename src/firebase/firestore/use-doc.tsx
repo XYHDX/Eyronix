@@ -4,6 +4,8 @@
 import { useState, useEffect } from 'react';
 import { FirestoreError } from 'firebase/firestore';
 
+import { mockDb } from '@/lib/mock-db';
+
 /** Utility type to add an 'id' field to a given type T. */
 type WithId<T> = T & { id: string };
 
@@ -12,18 +14,6 @@ export interface UseDocResult<T> {
   isLoading: boolean;
   error: FirestoreError | Error | null;
 }
-
-const MOCK_SETTINGS = {
-  id: 'footer',
-  phoneNumber: '+963 933 123 456',
-  email: 'info@eyronix.sy',
-  address: 'Damascus, Syria',
-  facebookUrl: 'https://facebook.com/eyronix',
-  twitterUrl: 'https://twitter.com/eyronix',
-  instagramUrl: 'https://instagram.com/eyronix',
-  termsUrl: '/terms',
-  privacyUrl: '/privacy'
-};
 
 /**
  * Mock implementation of useDoc.
@@ -45,16 +35,24 @@ export function useDoc<T = any>(
 
     setIsLoading(true);
 
-    const timer = setTimeout(() => {
-      if (docKey === 'settings/footer') {
-        setData(MOCK_SETTINGS as unknown as WithId<T>);
-      } else {
-        setData(null);
-      }
-      setIsLoading(false);
-    }, 600);
+    // Initial Fetch
+    if (docKey === 'settings/footer') {
+      const settingsWithId = { ...mockDb.settings, id: 'footer' };
+      setData(settingsWithId as unknown as WithId<T>);
+    } else {
+      setData(null);
+    }
+    setIsLoading(false);
 
-    return () => clearTimeout(timer);
+    // Subscribe
+    const unsubscribe = mockDb.subscribe(() => {
+      if (docKey === 'settings/footer') {
+        const settingsWithId = { ...mockDb.settings, id: 'footer' };
+        setData(settingsWithId as unknown as WithId<T>);
+      }
+    });
+
+    return () => unsubscribe();
   }, [docKey]);
 
   return { data, isLoading, error };

@@ -33,6 +33,7 @@ import {
 import { useToast } from '@/hooks/use-toast';
 import { doc, setDoc } from 'firebase/firestore';
 import { Skeleton } from '@/components/ui/skeleton';
+import { mockDb } from '@/lib/mock-db';
 
 const settingsFormSchema = z.object({
   facebookUrl: z.string().url().or(z.literal('')),
@@ -79,34 +80,35 @@ export default function SettingsPage() {
   }, [settings, form]);
 
   async function onSubmit(data: SiteSettings) {
-    if (!firestore) {
-      toast({ variant: 'destructive', title: 'Error', description: 'Database not available.' });
-      return;
-    }
-
     setIsSaving(true);
-    // Mock save
-    new Promise((resolve) => setTimeout(resolve, 500))
-      .then(() => {
+
+    // Mock Save to Local Storage
+    try {
+      if (!firestore) {
+        // Mock DB Operation
+        await new Promise(resolve => setTimeout(resolve, 500)); // Simulate network
+        mockDb.updateSettings(data);
+
         toast({
           title: 'Settings Saved',
-          description: 'Your site settings have been successfully updated.',
+          description: 'Your site settings have been successfully updated (Local Storage).',
         });
-      })
-      .catch((error) => {
-        console.error("Error saving settings:", error);
-        errorEmitter.emit(
-          'permission-error',
-          new FirestorePermissionError({
-            path: 'settings/footer',
-            operation: 'update',
-            requestResourceData: data,
-          })
-        );
-      })
-      .finally(() => {
         setIsSaving(false);
-      });
+        return;
+      }
+
+      // Real Firebase Implementation (Reserved)
+      /* 
+      await setDoc(doc(firestore, 'settings', 'footer'), data);
+      toast({ title: 'Settings Saved', description: 'Updated in Firebase.' });
+      */
+
+    } catch (error: any) {
+      console.error("Error saving settings:", error);
+      toast({ variant: 'destructive', title: 'Error', description: 'Failed to save settings.' });
+    } finally {
+      setIsSaving(false);
+    }
   }
 
   const renderFormFields = () => (

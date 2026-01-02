@@ -2,15 +2,6 @@
 'use client';
 
 import * as React from 'react';
-import { collection, doc, Timestamp, deleteDoc } from 'firebase/firestore';
-import {
-  useCollection,
-  useFirestore,
-  useMemoFirebase,
-  useUser,
-  errorEmitter,
-  FirestorePermissionError,
-} from '@/firebase';
 import {
   Card,
   CardContent,
@@ -53,49 +44,77 @@ import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
 import { getInitials } from '@/lib/utils';
 import { formatDistanceToNow } from 'date-fns';
-import { updateUserRole } from '../../actions';
+import { supabase } from '@/lib/supabase/client';
 
 type UserProfile = {
   id: string;
-  uid: string;
-  displayName: string;
   email: string;
-  photoURL: string | null;
+  full_name: string;
+  avatar_url: string | null;
   role: 'admin' | 'user';
-  createdAt: Timestamp;
+  created_at: string;
 };
 
 export default function UsersPage() {
-  const firestore = useFirestore();
-  const { user: currentUser } = useUser();
-  const usersCollection = 'users';
-  const { data: users, isLoading } = useCollection<UserProfile>(usersCollection);
   const { toast } = useToast();
+  const [users, setUsers] = React.useState<UserProfile[]>([]);
+  const [isLoading, setIsLoading] = React.useState(true);
+  const [currentUser, setCurrentUser] = React.useState<any>(null);
 
   const [isUpdating, setIsUpdating] = React.useState<string | null>(null);
   const [isDeleting, setIsDeleting] = React.useState(false);
   const [itemToDelete, setItemToDelete] = React.useState<UserProfile | null>(null);
+
+  const fetchUsers = React.useCallback(async () => {
+    setIsLoading(true);
+    const { data, error } = await supabase
+      .from('profiles')
+      .select('*')
+      .order('created_at', { ascending: false });
+
+    if (!error && data) {
+      setUsers(data as UserProfile[]);
+    }
+    setIsLoading(false);
+  }, []);
+
+  React.useEffect(() => {
+    // Get current user
+    supabase.auth.getUser().then(({ data: { user } }) => setCurrentUser(user));
+
+    fetchUsers();
+
+    // Realtime subscription
+    const channel = supabase
+      .channel('public:profiles')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'profiles' }, () => {
+        fetchUsers();
+      })
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [fetchUsers]);
+
 
   const handleRoleChange = async (userToUpdate: UserProfile, newRole: 'admin' | 'user') => {
     if (userToUpdate.role === newRole) return;
 
     setIsUpdating(userToUpdate.id);
     try {
-      // Use the authoritative server action to change the role.
-      const result = await updateUserRole(userToUpdate.uid, newRole);
+      const { error } = await supabase
+        .from('profiles')
+        .update({ role: newRole })
+        .eq('id', userToUpdate.id);
 
-      if (!result.success) {
-        // The server action now handles the "last admin" check, so we can just display its error.
-        throw new Error(result.error || 'Failed to update user role.');
-      }
+      if (error) throw error;
 
-      // The UI will update automatically because the server action revalidates the path,
-      // and the useCollection hook will get the latest data.
       toast({
         title: 'Role Updated',
-        description: `${userToUpdate.displayName}'s role has been changed to ${newRole}.`,
+        description: `${userToUpdate.full_name || userToUpdate.email}'s role has been changed to ${newRole}.`,
       });
-
+      // UI updates automatically via subscription
     } catch (error: any) {
       console.error('Error updating role:', error);
       toast({
@@ -109,32 +128,35 @@ export default function UsersPage() {
   };
 
   const handleDelete = async () => {
-    if (!itemToDelete || !firestore) return;
+    if (!itemToDelete) return;
     setIsDeleting(true);
-    const userDocRef = doc(firestore, 'users', itemToDelete.id);
 
-    // Note: This only deletes the Firestore document, not the auth user.
-    deleteDoc(userDocRef)
-      .then(() => {
-        toast({
-          title: 'User Record Deleted',
-          description: `The user record for ${itemToDelete.displayName} has been deleted.`,
-        });
-      })
-      .catch((error) => {
-        console.error("Error deleting user record:", error);
-        errorEmitter.emit(
-          'permission-error',
-          new FirestorePermissionError({
-            path: `users/${itemToDelete.id}`,
-            operation: 'delete',
-          })
-        );
-      })
-      .finally(() => {
-        setIsDeleting(false);
-        setItemToDelete(null);
+    try {
+      // Warning: This only deletes the profile. Auth user deletion requires Service Role key on server.
+      // For client-side, we can only update role to 'banned' or delete profile row (which might break auth sync).
+      // Let's just delete the profile row for now as requested.
+      const { error } = await supabase
+        .from('profiles')
+        .delete()
+        .eq('id', itemToDelete.id);
+
+      if (error) throw error;
+
+      toast({
+        title: 'User Record Deleted',
+        description: `The user record for ${itemToDelete.full_name} has been deleted.`,
       });
+    } catch (error: any) {
+      console.error("Error deleting user record:", error);
+      toast({
+        variant: 'destructive',
+        title: 'Delete failed',
+        description: error.message,
+      });
+    } finally {
+      setIsDeleting(false);
+      setItemToDelete(null);
+    }
   };
 
   return (
@@ -188,11 +210,11 @@ export default function UsersPage() {
                     <TableCell>
                       <div className="flex items-center gap-4">
                         <Avatar>
-                          <AvatarImage src={user.photoURL || undefined} />
-                          <AvatarFallback>{getInitials(user.displayName)}</AvatarFallback>
+                          <AvatarImage src={user.avatar_url || undefined} />
+                          <AvatarFallback>{getInitials(user.full_name || user.email)}</AvatarFallback>
                         </Avatar>
                         <div>
-                          <div className="font-medium">{user.displayName}</div>
+                          <div className="font-medium">{user.full_name || 'No Name'}</div>
                           <div className="text-sm text-muted-foreground">{user.email}</div>
                         </div>
                       </div>
@@ -206,7 +228,7 @@ export default function UsersPage() {
                       </Badge>
                     </TableCell>
                     <TableCell className="hidden md:table-cell">
-                      {user.createdAt ? formatDistanceToNow(user.createdAt.toDate(), { addSuffix: true }) : 'N/A'}
+                      {user.created_at ? formatDistanceToNow(new Date(user.created_at), { addSuffix: true }) : 'N/A'}
                     </TableCell>
                     <TableCell>
                       <AlertDialog onOpenChange={(open) => !open && setItemToDelete(null)}>
@@ -238,7 +260,7 @@ export default function UsersPage() {
                             </DropdownMenuItem>
                             <DropdownMenuSeparator />
                             <AlertDialogTrigger asChild>
-                              <DropdownMenuItem className="text-red-600" onSelect={(e) => { e.preventDefault(); setItemToDelete(user); }} disabled={currentUser?.uid === user.uid}>
+                              <DropdownMenuItem className="text-red-600" onSelect={(e) => { e.preventDefault(); setItemToDelete(user); }} disabled={currentUser?.id === user.id}>
                                 Delete User
                               </DropdownMenuItem>
                             </AlertDialogTrigger>
@@ -249,7 +271,7 @@ export default function UsersPage() {
                             <AlertDialogHeader>
                               <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
                               <AlertDialogDescription>
-                                This action cannot be undone. This will permanently delete the user record for <span className="font-bold">{itemToDelete.displayName}</span> from Firestore. It will not remove them from Firebase Authentication.
+                                This action cannot be undone. This will permanently delete the user record for <span className="font-bold">{itemToDelete.full_name}</span>.
                               </AlertDialogDescription>
                             </AlertDialogHeader>
                             <AlertDialogFooter>

@@ -20,7 +20,8 @@ import { useRouter } from 'next/navigation';
 import { useToast } from '@/hooks/use-toast';
 import { useState, useEffect } from 'react';
 import { updateUserProfile } from '@/firebase/firestore/users';
-import { mockDb } from '@/lib/mock-db';
+import { mockDb } from '@/lib/mock-db'; // Keeping for reference/fallback if needed
+import { supabase } from '@/lib/supabase/client';
 
 function GoogleIcon(props: React.SVGProps<SVGSVGElement>) {
   return (
@@ -92,26 +93,18 @@ export default function LoginPage() {
     setIsSigningIn(true);
 
     try {
-      if (!auth) {
-        // Mock Sign In
-        mockDb.signIn(email);
-        toast({ title: 'Signed in successfully!', description: 'Running in MOCK mode (simulated).' });
-        router.push('/dashboard');
-      } else {
-        const userCredential = await signInWithEmailAndPassword(auth, email, password);
-        await userCredential.user.getIdToken(true); // Force token refresh
-        toast({ title: 'Signed in successfully!' });
-        router.push('/dashboard');
-      }
+      const { error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
+
+      if (error) throw error;
+
+      toast({ title: 'Signed in successfully!' });
+      router.push('/dashboard');
     } catch (error: any) {
       console.error('Email sign-in error:', error);
-      let description = 'An unexpected error occurred.';
-      if (error.code === 'auth/invalid-credential') {
-        description = 'The email or password you entered is incorrect. Please check for typos or sign up if you are a new user.';
-      } else if (error.code) {
-        description = `Error: ${error.code}`
-      }
-      toast({ variant: 'destructive', title: 'Sign-in failed', description });
+      toast({ variant: 'destructive', title: 'Sign-in failed', description: error.message || 'Invalid credentials' });
     } finally {
       setIsSigningIn(false);
     }

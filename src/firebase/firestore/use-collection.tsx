@@ -1,63 +1,67 @@
 import { useState, useEffect } from 'react';
-import { mockDb } from '@/lib/mock-db';
+import { FirestoreError } from 'firebase/firestore';
+import { supabase } from '@/lib/supabase/client';
 
-// Mock implementation of useCollection
-export function useCollection(collectionNameOrQuery: any, options?: any) {
-  const [data, setData] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
+export interface UseCollectionResult<T> {
+  data: T[] | null;
+  isLoading: boolean;
+  error: FirestoreError | Error | null;
+}
+
+/**
+ * Supabase implementation of useCollection.
+ * Accepts a table name string.
+ */
+export function useCollection<T = any>(
+  tableName: any,
+): UseCollectionResult<T> {
+  const [data, setData] = useState<T[] | null>(null);
+  const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [error, setError] = useState<FirestoreError | Error | null>(null);
 
   useEffect(() => {
-    let name = '';
-
-    if (typeof collectionNameOrQuery === 'string') {
-      name = collectionNameOrQuery;
-    } else if (collectionNameOrQuery === null) {
-      setData([]);
-      setLoading(false);
+    if (!tableName || typeof tableName !== 'string') {
+      setData(null);
+      setIsLoading(false);
       return;
     }
 
-    const fetchData = () => {
-      let mockData: any[] = [];
-      switch (name) {
-        case 'users':
-          mockData = mockDb.users;
-          break;
-        case 'products':
-          mockData = mockDb.products;
-          break;
-        case 'services':
-          mockData = mockDb.services;
-          break;
-        case 'survey-requests':
-          mockData = mockDb.requests;
-          break;
-        case 'pricing':
-          mockData = mockDb.pricing;
-          break;
-        default:
-          mockData = [];
-      }
-      setData([...mockData]); // Spread to ensure new reference
-      setLoading(false);
-    };
+    let mounted = true;
+    setIsLoading(true);
 
-    // Initial fetch
+    async function fetchData() {
+      try {
+        const { data: results, error } = await supabase
+          .from(tableName)
+          .select('*');
+
+        if (error) throw error;
+        if (mounted) setData(results as T[]);
+      } catch (err: any) {
+        console.error(`Error fetching ${tableName}:`, err);
+        if (mounted) setError(err);
+      } finally {
+        if (mounted) setIsLoading(false);
+      }
+    }
+
     fetchData();
 
-    // Subscribe to changes
-    const unsubscribe = mockDb.subscribe(() => {
-      fetchData();
-    });
+    // Realtime Subscription
+    const channel = supabase
+      .channel(`public:${tableName}`)
+      .on('postgres_changes', { event: '*', schema: 'public', table: tableName }, (payload) => {
+        // Simplest strategy: refetch on any change. 
+        // Could optimize to merge payload.new/old but fetching is safer for consistency.
+        fetchData();
+      })
+      .subscribe();
 
-    return () => unsubscribe();
-  }, [collectionNameOrQuery]);
+    return () => {
+      mounted = false;
+      supabase.removeChannel(channel);
+    };
+  }, [tableName]);
 
-  return {
-    data,
-    loading: false,
-    isLoading: loading,
-    error: null,
-    snapshot: null
-  };
+  return { data, isLoading, error };
 }

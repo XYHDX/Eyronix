@@ -33,7 +33,8 @@ import {
 import { useToast } from '@/hooks/use-toast';
 import { doc, setDoc } from 'firebase/firestore';
 import { Skeleton } from '@/components/ui/skeleton';
-import { mockDb } from '@/lib/mock-db';
+import { mockDb } from '@/lib/mock-db'; // Keeping for reference if needed
+import { supabase } from '@/lib/supabase/client';
 
 const settingsFormSchema = z.object({
   facebookUrl: z.string().url().or(z.literal('')),
@@ -82,30 +83,31 @@ export default function SettingsPage() {
   async function onSubmit(data: SiteSettings) {
     setIsSaving(true);
 
-    // Mock Save to Local Storage
     try {
-      if (!firestore) {
-        // Mock DB Operation
-        await new Promise(resolve => setTimeout(resolve, 500)); // Simulate network
-        mockDb.updateSettings(data);
-
-        toast({
-          title: 'Settings Saved',
-          description: 'Your site settings have been successfully updated (Local Storage).',
+      // Upsert settings (id is strictly 'footer')
+      const { error } = await supabase
+        .from('settings')
+        .upsert({
+          id: 'footer',
+          facebook_url: data.facebookUrl,
+          twitter_url: data.twitterUrl,
+          instagram_url: data.instagramUrl,
+          phone_number: data.phoneNumber,
+          email: data.email,
+          address: data.address,
+          terms_url: data.termsUrl,
+          privacy_url: data.privacyUrl
         });
-        setIsSaving(false);
-        return;
-      }
 
-      // Real Firebase Implementation (Reserved)
-      /* 
-      await setDoc(doc(firestore, 'settings', 'footer'), data);
-      toast({ title: 'Settings Saved', description: 'Updated in Firebase.' });
-      */
+      if (error) throw error;
 
+      toast({
+        title: 'Settings Saved',
+        description: 'Your site settings have been successfully updated.',
+      });
     } catch (error: any) {
       console.error("Error saving settings:", error);
-      toast({ variant: 'destructive', title: 'Error', description: 'Failed to save settings.' });
+      toast({ variant: 'destructive', title: 'Error', description: error.message || 'Failed to save settings.' });
     } finally {
       setIsSaving(false);
     }

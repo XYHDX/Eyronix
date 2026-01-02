@@ -17,6 +17,7 @@ import { getInitials } from '@/lib/utils';
 import { Skeleton } from './ui/skeleton';
 import { hasPermission } from '@/lib/permissions';
 import { mockDb } from '@/lib/mock-db';
+import { supabase } from '@/lib/supabase/client';
 
 export default function Header() {
   const router = useRouter();
@@ -27,13 +28,9 @@ export default function Header() {
 
   const handleLogout = async () => {
     try {
-      if (!auth) {
-        mockDb.signOut();
-        toast({ title: "You've been logged out.", description: "Mock session cleared." });
-        router.push('/');
-        return;
-      }
-      await signOut(auth);
+      const { error } = await supabase.auth.signOut();
+      if (error) throw error;
+
       toast({ title: "You've been logged out." });
       router.push('/');
     } catch (error) {

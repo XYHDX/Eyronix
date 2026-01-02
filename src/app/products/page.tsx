@@ -16,6 +16,7 @@ import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
 import { mockDb } from '@/lib/mock-db';
 import { Button } from '@/components/ui/button';
+import { supabase } from '@/lib/supabase/client';
 
 type Product = {
   id: string;
@@ -87,10 +88,27 @@ export default function ProductsPage() {
                     </CardHeader>
                     <CardContent className="flex-grow mt-auto">
                       <p className="text-2xl font-bold text-accent mb-4">${product.price.toFixed(2)}</p>
-                      <Button className="w-full" onClick={() => {
+                      <Button className="w-full" onClick={async () => {
                         if (product.stock > 0) {
-                          mockDb.addOrder(product, 'product');
-                          toast({ title: 'Order Placed!', description: `You bought ${product.name}.` });
+                          try {
+                            const { error } = await supabase.from('sales').insert([{
+                              user_id: (supabase.auth.getUser() as any)?.id || null, // Best effort to get user
+                              item_details: product,
+                              type: 'product',
+                              amount: product.price,
+                              status: 'Completed'
+                            }]);
+
+                            if (error) throw error;
+
+                            // Decrement Stock (Naive)
+                            await supabase.from('products').update({ stock: product.stock - 1 }).eq('id', product.id);
+
+                            toast({ title: 'Order Placed!', description: `You bought ${product.name}.` });
+                          } catch (e) {
+                            console.error("Order failed", e);
+                            toast({ variant: 'destructive', title: 'Order Failed', description: 'Could not place order.' });
+                          }
                         } else {
                           toast({ variant: 'destructive', title: 'Out of Stock', description: 'This item is currently unavailable.' });
                         }

@@ -28,6 +28,7 @@ import {
   errorEmitter,
   FirestorePermissionError,
 } from '@/firebase';
+import { supabase } from '@/lib/supabase/client';
 
 import Header from '@/components/header';
 import Footer from '@/components/footer';
@@ -353,10 +354,28 @@ export default function Home() {
                     </CardHeader>
                     <CardContent className="flex-grow">
                       <p className="text-2xl font-bold text-accent mb-4">${product.price.toFixed(2)}</p>
-                      <Button className="w-full" size="sm" onClick={() => {
+                      <Button className="w-full" size="sm" onClick={async () => {
                         if (product.stock > 0) {
-                          mockDb.addOrder(product, 'product');
-                          toast({ title: 'Order Placed!', description: `You bought ${product.name}.` });
+                          try {
+                            const { data: { user } } = await supabase.auth.getUser();
+                            const { error } = await supabase.from('sales').insert([{
+                              user_id: user?.id || null,
+                              item_details: product,
+                              type: 'product',
+                              amount: product.price,
+                              status: 'Completed'
+                            }]);
+
+                            if (error) throw error;
+
+                            // Decrement Stock
+                            await supabase.from('products').update({ stock: product.stock - 1 }).eq('id', product.id);
+
+                            toast({ title: 'Order Placed!', description: `You bought ${product.name}.` });
+                          } catch (e) {
+                            console.error("Order failed", e);
+                            toast({ variant: 'destructive', title: 'Order Failed', description: 'Could not place order.' });
+                          }
                         } else {
                           toast({ variant: 'destructive', title: 'Out of Stock', description: 'This item is currently unavailable.' });
                         }
@@ -520,9 +539,23 @@ export default function Home() {
                             </div>
                           </div>
                           <DialogFooter>
-                            <Button onClick={() => {
-                              mockDb.addOrder(pkg, 'package');
-                              toast({ title: 'Package Selected!', description: `You ordered the ${pkg.name} package.` });
+                            <Button onClick={async () => {
+                              try {
+                                const { data: { user } } = await supabase.auth.getUser();
+                                const { error } = await supabase.from('sales').insert([{
+                                  user_id: user?.id || null,
+                                  item_details: pkg,
+                                  type: 'package',
+                                  amount: pkg.price,
+                                  status: 'Completed'
+                                }]);
+
+                                if (error) throw error;
+                                toast({ title: 'Package Selected!', description: `You ordered the ${pkg.name} package.` });
+                              } catch (e) {
+                                console.error("Package order failed", e);
+                                toast({ variant: 'destructive', title: 'Order Failed', description: 'Could not purchase package.' });
+                              }
                             }}>
                               Confirm Purchase
                             </Button>

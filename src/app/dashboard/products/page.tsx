@@ -31,7 +31,8 @@ import {
   FirestorePermissionError,
   useUser,
 } from '@/firebase';
-import { mockDb } from '@/lib/mock-db';
+import { supabase } from '@/lib/supabase/client';
+import { mockDb } from '@/lib/mock-db'; // Keep for seed data reference if needed, or remove.
 import { useToast } from '@/hooks/use-toast';
 import { revalidateProducts } from '../../actions';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -155,72 +156,57 @@ function ProductForm({
       });
       return;
     }
-
     setIsSaving(true);
-
     let imageUrl: string | null = initialProductData?.imageUrl || null;
-    let imageId: string | null = initialProductData?.imageId || null;
 
-    // Handle mock image upload (simulate with Base64 for persistence)
+    // Handle Image Upload (Base64 for now)
     if (values.image) {
-      if (storage) {
-        // Real storage implementation
-        const storageRef = ref(storage, `products/${Date.now()}-${values.image.name}`);
-        try {
-          const snapshot = await uploadBytes(storageRef, values.image);
-          imageUrl = await getDownloadURL(snapshot.ref);
-        } catch (e) {
-          console.warn("Real storage upload failed, using fallback mock URL");
-          imageUrl = await fileToBase64(values.image);
-        }
-      } else {
-        // Fallback for mock environment - Use Base64 to persist in localStorage
-        try {
-          imageUrl = await fileToBase64(values.image);
-        } catch (e) {
-          console.error("Failed to convert image", e);
-          imageUrl = URL.createObjectURL(values.image);
-        }
+      try {
+        imageUrl = await fileToBase64(values.image);
+      } catch (e) {
+        console.error("Failed to convert image", e);
+        toast({ variant: 'destructive', title: 'Image Error', description: 'Failed to process image.' });
+        setIsSaving(false);
+        return;
       }
-      imageId = null;
     }
 
-    const productData = {
-      name: values.name,
-      sku: values.sku,
-      price: values.price,
-      netPrice: values.netPrice,
-      stock: values.stock,
-      status: values.status,
-      imageUrl,
-      imageId,
-    };
-
     try {
-      if (firestore) {
-        const operation = initialProductData
-          ? updateDoc(doc(firestore, 'products', initialProductData.id), productData)
-          : addDoc(collection(firestore, 'products'), productData);
-        await operation;
+      const productData = {
+        name: values.name,
+        sku: values.sku,
+        price: values.price,
+        stock: values.stock,
+        status: values.status,
+        image_url: imageUrl,
+      };
+
+      if (initialProductData) {
+        // Update
+        const { error } = await supabase
+          .from('products')
+          .update({ ...productData, net_price: values.netPrice }) // Map camelCase to snake_case if needed
+          .eq('id', initialProductData.id);
+
+        if (error) throw error;
+        toast({ title: 'Product updated', description: `${values.name} has been updated.` });
       } else {
-        // Mock DB Operation
-        await new Promise(resolve => setTimeout(resolve, 500)); // Simulate delay
-        if (initialProductData) {
-          mockDb.updateProduct(initialProductData.id, productData);
-        } else {
-          mockDb.addProduct(productData);
-        }
+        // Create
+        const { error } = await supabase
+          .from('products')
+          .insert([{ ...productData, net_price: values.netPrice }]);
+
+        if (error) throw error;
+        toast({ title: 'Product created', description: `${values.name} has been added.` });
       }
 
-      await revalidateProducts();
-      toast({
-        title: `Product ${initialProductData ? 'Updated' : 'Added'}`,
-        description: `${productData.name} has been successfully ${initialProductData ? 'updated' : 'added'}.`,
-      });
-      onSuccess();
+      // setOpen(false); // This variable is not defined in this component's scope
+      form.reset();
+      // setInitialProductData(null); // This variable is not defined in this component's scope
+      onSuccess(); // Call onSuccess to close dialog and refresh data
     } catch (error: any) {
-      console.error('Failed to save product:', error);
-      toast({ variant: 'destructive', title: 'Error', description: 'Failed to save product.' });
+      console.error('Error saving product:', error);
+      toast({ variant: 'destructive', title: 'Error', description: error.message || 'Failed to save product.' });
     } finally {
       setIsSaving(false);
     }
@@ -423,189 +409,193 @@ export default function ProductsPage() {
           // Try delete image logic...
           const imageRef = ref(storage, itemToDelete.imageUrl);
           await deleteObject(imageRef).catch(console.warn);
+          // Assuming 'supabase' is available in this scope, e.g., from useSupabaseClient()
+          // If not, you'll need to add it.
+          const { error } = await supabase.from('products').delete().eq('id', itemToDelete.id);
+          if (error) throw error;
+
+          // If there's an image associated and it's a Supabase storage URL, delete it.
+          // This part needs to be adapted for Supabase Storage if applicable.
+          // For now, keeping the Firebase Storage logic commented out or removed.
+          // if (itemToDelete.imageUrl && itemToDelete.imageUrl.startsWith('https://firebasestorage.googleapis.com')) {
+          //   const imageRef = ref(storage, itemToDelete.imageUrl);
+          //   await deleteObject(imageRef).catch(console.warn);
+          // }
+
+          await revalidateProducts(); // Assuming this function refreshes product data
+          toast({
+            title: 'Product Deleted',
+            description: `${itemToDelete.name} has been successfully deleted.`,
+          });
+        } catch (error: any) {
+          console.error('Error deleting product:', error);
+          toast({ variant: 'destructive', title: 'Error', description: 'Failed to delete product.' });
+        } finally {
+          setIsDeleting(false);
+          setItemToDelete(null);
         }
-        const productDocRef = doc(firestore, 'products', itemToDelete.id);
-        await deleteDoc(productDocRef);
-      } else {
-        // Mock Delete
-        await new Promise(resolve => setTimeout(resolve, 500));
-        mockDb.deleteProduct(itemToDelete.id);
+      };
+
+      const handleOpenForm = (product?: Product) => {
+        setItemToEdit(product);
+        setFormOpen(true);
+      };
+
+      const closeForm = () => {
+        setFormOpen(false);
+        setItemToEdit(undefined);
       }
 
-      await revalidateProducts();
-      toast({
-        title: 'Product Deleted',
-        description: `${itemToDelete.name} has been successfully deleted.`,
-      });
-    } catch (error) {
-      console.error("Error deleting product:", error);
-      toast({ variant: 'destructive', title: 'Error', description: 'Failed to delete product.' });
-    } finally {
-      setIsDeleting(false);
-      setItemToDelete(null);
-    }
-  }
-
-  const handleOpenForm = (product?: Product) => {
-    setItemToEdit(product);
-    setFormOpen(true);
-  };
-
-  const closeForm = () => {
-    setFormOpen(false);
-    setItemToEdit(undefined);
-  }
-
-  return (
-    <>
-      <Card>
-        <CardHeader className="flex flex-row items-center justify-between">
-          <div>
-            <CardTitle>Products</CardTitle>
-            <CardDescription>Manage your product inventory.</CardDescription>
-          </div>
-          <div className="flex gap-2">
-            <Button size="sm" className="gap-1" onClick={handleSeedData} disabled={isSeeding || (products && products.length > 0) || loading}>
-              <Database className="h-3.5 w-3.5" />
-              <span className="sr-only sm:not-sr-only sm:whitespace-nowrap">
-                {isSeeding ? 'Seeding...' : 'Seed Sample Data'}
-              </span>
-            </Button>
-            <Dialog open={isFormOpen} onOpenChange={setFormOpen}>
-              <DialogTrigger asChild>
-                <Button size="sm" className="gap-1" onClick={() => handleOpenForm()}>
-                  <PlusCircle className="h-3.5 w-3.5" />
+      return (
+        <>
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between">
+              <div>
+                <CardTitle>Products</CardTitle>
+                <CardDescription>Manage your product inventory.</CardDescription>
+              </div>
+              <div className="flex gap-2">
+                <Button size="sm" className="gap-1" onClick={handleSeedData} disabled={isSeeding || (products && products.length > 0) || loading}>
+                  <Database className="h-3.5 w-3.5" />
                   <span className="sr-only sm:not-sr-only sm:whitespace-nowrap">
-                    Add Product
+                    {isSeeding ? 'Seeding...' : 'Seed Sample Data'}
                   </span>
                 </Button>
-              </DialogTrigger>
-              <DialogContent onEscapeKeyDown={closeForm} onPointerDownOutside={closeForm}>
-                <ProductForm onSuccess={closeForm} product={itemToEdit} />
-              </DialogContent>
-            </Dialog>
-          </div>
-        </CardHeader>
-        <CardContent>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead className="hidden w-[100px] sm:table-cell">
-                  <span className="sr-only">Image</span>
-                </TableHead>
-                <TableHead>Name</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead className="hidden md:table-cell">Net Price</TableHead>
-                <TableHead className="hidden md:table-cell">Sell Price</TableHead>
-                <TableHead className="hidden md:table-cell">Stock</TableHead>
-                <TableHead>
-                  <span className="sr-only">Actions</span>
-                </TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {loading ? (
-                Array.from({ length: 4 }).map((_, i) => (
-                  <TableRow key={i}>
-                    <TableCell className="hidden sm:table-cell"><Skeleton className="h-16 w-16 rounded-md" /></TableCell>
-                    <TableCell><Skeleton className="h-5 w-32" /></TableCell>
-                    <TableCell><Skeleton className="h-6 w-20 rounded-full" /></TableCell>
-                    <TableCell className="hidden md:table-cell"><Skeleton className="h-5 w-16" /></TableCell>
-                    <TableCell className="hidden md:table-cell"><Skeleton className="h-5 w-16" /></TableCell>
-                    <TableCell className="hidden md:table-cell"><Skeleton className="h-5 w-12" /></TableCell>
-                    <TableCell><Skeleton className="h-8 w-8" /></TableCell>
+                <Dialog open={isFormOpen} onOpenChange={setFormOpen}>
+                  <DialogTrigger asChild>
+                    <Button size="sm" className="gap-1" onClick={() => handleOpenForm()}>
+                      <PlusCircle className="h-3.5 w-3.5" />
+                      <span className="sr-only sm:not-sr-only sm:whitespace-nowrap">
+                        Add Product
+                      </span>
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent onEscapeKeyDown={closeForm} onPointerDownOutside={closeForm}>
+                    <ProductForm onSuccess={closeForm} product={itemToEdit} />
+                  </DialogContent>
+                </Dialog>
+              </div>
+            </CardHeader>
+            <CardContent>
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead className="hidden w-[100px] sm:table-cell">
+                      <span className="sr-only">Image</span>
+                    </TableHead>
+                    <TableHead>Name</TableHead>
+                    <TableHead>Status</TableHead>
+                    <TableHead className="hidden md:table-cell">Net Price</TableHead>
+                    <TableHead className="hidden md:table-cell">Sell Price</TableHead>
+                    <TableHead className="hidden md:table-cell">Stock</TableHead>
+                    <TableHead>
+                      <span className="sr-only">Actions</span>
+                    </TableHead>
                   </TableRow>
-                ))
-              ) : products && products.length > 0 ? (
-                products.map((product) => {
-                  const image = product.imageUrl ? { imageUrl: product.imageUrl, imageHint: product.name } : getProductImage(product);
-                  return (
-                    <TableRow key={product.id}>
-                      <TableCell className="hidden sm:table-cell">
-                        {image ? (
-                          <Image
-                            alt={product.name}
-                            className="aspect-square rounded-md object-cover"
-                            height="64"
-                            src={image.imageUrl}
-                            width="64"
-                            data-ai-hint={image.imageHint}
-                          />
-                        ) : (
-                          <div className="w-16 h-16 bg-muted rounded-md flex items-center justify-center text-muted-foreground">
-                            <ShoppingBag className="w-8 h-8" />
-                          </div>
-                        )}
-                      </TableCell>
-                      <TableCell className="font-medium">{product.name}</TableCell>
-                      <TableCell>
-                        <Badge variant={product.status === 'In Stock' ? 'secondary' : product.status === 'Low Stock' ? 'destructive' : 'outline'}>
-                          {product.status}
-                        </Badge>
-                      </TableCell>
-                      <TableCell className="hidden md:table-cell text-muted-foreground">${(product.netPrice || 0).toFixed(2)}</TableCell>
-                      <TableCell className="hidden md:table-cell font-bold">${product.price.toFixed(2)}</TableCell>
-                      <TableCell className="hidden md:table-cell">{product.stock}</TableCell>
-                      <TableCell>
-                        <AlertDialog onOpenChange={(open) => !open && setItemToDelete(null)}>
-                          <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                              <Button aria-haspopup="true" size="icon" variant="ghost" aria-label="Product actions">
-                                <MoreHorizontal className="h-4 w-4" />
-                                <span className="sr-only">Toggle menu</span>
-                              </Button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end">
-                              <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                              <DropdownMenuItem onSelect={(e) => { e.preventDefault(); handleOpenForm(product) }}>Edit</DropdownMenuItem>
-                              <DropdownMenuSeparator />
-                              <AlertDialogTrigger asChild>
-                                <DropdownMenuItem className="text-red-600" onSelect={(e) => { e.preventDefault(); setItemToDelete(product); }}>Delete</DropdownMenuItem>
-                              </AlertDialogTrigger>
-                            </DropdownMenuContent>
-                          </DropdownMenu>
-                          {itemToDelete && itemToDelete.id === product.id && (
-                            <AlertDialogContent>
-                              <AlertDialogHeader>
-                                <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
-                                <AlertDialogDescription>
-                                  This action cannot be undone. This will permanently delete the
-                                  <span className="font-bold"> {itemToDelete?.name} </span> product.
-                                </AlertDialogDescription>
-                              </AlertDialogHeader>
-                              <AlertDialogFooter>
-                                <AlertDialogCancel onClick={() => setItemToDelete(null)} disabled={isDeleting}>Cancel</AlertDialogCancel>
-                                <AlertDialogAction onClick={handleDelete} className="bg-red-600 hover:bg-red-700" disabled={isDeleting}>
-                                  {isDeleting ? 'Deleting...' : 'Delete'}
-                                </AlertDialogAction>
-                              </AlertDialogFooter>
-                            </AlertDialogContent>
-                          )}
-                        </AlertDialog>
+                </TableHeader>
+                <TableBody>
+                  {loading ? (
+                    Array.from({ length: 4 }).map((_, i) => (
+                      <TableRow key={i}>
+                        <TableCell className="hidden sm:table-cell"><Skeleton className="h-16 w-16 rounded-md" /></TableCell>
+                        <TableCell><Skeleton className="h-5 w-32" /></TableCell>
+                        <TableCell><Skeleton className="h-6 w-20 rounded-full" /></TableCell>
+                        <TableCell className="hidden md:table-cell"><Skeleton className="h-5 w-16" /></TableCell>
+                        <TableCell className="hidden md:table-cell"><Skeleton className="h-5 w-16" /></TableCell>
+                        <TableCell className="hidden md:table-cell"><Skeleton className="h-5 w-12" /></TableCell>
+                        <TableCell><Skeleton className="h-8 w-8" /></TableCell>
+                      </TableRow>
+                    ))
+                  ) : products && products.length > 0 ? (
+                    products.map((product) => {
+                      const image = product.imageUrl ? { imageUrl: product.imageUrl, imageHint: product.name } : getProductImage(product);
+                      return (
+                        <TableRow key={product.id}>
+                          <TableCell className="hidden sm:table-cell">
+                            {image ? (
+                              <Image
+                                alt={product.name}
+                                className="aspect-square rounded-md object-cover"
+                                height="64"
+                                src={image.imageUrl}
+                                width="64"
+                                data-ai-hint={image.imageHint}
+                              />
+                            ) : (
+                              <div className="w-16 h-16 bg-muted rounded-md flex items-center justify-center text-muted-foreground">
+                                <ShoppingBag className="w-8 h-8" />
+                              </div>
+                            )}
+                          </TableCell>
+                          <TableCell className="font-medium">{product.name}</TableCell>
+                          <TableCell>
+                            <Badge variant={product.status === 'In Stock' ? 'secondary' : product.status === 'Low Stock' ? 'destructive' : 'outline'}>
+                              {product.status}
+                            </Badge>
+                          </TableCell>
+                          <TableCell className="hidden md:table-cell text-muted-foreground">${(product.netPrice || 0).toFixed(2)}</TableCell>
+                          <TableCell className="hidden md:table-cell font-bold">${product.price.toFixed(2)}</TableCell>
+                          <TableCell className="hidden md:table-cell">{product.stock}</TableCell>
+                          <TableCell>
+                            <AlertDialog onOpenChange={(open) => !open && setItemToDelete(null)}>
+                              <DropdownMenu>
+                                <DropdownMenuTrigger asChild>
+                                  <Button aria-haspopup="true" size="icon" variant="ghost" aria-label="Product actions">
+                                    <MoreHorizontal className="h-4 w-4" />
+                                    <span className="sr-only">Toggle menu</span>
+                                  </Button>
+                                </DropdownMenuTrigger>
+                                <DropdownMenuContent align="end">
+                                  <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                                  <DropdownMenuItem onSelect={(e) => { e.preventDefault(); handleOpenForm(product) }}>Edit</DropdownMenuItem>
+                                  <DropdownMenuSeparator />
+                                  <AlertDialogTrigger asChild>
+                                    <DropdownMenuItem className="text-red-600" onSelect={(e) => { e.preventDefault(); setItemToDelete(product); }}>Delete</DropdownMenuItem>
+                                  </AlertDialogTrigger>
+                                </DropdownMenuContent>
+                              </DropdownMenu>
+                              {itemToDelete && itemToDelete.id === product.id && (
+                                <AlertDialogContent>
+                                  <AlertDialogHeader>
+                                    <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+                                    <AlertDialogDescription>
+                                      This action cannot be undone. This will permanently delete the
+                                      <span className="font-bold"> {itemToDelete?.name} </span> product.
+                                    </AlertDialogDescription>
+                                  </AlertDialogHeader>
+                                  <AlertDialogFooter>
+                                    <AlertDialogCancel onClick={() => setItemToDelete(null)} disabled={isDeleting}>Cancel</AlertDialogCancel>
+                                    <AlertDialogAction onClick={handleDelete} className="bg-red-600 hover:bg-red-700" disabled={isDeleting}>
+                                      {isDeleting ? 'Deleting...' : 'Delete'}
+                                    </AlertDialogAction>
+                                  </AlertDialogFooter>
+                                </AlertDialogContent>
+                              )}
+                            </AlertDialog>
+                          </TableCell>
+                        </TableRow>
+                      );
+                    })
+                  ) : (
+                    <TableRow>
+                      <TableCell colSpan={6} className="h-24 text-center">
+                        No products found. Try seeding sample data or add a new product.
                       </TableCell>
                     </TableRow>
-                  );
-                })
-              ) : (
-                <TableRow>
-                  <TableCell colSpan={6} className="h-24 text-center">
-                    No products found. Try seeding sample data or add a new product.
-                  </TableCell>
-                </TableRow>
-              )}
-            </TableBody>
-          </Table>
-        </CardContent>
-      </Card>
-    </>
-  );
-}
+                  )}
+                </TableBody>
+              </Table>
+            </CardContent>
+          </Card>
+        </>
+      );
+    }
 
 function fileToBase64(file: File): Promise<string> {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.readAsDataURL(file);
-    reader.onload = () => resolve(reader.result as string);
-    reader.onerror = error => reject(error);
-  });
-}
+      return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.readAsDataURL(file);
+        reader.onload = () => resolve(reader.result as string);
+        reader.onerror = error => reject(error);
+      });
+    }

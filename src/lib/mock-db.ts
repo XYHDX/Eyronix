@@ -109,104 +109,100 @@ class MockDatabase {
         this.notify();
     }
 
+
+
+    // Subscriptions
+    subscribe(listener: ChangeListener) {
+        this.listeners.push(listener);
+        // Initial notify to sync state if needed, though usually not required for subscription
+        return () => {
+            this.listeners = this.listeners.filter(l => l !== listener);
+        };
+    }
+
+    notify() {
+        this.saveToStorage(); // Auto-save on any change
+        this.listeners.forEach(l => l());
+    }
+
+    // Auth Mutations
+    signIn(email: string) {
+        // Find user or create a mock one. Currently just matching email or defaulting to user role
+        // Check if it's the admin
+        const isAdmin = email === 'admin@gmail.com';
+
+        this.currentUser = {
+            uid: isAdmin ? 'mock-admin-uid-123' : `user-${Date.now()}`,
+            email: email,
+            displayName: isAdmin ? 'Admin User' : 'User',
+            photoURL: null,
+            isAdmin: isAdmin,
+            role: isAdmin ? 'admin' : 'user'
+        };
+        this.notify();
+        return this.currentUser;
+    }
+
+    signOut() {
+        this.currentUser = null;
+        this.notify();
+    }
+
+    // Data Mutations
+    addOrder(item: any, type: 'product' | 'package', userId: string = 'guest') {
+        // Use current user ID if available and not explicitly guest
+        const activeUserId = this.currentUser ? this.currentUser.uid : userId;
+
+        const sale = {
+            id: `sale-${Date.now()}`,
+            item: item,
+            type: type,
+            amount: item.price,
+            userId: activeUserId,
+            date: new Date(),
+            status: 'Completed'
+        };
+        // Use spread to trigger react state updates if we were using it directly, but here just for array immutability
+        this.sales = [sale, ...this.sales];
+
+        if (type === 'product') {
+            // Decrement stock if it's a product
+            const productIndex = this.products.findIndex(p => p.id === item.id);
+            if (productIndex !== -1 && this.products[productIndex].stock > 0) {
+                // Clone array to avoid direct mutation issues
+                const newProducts = [...this.products];
+                newProducts[productIndex] = { ...newProducts[productIndex], stock: newProducts[productIndex].stock - 1 };
+
+                // If stock reaches 0, update status
+                if (newProducts[productIndex].stock === 0) {
+                    newProducts[productIndex].status = 'Out of Stock';
+                } else if (newProducts[productIndex].stock < 10) {
+                    newProducts[productIndex].status = 'Low Stock';
+                }
+                this.products = newProducts;
+            }
+        }
+        this.notify();
+        return sale;
+    }
+
+    // Mutations
+    addProduct(product: any) {
+        const newProduct = { ...product, id: product.id || `prod-${Date.now()}` };
+        this.products = [...this.products, newProduct];
+        this.notify();
+        return newProduct;
+    }
+
+    updateProduct(id: string, updates: any) {
+        this.products = this.products.map(p => p.id === id ? { ...p, ...updates } : p);
+        this.notify();
+    }
+
     deleteProduct(id: string) {
         this.products = this.products.filter(p => p.id !== id);
         this.notify();
     }
-}
-
-// Subscriptions
-subscribe(listener: ChangeListener) {
-    this.listeners.push(listener);
-    // Initial notify to sync state if needed, though usually not required for subscription
-    return () => {
-        this.listeners = this.listeners.filter(l => l !== listener);
-    };
-}
-
-notify() {
-    this.saveToStorage(); // Auto-save on any change
-    this.listeners.forEach(l => l());
-}
-
-// Auth Mutations
-signIn(email: string) {
-    // Find user or create a mock one. Currently just matching email or defaulting to user role
-    // Check if it's the admin
-    const isAdmin = email === 'admin@gmail.com';
-
-    this.currentUser = {
-        uid: isAdmin ? 'mock-admin-uid-123' : `user-${Date.now()}`,
-        email: email,
-        displayName: isAdmin ? 'Admin User' : 'User',
-        photoURL: null,
-        isAdmin: isAdmin,
-        role: isAdmin ? 'admin' : 'user'
-    };
-    this.notify();
-    return this.currentUser;
-}
-
-signOut() {
-    this.currentUser = null;
-    this.notify();
-}
-
-// Data Mutations
-addOrder(item: any, type: 'product' | 'package', userId: string = 'guest') {
-    // Use current user ID if available and not explicitly guest
-    const activeUserId = this.currentUser ? this.currentUser.uid : userId;
-
-    const sale = {
-        id: `sale-${Date.now()}`,
-        item: item,
-        type: type,
-        amount: item.price,
-        userId: activeUserId,
-        date: new Date(),
-        status: 'Completed'
-    };
-    // Use spread to trigger react state updates if we were using it directly, but here just for array immutability
-    this.sales = [sale, ...this.sales];
-
-    if (type === 'product') {
-        // Decrement stock if it's a product
-        const productIndex = this.products.findIndex(p => p.id === item.id);
-        if (productIndex !== -1 && this.products[productIndex].stock > 0) {
-            // Clone array to avoid direct mutation issues
-            const newProducts = [...this.products];
-            newProducts[productIndex] = { ...newProducts[productIndex], stock: newProducts[productIndex].stock - 1 };
-
-            // If stock reaches 0, update status
-            if (newProducts[productIndex].stock === 0) {
-                newProducts[productIndex].status = 'Out of Stock';
-            } else if (newProducts[productIndex].stock < 10) {
-                newProducts[productIndex].status = 'Low Stock';
-            }
-            this.products = newProducts;
-        }
-    }
-    this.notify();
-    return sale;
-}
-
-// Mutations
-addProduct(product: any) {
-    const newProduct = { ...product, id: product.id || `prod-${Date.now()}` };
-    this.products = [...this.products, newProduct];
-    this.notify();
-    return newProduct;
-}
-
-updateProduct(id: string, updates: any) {
-    this.products = this.products.map(p => p.id === id ? { ...p, ...updates } : p);
-    this.notify();
-}
-
-deleteProduct(id: string) {
-    this.products = this.products.filter(p => p.id !== id);
-    this.notify();
-}
 }
 
 export const mockDb = new MockDatabase();

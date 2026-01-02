@@ -1,4 +1,3 @@
-
 'use client';
 
 import * as React from 'react';
@@ -20,15 +19,7 @@ import {
 } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { PlusCircle, Database, MoreHorizontal } from 'lucide-react';
-import {
-  useCollection,
-  useFirestore,
-  useMemoFirebase,
-  errorEmitter,
-  FirestorePermissionError,
-} from '@/firebase';
 import { useToast } from '@/hooks/use-toast';
-import { revalidatePricing } from '../../actions';
 import { Skeleton } from '@/components/ui/skeleton';
 import {
   Dialog,
@@ -79,7 +70,7 @@ import {
   DropdownMenuTrigger,
   DropdownMenuSeparator,
 } from '@/components/ui/dropdown-menu';
-import { collection, addDoc, doc, updateDoc, deleteDoc, writeBatch } from 'firebase/firestore';
+import { supabase } from '@/lib/supabase/client';
 
 
 type PricingPackage = {
@@ -107,7 +98,6 @@ function PackageForm({
   pkg?: PricingPackage;
 }) {
   const { toast } = useToast();
-  const firestore = useFirestore();
   const [isSaving, setIsSaving] = React.useState(false);
 
   const form = useForm<z.infer<typeof packageSchema>>({
@@ -132,15 +122,6 @@ function PackageForm({
   }, [initialPkgData, form]);
 
   async function onSubmit(values: z.infer<typeof packageSchema>) {
-    if (!firestore) {
-      toast({
-        variant: 'destructive',
-        title: 'Error',
-        description: 'Database not available.',
-      });
-      return;
-    }
-
     setIsSaving(true);
 
     const featuresArray = values.features
@@ -149,36 +130,38 @@ function PackageForm({
       .filter((f) => f);
     const dataToSave = { ...values, features: featuresArray };
 
-    const operationPromise = initialPkgData
-      ? updateDoc(doc(firestore, 'pricing', initialPkgData.id), dataToSave)
-      : addDoc(collection(firestore, 'pricing'), dataToSave);
+    try {
+      let error;
+      if (initialPkgData?.id) {
+        const { error: updateError } = await supabase
+          .from('pricing')
+          .update(dataToSave)
+          .eq('id', initialPkgData.id);
+        error = updateError;
+      } else {
+        const { error: insertError } = await supabase
+          .from('pricing')
+          .insert([dataToSave]);
+        error = insertError;
+      }
 
-    operationPromise
-      .then(async () => {
-        await revalidatePricing();
-        toast({
-          title: `Package ${initialPkgData ? 'Updated' : 'Added'}`,
-          description: `${values.name} has been successfully ${initialPkgData ? 'updated' : 'added'
-            }.`,
-        });
-        onSuccess();
-      })
-      .catch((error) => {
-        console.error('Failed to save package:', error);
-        errorEmitter.emit(
-          'permission-error',
-          new FirestorePermissionError({
-            path: initialPkgData
-              ? `pricing/${initialPkgData.id}`
-              : 'pricing',
-            operation: initialPkgData ? 'update' : 'create',
-            requestResourceData: dataToSave,
-          })
-        );
-      })
-      .finally(() => {
-        setIsSaving(false);
+      if (error) throw error;
+
+      toast({
+        title: `Package ${initialPkgData ? 'Updated' : 'Added'}`,
+        description: `${values.name} has been successfully ${initialPkgData ? 'updated' : 'added'}.`,
       });
+      onSuccess();
+    } catch (error: any) {
+      console.error('Failed to save package:', error);
+      toast({
+        variant: 'destructive',
+        title: 'Error',
+        description: 'Failed to save package.',
+      });
+    } finally {
+      setIsSaving(false);
+    }
   }
 
   return (
@@ -291,15 +274,45 @@ function PackageForm({
 
 
 export default function PricingPage() {
-  const firestore = useFirestore();
-  const pricingCollection = 'pricing';
-  const { data: packages, isLoading: loading } = useCollection<PricingPackage>(pricingCollection);
   const { toast } = useToast();
+  const [packages, setPackages] = React.useState<PricingPackage[]>([]);
+  const [loading, setLoading] = React.useState(true);
+
   const [isSeeding, setIsSeeding] = React.useState(false);
   const [isDeleting, setIsDeleting] = React.useState(false);
   const [isFormOpen, setFormOpen] = React.useState(false);
   const [itemToEdit, setItemToEdit] = React.useState<PricingPackage | undefined>(undefined);
   const [itemToDelete, setItemToDelete] = React.useState<PricingPackage | null>(null);
+
+  const fetchPackages = React.useCallback(async () => {
+    setLoading(true);
+    const { data, error } = await supabase
+      .from('pricing')
+      .select('*')
+      .order('price', { ascending: true });
+
+    if (error) {
+      console.error('Error fetching pricing:', error);
+    } else {
+      setPackages(data || []);
+    }
+    setLoading(false);
+  }, []);
+
+  React.useEffect(() => {
+    fetchPackages();
+    // Realtime subscription
+    const channel = supabase
+      .channel('public:pricing')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'pricing' }, () => {
+        fetchPackages();
+      })
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    }
+  }, [fetchPackages]);
 
   const samplePackages = [
     { name: 'Basic', price: 499, features: ['2 Full HD Cameras', '1 TB Storage', 'Mobile Viewing', 'Basic Installation'], status: 'Active' as const, popular: false },
@@ -309,66 +322,44 @@ export default function PricingPage() {
   ];
 
   const handleSeedData = async () => {
-    if (!firestore) {
-      toast({ variant: 'destructive', title: 'Error', description: 'Database not available.' });
-      return;
-    }
     setIsSeeding(true);
-    const pricingCollectionRef = collection(firestore, 'pricing');
-    const batch = writeBatch(firestore);
-    samplePackages.forEach((pkg) => {
-      const docRef = doc(pricingCollectionRef);
-      batch.set(docRef, pkg);
-    });
-
-    batch.commit()
-      .then(async () => {
-        await revalidatePricing();
-        toast({ title: 'Success', description: 'Sample pricing packages have been added.' });
-      })
-      .catch((error) => {
-        console.error("Error seeding pricing:", error);
-        errorEmitter.emit(
-          'permission-error',
-          new FirestorePermissionError({
-            path: 'pricing',
-            operation: 'write',
-            requestResourceData: samplePackages,
-          })
-        );
-      })
-      .finally(() => {
-        setIsSeeding(false);
-      });
+    try {
+      const { error } = await supabase.from('pricing').insert(samplePackages);
+      if (error) throw error;
+      toast({ title: 'Success', description: 'Sample pricing packages have been added.' });
+      fetchPackages();
+    } catch (error: any) {
+      console.error("Error seeding pricing:", error);
+      toast({ variant: 'destructive', title: 'Error', description: 'Failed to seed data.' });
+    } finally {
+      setIsSeeding(false);
+    }
   };
 
   const handleDelete = async () => {
-    if (!itemToDelete || !firestore) return;
+    if (!itemToDelete) return;
     setIsDeleting(true);
-    const pkgDocRef = doc(firestore, 'pricing', itemToDelete.id);
 
-    deleteDoc(pkgDocRef)
-      .then(async () => {
-        await revalidatePricing();
-        toast({
-          title: 'Package Deleted',
-          description: `${itemToDelete.name} has been successfully deleted.`,
-        });
-      })
-      .catch((error) => {
-        console.error("Error deleting package:", error);
-        errorEmitter.emit(
-          'permission-error',
-          new FirestorePermissionError({
-            path: `pricing/${itemToDelete.id}`,
-            operation: 'delete',
-          })
-        );
-      })
-      .finally(() => {
-        setIsDeleting(false);
-        setItemToDelete(null);
+    try {
+      const { error } = await supabase
+        .from('pricing')
+        .delete()
+        .eq('id', itemToDelete.id);
+
+      if (error) throw error;
+
+      toast({
+        title: 'Package Deleted',
+        description: `${itemToDelete.name} has been successfully deleted.`,
       });
+      setItemToDelete(null);
+      fetchPackages();
+    } catch (error: any) {
+      console.error("Error deleting package:", error);
+      toast({ variant: 'destructive', title: 'Error', description: 'Failed to delete package.' });
+    } finally {
+      setIsDeleting(false);
+    }
   }
 
   const handleOpenForm = (pkg?: PricingPackage) => {
@@ -379,6 +370,7 @@ export default function PricingPage() {
   const closeForm = () => {
     setFormOpen(false);
     setItemToEdit(undefined);
+    fetchPackages();
   }
 
   return (

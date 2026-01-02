@@ -1,4 +1,3 @@
-
 'use client';
 
 import * as React from 'react';
@@ -20,16 +19,6 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { PlusCircle, Database, MoreHorizontal, Image as ImageIcon } from 'lucide-react';
-import {
-  useCollection,
-  useFirestore,
-  useStorage,
-  useMemoFirebase,
-  errorEmitter,
-  FirestorePermissionError,
-  useUser,
-} from '@/firebase';
-import { revalidateServices } from '../../actions';
 import { useToast } from '@/hooks/use-toast';
 import { Skeleton } from '@/components/ui/skeleton';
 import {
@@ -72,17 +61,15 @@ import {
   DropdownMenuTrigger,
   DropdownMenuSeparator,
 } from '@/components/ui/dropdown-menu';
-import { collection, addDoc, doc, updateDoc, deleteDoc, writeBatch } from 'firebase/firestore';
-import { ref, uploadBytes, getDownloadURL, deleteObject } from "firebase/storage";
+import { supabase } from '@/lib/supabase/client';
 import { PlaceHolderImages } from '@/lib/placeholder-images';
-
 
 type Service = {
   id: string;
   name: string;
   description: string;
   icon: string;
-  imageUrl?: string;
+  image_url?: string;
 };
 
 const serviceSchema = z.object({
@@ -100,8 +87,6 @@ function ServiceForm({
   service?: Service;
 }) {
   const { toast } = useToast();
-  const firestore = useFirestore();
-  const storage = useStorage();
   const [isSaving, setIsSaving] = React.useState(false);
 
   const form = useForm<z.infer<typeof serviceSchema>>({
@@ -124,62 +109,68 @@ function ServiceForm({
   }, [initialServiceData, form]);
 
   async function onSubmit(values: z.infer<typeof serviceSchema>) {
-    if (!firestore || !storage) {
-      toast({ variant: 'destructive', title: 'Error', description: 'Database, or Storage not available.' });
-      return;
-    }
-
     setIsSaving(true);
-    let imageUrl: string | undefined = initialServiceData?.imageUrl;
+    let image_url: string | undefined = initialServiceData?.image_url;
 
-    if (values.image) {
-      if (initialServiceData?.imageUrl && initialServiceData.imageUrl.startsWith('https://firebasestorage.googleapis.com')) {
-        try {
-          const oldImageRef = ref(storage, initialServiceData.imageUrl);
-          await deleteObject(oldImageRef);
-        } catch (storageError: any) {
-          if (storageError.code !== 'storage/object-not-found') {
-            console.warn("Could not delete old image from storage:", storageError);
-          }
-        }
+    try {
+      if (values.image) {
+        // Upload new image
+        const fileExt = values.image.name.split('.').pop();
+        const fileName = `${Date.now()}.${fileExt}`;
+        const filePath = `${fileName}`;
+
+        const { error: uploadError } = await supabase.storage
+          .from('services')
+          .upload(filePath, values.image);
+
+        if (uploadError) throw uploadError;
+
+        const { data: { publicUrl } } = supabase.storage
+          .from('services')
+          .getPublicUrl(filePath);
+
+        image_url = publicUrl;
       }
 
-      const storageRef = ref(storage, `services/${Date.now()}-${values.image.name}`);
-      const snapshot = await uploadBytes(storageRef, values.image);
-      imageUrl = await getDownloadURL(snapshot.ref);
-    }
+      const dataToSave = {
+        name: values.name,
+        description: values.description,
+        icon: values.icon,
+        image_url
+      };
 
-    const dataToSave = {
-      name: values.name,
-      description: values.description,
-      icon: values.icon,
-      imageUrl
-    };
+      let error;
+      if (initialServiceData?.id) {
+        const { error: updateError } = await supabase
+          .from('services')
+          .update(dataToSave)
+          .eq('id', initialServiceData.id);
+        error = updateError;
+      } else {
+        const { error: insertError } = await supabase
+          .from('services')
+          .insert([dataToSave]);
+        error = insertError;
+      }
 
-    const operation = initialServiceData
-      ? updateDoc(doc(firestore, 'services', initialServiceData.id), dataToSave)
-      : addDoc(collection(firestore, 'services'), dataToSave);
+      if (error) throw error;
 
-    operation
-      .then(async () => {
-        await revalidateServices();
-        toast({
-          title: `Service ${initialServiceData ? 'Updated' : 'Added'}`,
-          description: `${values.name} has been successfully ${initialServiceData ? 'updated' : 'added'}.`,
-        });
-        onSuccess();
-      })
-      .catch((error: any) => {
-        console.error('Failed to save service:', error);
-        errorEmitter.emit('permission-error', new FirestorePermissionError({
-          path: initialServiceData ? `services/${initialServiceData.id}` : 'services',
-          operation: initialServiceData ? 'update' : 'create',
-          requestResourceData: dataToSave,
-        }));
-      })
-      .finally(() => {
-        setIsSaving(false);
+      toast({
+        title: `Service ${initialServiceData ? 'Updated' : 'Added'}`,
+        description: `${values.name} has been successfully ${initialServiceData ? 'updated' : 'added'}.`,
       });
+      onSuccess();
+
+    } catch (error: any) {
+      console.error('Failed to save service:', error);
+      toast({
+        variant: 'destructive',
+        title: 'Error',
+        description: error.message || 'Failed to save service.',
+      });
+    } finally {
+      setIsSaving(false);
+    }
   }
 
   return (
@@ -266,88 +257,93 @@ function ServiceForm({
 
 
 export default function ServicesPage() {
-  const firestore = useFirestore();
-  const storage = useStorage();
-  const servicesCollection = 'services';
-  const { data: services, isLoading: loading } = useCollection<Service>(servicesCollection);
   const { toast } = useToast();
+  const [services, setServices] = React.useState<Service[]>([]);
+  const [loading, setLoading] = React.useState(true);
+
   const [isSeeding, setIsSeeding] = React.useState(false);
   const [isDeleting, setIsDeleting] = React.useState(false);
   const [isFormOpen, setFormOpen] = React.useState(false);
   const [itemToEdit, setItemToEdit] = React.useState<Service | undefined>(undefined);
   const [itemToDelete, setItemToDelete] = React.useState<Service | null>(null);
 
+  const fetchServices = React.useCallback(async () => {
+    try {
+      setLoading(true);
+      const { data, error } = await supabase
+        .from('services')
+        .select('*')
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+      setServices(data || []);
+    } catch (error) {
+      console.error('Error fetching services:', error);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  React.useEffect(() => {
+    fetchServices();
+    // Realtime subscription
+    const channel = supabase
+      .channel('public:services')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'services' }, () => {
+        fetchServices();
+      })
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    }
+  }, [fetchServices]);
+
   const sampleServices = [
-    { name: 'CCTV Systems', description: 'High-definition surveillance solutions for homes and businesses. Secure your premises with our reliable CCTV technology.', icon: 'Camera', imageUrl: PlaceHolderImages.find(i => i.id === 'cctv-service')?.imageUrl },
-    { name: 'Dashcam Installation', description: 'Capture every moment on the road. Protect yourself from false claims with crystal-clear dashcam footage.', icon: 'Car', imageUrl: PlaceHolderImages.find(i => i.id === 'dashcam-service')?.imageUrl },
-    { name: 'System Maintenance', description: 'Ensure your security systems are always running at peak performance with our expert maintenance services.', icon: 'Wrench', imageUrl: PlaceHolderImages.find(i => i.id === 'maintenance-service')?.imageUrl },
+    { name: 'CCTV Systems', description: 'High-definition surveillance solutions for homes and businesses. Secure your premises with our reliable CCTV technology.', icon: 'Camera', image_url: PlaceHolderImages.find(i => i.id === 'cctv-service')?.imageUrl },
+    { name: 'Dashcam Installation', description: 'Capture every moment on the road. Protect yourself from false claims with crystal-clear dashcam footage.', icon: 'Car', image_url: PlaceHolderImages.find(i => i.id === 'dashcam-service')?.imageUrl },
+    { name: 'System Maintenance', description: 'Ensure your security systems are always running at peak performance with our expert maintenance services.', icon: 'Wrench', image_url: PlaceHolderImages.find(i => i.id === 'maintenance-service')?.imageUrl },
   ];
 
   const handleSeedData = async () => {
-    if (!firestore) {
-      toast({ variant: 'destructive', title: 'Error', description: 'Database not available.' });
-      return;
-    }
     setIsSeeding(true);
-
-    const servicesCollectionRef = collection(firestore, 'services');
-    const batch = writeBatch(firestore);
-    sampleServices.forEach((service) => {
-      const docRef = doc(servicesCollectionRef);
-      batch.set(docRef, service);
-    });
-
-    batch.commit()
-      .then(async () => {
-        await revalidateServices();
-        toast({ title: 'Success', description: 'Sample services have been added.' });
-      })
-      .catch((error) => {
-        console.error("Error seeding services:", error);
-        errorEmitter.emit('permission-error', new FirestorePermissionError({
-          path: 'services',
-          operation: 'write',
-          requestResourceData: sampleServices,
-        }));
-      })
-      .finally(() => {
-        setIsSeeding(false);
-      });
+    try {
+      const { error } = await supabase.from('services').insert(sampleServices);
+      if (error) throw error;
+      toast({ title: 'Success', description: 'Sample services have been added.' });
+      fetchServices();
+    } catch (error: any) {
+      console.error("Error seeding services:", error);
+      toast({ variant: 'destructive', title: 'Error', description: 'Failed to seed data.' });
+    } finally {
+      setIsSeeding(false);
+    }
   };
 
   const handleDelete = async () => {
-    if (!itemToDelete || !firestore || !storage) return;
+    if (!itemToDelete) return;
     setIsDeleting(true);
 
-    if (itemToDelete.imageUrl && itemToDelete.imageUrl.startsWith('https://firebasestorage.googleapis.com')) {
-      const imageRef = ref(storage, itemToDelete.imageUrl);
-      await deleteObject(imageRef).catch(err => {
-        if (err.code !== 'storage/object-not-found') {
-          console.warn("Could not delete old image from storage:", err);
-        }
-      });
-    }
+    try {
+      const { error } = await supabase
+        .from('services')
+        .delete()
+        .eq('id', itemToDelete.id);
 
-    const serviceDocRef = doc(firestore, 'services', itemToDelete.id);
-    deleteDoc(serviceDocRef)
-      .then(async () => {
-        await revalidateServices();
-        toast({
-          title: 'Service Deleted',
-          description: `${itemToDelete.name} has been successfully deleted.`,
-        });
-      })
-      .catch((error) => {
-        console.error("Error deleting service:", error);
-        errorEmitter.emit('permission-error', new FirestorePermissionError({
-          path: `services/${itemToDelete.id}`,
-          operation: 'delete',
-        }));
-      })
-      .finally(() => {
-        setIsDeleting(false);
-        setItemToDelete(null);
+      if (error) throw error;
+
+      toast({
+        title: 'Service Deleted',
+        description: `${itemToDelete.name} has been successfully deleted.`,
       });
+      setItemToDelete(null);
+      fetchServices();
+    } catch (error: any) {
+      console.error("Error deleting service:", error);
+      toast({ variant: 'destructive', title: 'Error', description: 'Failed to delete service.' });
+    } finally {
+      setIsDeleting(false);
+    }
   };
 
   const handleOpenForm = (service?: Service) => {
@@ -358,6 +354,7 @@ export default function ServicesPage() {
   const closeForm = () => {
     setFormOpen(false);
     setItemToEdit(undefined);
+    fetchServices(); // Refresh just in case
   }
 
   return (
@@ -416,12 +413,12 @@ export default function ServicesPage() {
                 services.map((service) => (
                   <TableRow key={service.id}>
                     <TableCell className="hidden sm:table-cell">
-                      {service.imageUrl ? (
+                      {service.image_url ? (
                         <Image
                           alt={service.name}
                           className="aspect-square rounded-md object-cover"
                           height="64"
-                          src={service.imageUrl}
+                          src={service.image_url}
                           width="64"
                         />
                       ) : (

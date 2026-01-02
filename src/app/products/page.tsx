@@ -1,7 +1,6 @@
-
 'use client';
 
-import * as React from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import Image from 'next/image';
 import { ShoppingBag } from 'lucide-react';
 

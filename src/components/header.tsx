@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation';
 import { LogIn, LogOut, LayoutDashboard, Moon, Sun, User, Wrench, Package, DollarSign, Mail, Users, Settings, ShoppingBag, Activity } from 'lucide-react';
 import { useTheme } from 'next-themes';
 import Image from 'next/image';
+import React, { useState, useEffect, useCallback } from 'react';
 
 import { Button } from '@/components/ui/button';
 import { useAuth, useUser } from '@/firebase';
@@ -25,9 +26,9 @@ export default function Header() {
   const { user, loading, isAdmin } = useUser();
   const auth = useAuth();
   const { setTheme, theme } = useTheme();
-  const [pendingCount, setPendingCount] = React.useState(0);
+  const [pendingCount, setPendingCount] = useState(0);
 
-  const fetchPendingOrders = React.useCallback(async () => {
+  const fetchPendingOrders = useCallback(async () => {
     if (!user) {
       setPendingCount(0);
       return;
@@ -43,7 +44,7 @@ export default function Header() {
     }
   }, [user]);
 
-  React.useEffect(() => {
+  useEffect(() => {
     fetchPendingOrders();
 
     const channel = supabase

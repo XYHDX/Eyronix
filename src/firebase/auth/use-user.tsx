@@ -3,6 +3,7 @@
 
 import { useState, useEffect } from 'react';
 import type { User } from 'firebase/auth';
+import { mockDb } from '@/lib/mock-db';
 
 // Mock User Interface resembling Firebase User
 export interface UserWithAdmin extends Partial<User> {
@@ -35,11 +36,16 @@ export function useUser(): UseUserResult {
   const [user, setUser] = useState<UserWithAdmin | null>(null);
 
   useEffect(() => {
-    const timer = setTimeout(() => {
-      setUser(mockUser);
-      setLoading(false);
-    }, 500);
-    return () => clearTimeout(timer);
+    // Initial fetch
+    setUser(mockDb.currentUser);
+    setLoading(false);
+
+    // Subscribe to changes
+    const unsubscribe = mockDb.subscribe(() => {
+      setUser(mockDb.currentUser);
+    });
+
+    return () => unsubscribe();
   }, []);
 
   return {

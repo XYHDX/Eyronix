@@ -16,6 +16,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { getInitials } from '@/lib/utils';
 import { Skeleton } from './ui/skeleton';
 import { hasPermission } from '@/lib/permissions';
+import { mockDb } from '@/lib/mock-db';
 
 export default function Header() {
   const router = useRouter();
@@ -25,8 +26,13 @@ export default function Header() {
   const { setTheme, theme } = useTheme();
 
   const handleLogout = async () => {
-    if (!auth) return;
     try {
+      if (!auth) {
+        mockDb.signOut();
+        toast({ title: "You've been logged out.", description: "Mock session cleared." });
+        router.push('/');
+        return;
+      }
       await signOut(auth);
       toast({ title: "You've been logged out." });
       router.push('/');

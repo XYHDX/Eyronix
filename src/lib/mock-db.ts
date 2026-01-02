@@ -31,44 +31,129 @@ class MockDatabase {
         { id: 'price-3', name: 'Pro', price: 1899, features: ['8 4K UHD Cameras', '4 TB Storage', '24/7 Support'], status: 'Active', popular: false },
     ];
 
+    public currentUser: any | null = null;
+
     public sales: any[] = [];
+
+    // Local Storage Keys
+    private STORAGE_KEYS = {
+        PRODUCTS: 'eyronix_products',
+        SALES: 'eyronix_sales',
+        SESSION: 'eyronix_session'
+    };
+
+    constructor() {
+        this.loadFromStorage();
+    }
+
+    private loadFromStorage() {
+        if (typeof window === 'undefined') return;
+
+        try {
+            const storedProducts = localStorage.getItem(this.STORAGE_KEYS.PRODUCTS);
+            if (storedProducts) {
+                this.products = JSON.parse(storedProducts);
+            }
+
+            const storedSales = localStorage.getItem(this.STORAGE_KEYS.SALES);
+            if (storedSales) {
+                this.sales = JSON.parse(storedSales);
+            }
+
+            const storedSession = localStorage.getItem(this.STORAGE_KEYS.SESSION);
+            if (storedSession) {
+                this.currentUser = JSON.parse(storedSession);
+            }
+        } catch (error) {
+            console.error('Failed to load from mock storage', error);
+        }
+    }
+
+    private saveToStorage() {
+        if (typeof window === 'undefined') return;
+
+        try {
+            localStorage.setItem(this.STORAGE_KEYS.PRODUCTS, JSON.stringify(this.products));
+            localStorage.setItem(this.STORAGE_KEYS.SALES, JSON.stringify(this.sales));
+            if (this.currentUser) {
+                localStorage.setItem(this.STORAGE_KEYS.SESSION, JSON.stringify(this.currentUser));
+            } else {
+                localStorage.removeItem(this.STORAGE_KEYS.SESSION);
+            }
+        } catch (error) {
+            console.error('Failed to save to mock storage', error);
+        }
+    }
 
     // Subscriptions
     subscribe(listener: ChangeListener) {
         this.listeners.push(listener);
+        // Initial notify to sync state if needed, though usually not required for subscription
         return () => {
             this.listeners = this.listeners.filter(l => l !== listener);
         };
     }
 
     notify() {
+        this.saveToStorage(); // Auto-save on any change
         this.listeners.forEach(l => l());
     }
 
-    // Mutations
+    // Auth Mutations
+    signIn(email: string) {
+        // Find user or create a mock one. Currently just matching email or defaulting to user role
+        // Check if it's the admin
+        const isAdmin = email === 'admin@gmail.com';
+
+        this.currentUser = {
+            uid: isAdmin ? 'mock-admin-uid-123' : `user-${Date.now()}`,
+            email: email,
+            displayName: isAdmin ? 'Admin User' : 'User',
+            photoURL: null,
+            isAdmin: isAdmin,
+            role: isAdmin ? 'admin' : 'user'
+        };
+        this.notify();
+        return this.currentUser;
+    }
+
+    signOut() {
+        this.currentUser = null;
+        this.notify();
+    }
+
+    // Data Mutations
     addOrder(item: any, type: 'product' | 'package', userId: string = 'guest') {
+        // Use current user ID if available and not explicitly guest
+        const activeUserId = this.currentUser ? this.currentUser.uid : userId;
+
         const sale = {
             id: `sale-${Date.now()}`,
             item: item,
             type: type,
             amount: item.price,
-            userId: userId,
+            userId: activeUserId,
             date: new Date(),
             status: 'Completed'
         };
+        // Use spread to trigger react state updates if we were using it directly, but here just for array immutability
         this.sales = [sale, ...this.sales];
 
         if (type === 'product') {
             // Decrement stock if it's a product
             const productIndex = this.products.findIndex(p => p.id === item.id);
             if (productIndex !== -1 && this.products[productIndex].stock > 0) {
-                this.products[productIndex].stock -= 1;
+                // Clone array to avoid direct mutation issues
+                const newProducts = [...this.products];
+                newProducts[productIndex] = { ...newProducts[productIndex], stock: newProducts[productIndex].stock - 1 };
+
                 // If stock reaches 0, update status
-                if (this.products[productIndex].stock === 0) {
-                    this.products[productIndex].status = 'Out of Stock';
-                } else if (this.products[productIndex].stock < 10) {
-                    this.products[productIndex].status = 'Low Stock';
+                if (newProducts[productIndex].stock === 0) {
+                    newProducts[productIndex].status = 'Out of Stock';
+                } else if (newProducts[productIndex].stock < 10) {
+                    newProducts[productIndex].status = 'Low Stock';
                 }
+                this.products = newProducts;
             }
         }
         this.notify();

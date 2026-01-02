@@ -4,7 +4,7 @@
 import * as React from 'react';
 import { usePathname, useRouter } from 'next/navigation';
 import { Loader } from 'lucide-react';
-import { useUser } from '@/firebase';
+import { supabase } from '@/lib/supabase/client';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import Header from '@/components/header';
@@ -15,39 +15,64 @@ export default function DashboardLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const { user, loading, isAdmin } = useUser();
+  const [user, setUser] = React.useState<any>(null);
+  const [role, setRole] = React.useState<'admin' | 'user' | null>(null);
+  const [loading, setLoading] = React.useState(true);
   const router = useRouter();
   const pathname = usePathname();
 
   React.useEffect(() => {
-    // Wait until loading is complete before doing anything.
-    if (loading) {
-      return;
-    }
+    const checkAuth = async () => {
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
 
-    // If there's no user, redirect to the login-required page.
-    if (!user) {
-      router.replace('/login-required');
-      return;
-    }
+        if (!session) {
+          router.replace('/login-required');
+          return;
+        }
 
-    // If the user is loaded, check permissions for the current path
-    const role = isAdmin ? 'admin' : 'user';
-    const hasAccess = hasPermission(role, pathname);
+        setUser(session.user);
 
-    if (!hasAccess) {
-      // If they don't have access to the *specific* page they are on,
-      // redirect them to a safe default.
-      if (isAdmin) {
-        // Admins should generally have access, but if they hit a weird route, send to users
-        router.replace('/dashboard/users');
-      } else {
-        // Users should go to profile
-        router.replace('/dashboard/profile');
+        // Fetch usage role from public.profiles
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('role')
+          .eq('id', session.user.id)
+          .single();
+
+        const userRole = profile?.role || 'user';
+        setRole(userRole);
+
+        // Check permissions
+        const hasAccess = hasPermission(userRole, pathname);
+
+        if (!hasAccess) {
+          if (userRole === 'admin') {
+            router.replace('/dashboard/users');
+          } else {
+            router.replace('/dashboard/profile');
+          }
+        }
+
+      } catch (error) {
+        console.error("Auth check failed", error);
+        router.replace('/login-required');
+      } finally {
+        setLoading(false);
       }
-    }
+    };
 
-  }, [user, loading, isAdmin, pathname, router]);
+    checkAuth();
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      if (!session) {
+        router.replace('/login-required');
+      }
+    });
+
+    return () => subscription.unsubscribe();
+
+  }, [pathname, router]);
 
   // While auth state is loading, show a full-screen spinner.
   if (loading) {
@@ -58,8 +83,7 @@ export default function DashboardLayout({
     );
   }
 
-  // After loading, if there's still no user, we render nothing, as the
-  // redirect is already in progress.
+  // If loading is done and we have no user (redirect happening), return null
   if (!user) {
     return null;
   }

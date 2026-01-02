@@ -2,15 +2,8 @@
 'use client';
 
 import * as React from 'react';
-import { collection, Timestamp, doc, updateDoc, deleteDoc } from 'firebase/firestore';
-import { format } from 'date-fns';
-import {
-  useCollection,
-  useFirestore,
-  useMemoFirebase,
-  errorEmitter,
-  FirestorePermissionError,
-} from '@/firebase';
+import { supabase } from '@/lib/supabase/client';
+
 import {
   Card,
   CardContent,
@@ -60,7 +53,7 @@ type SurveyRequest = {
   phone: string;
   message: string;
   status: 'New' | 'Contacted' | 'Completed' | 'Archived';
-  createdAt: Timestamp;
+  created_at: string; // Supabase returns ISO string
 };
 
 const statusColors: { [key: string]: 'default' | 'secondary' | 'destructive' | 'outline' } = {
@@ -103,74 +96,101 @@ function RequestActions({ request, isUpdating, handleStatusChange, setItemToDele
 
 
 export default function RequestsPage() {
-  const firestore = useFirestore();
-  const requestsCollection = 'survey-requests';
-  const { data: requests, isLoading } = useCollection<SurveyRequest>(requestsCollection);
   const { toast } = useToast();
+  const [requests, setRequests] = React.useState<SurveyRequest[]>([]);
+  const [isLoading, setIsLoading] = React.useState(true);
   const [isUpdating, setIsUpdating] = React.useState<string | null>(null);
   const [isDeleting, setIsDeleting] = React.useState(false);
   const [itemToDelete, setItemToDelete] = React.useState<SurveyRequest | null>(null);
   const isMobile = useIsMobile();
 
-  const sortedRequests = React.useMemo(() => {
-    if (!requests) return [];
-    return [...requests].sort((a, b) => b.createdAt.toMillis() - a.createdAt.toMillis());
-  }, [requests]);
+  const fetchRequests = React.useCallback(async () => {
+    try {
+      setIsLoading(true);
+      const { data, error } = await supabase
+        .from('survey_requests')
+        .select('*')
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+      setRequests(data as any[] || []); // Cast assuming shape match, or map timestamps
+    } catch (error) {
+      console.error('Error fetching requests:', error);
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
+
+  React.useEffect(() => {
+    fetchRequests();
+
+    const channel = supabase
+      .channel('public:survey_requests')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'survey_requests' }, () => {
+        fetchRequests();
+      })
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    }
+  }, [fetchRequests]);
+
+  const sortedRequests = requests; // Already sorted by query
 
   const handleStatusChange = async (id: string, newStatus: SurveyRequest['status']) => {
-    if (!firestore) return;
     setIsUpdating(id);
-    const requestDocRef = doc(firestore, 'survey-requests', id);
+    try {
+      const { error } = await supabase
+        .from('survey_requests')
+        .update({ status: newStatus })
+        .eq('id', id);
 
-    updateDoc(requestDocRef, { status: newStatus })
-      .then(() => {
-        toast({
-          title: 'Status Updated',
-          description: `Request has been marked as ${newStatus}.`
-        });
-      })
-      .catch((error) => {
-        console.error('Error updating status:', error);
-        errorEmitter.emit(
-          'permission-error',
-          new FirestorePermissionError({
-            path: `survey-requests/${id}`,
-            operation: 'update',
-            requestResourceData: { status: newStatus },
-          })
-        );
-      })
-      .finally(() => {
-        setIsUpdating(null);
+      if (error) throw error;
+
+      toast({
+        title: 'Status Updated',
+        description: `Request has been marked as ${newStatus}.`
       });
+    } catch (error: any) {
+      console.error('Error updating status:', error);
+      toast({
+        variant: 'destructive',
+        title: 'Update Failed',
+        description: error.message || 'Could not update status.'
+      });
+    } finally {
+      setIsUpdating(null);
+    }
   }
 
   const handleDelete = async () => {
-    if (!itemToDelete || !firestore) return;
+    if (!itemToDelete) return;
     setIsDeleting(true);
-    const requestDocRef = doc(firestore, 'survey-requests', itemToDelete.id);
 
-    deleteDoc(requestDocRef)
-      .then(() => {
-        toast({
-          title: 'Request Deleted',
-          description: `The request from ${itemToDelete.name} has been deleted.`,
-        });
-      })
-      .catch((error) => {
-        console.error('Error deleting request:', error);
-        errorEmitter.emit(
-          'permission-error',
-          new FirestorePermissionError({
-            path: `survey-requests/${itemToDelete.id}`,
-            operation: 'delete',
-          })
-        );
-      })
-      .finally(() => {
-        setIsDeleting(false);
-        setItemToDelete(null);
+    try {
+      const { error } = await supabase
+        .from('survey_requests')
+        .delete()
+        .eq('id', itemToDelete.id);
+
+      if (error) throw error;
+
+      toast({
+        title: 'Request Deleted',
+        description: `The request from ${itemToDelete.name} has been deleted.`,
       });
+      setItemToDelete(null);
+    } catch (error: any) {
+      console.error('Error deleting request:', error);
+      toast({
+        variant: 'destructive',
+        title: 'Delete Failed',
+        description: error.message || 'Could not delete request.'
+      });
+    } finally {
+      setIsDeleting(false);
+    }
   };
 
   const renderMobileView = () => (
@@ -213,7 +233,9 @@ export default function RequestsPage() {
                 <Badge variant={statusColors[request.status] || 'outline'}>
                   {request.status}
                 </Badge>
-                <span className="text-muted-foreground">{format(request.createdAt.toDate(), 'PPP')}</span>
+                <span className="text-muted-foreground">
+                  {request.created_at ? format(new Date(request.created_at), 'PPP') : 'N/A'}
+                </span>
               </CardFooter>
             </Card>
             {itemToDelete && itemToDelete.id === request.id && renderAlertDialog()}
@@ -273,7 +295,7 @@ export default function RequestsPage() {
                   {request.message}
                 </TableCell>
                 <TableCell>
-                  {format(request.createdAt.toDate(), 'PPP')}
+                  {request.created_at ? format(new Date(request.created_at), 'PPP') : 'N/A'}
                 </TableCell>
                 <TableCell>
                   <Badge variant={statusColors[request.status] || 'outline'}>

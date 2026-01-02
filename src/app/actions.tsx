@@ -1,10 +1,9 @@
-
 "use server";
 
 import { z } from "zod";
 import { aiMotionDetectionAlert } from "@/ai/flows/ai-motion-detection-alert";
 import { revalidatePath } from "next/cache";
-import { getFirebaseAdminApp, firestore } from '@/firebase/admin';
+import { createClient } from "@supabase/supabase-js";
 
 export async function analyzeImage(imageDataUri: string) {
     try {
@@ -40,36 +39,34 @@ export async function revalidatePricing() {
     revalidatePath('/');
 }
 
+// Helper for admin client
+const getSupabaseAdmin = () => {
+    const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+    if (!serviceRoleKey) throw new Error("Missing SUPABASE_SERVICE_ROLE_KEY");
+
+    return createClient(
+        process.env.NEXT_PUBLIC_SUPABASE_URL!,
+        serviceRoleKey
+    );
+}
+
 export async function setAdminRole(uid: string, isAdminRole: boolean) {
     try {
-        const adminApp = getFirebaseAdminApp();
-        const auth = adminApp.auth();
-        const userRef = firestore.collection('users').doc(uid);
+        const supabase = getSupabaseAdmin();
+        const role = isAdminRole ? 'admin' : 'user';
 
-        let isAdmin = isAdminRole;
+        // Update profiles table
+        const { error } = await supabase
+            .from('profiles')
+            .update({ role })
+            .eq('id', uid);
 
-        const userRecord = await auth.getUser(uid);
+        if (error) throw error;
 
-        // This server action is now the single source of truth for making a user an admin.
-        // It checks if this is the first user ever, and if so, forces them to be an admin.
-        // ALSO: Force admin for the hardcoded super-admin email.
-        const usersSnap = await firestore.collection('users').get();
-        if (usersSnap.docs.length <= 1 || userRecord.email === 'admin@eyronix.com' || userRecord.email === 'admin@gmail.com') {
-            isAdmin = true;
-        }
+        // Note: Supabase doesn't use custom claims for this logic in our implementation,
+        // we rely on the public.profiles table.
 
-        if (isAdmin) {
-            // Set the custom claim. This is the source of truth for security rules.
-            await auth.setCustomUserClaims(uid, { admin: true });
-
-            // Also update the role in the user's Firestore document for client-side display.
-            await userRef.set({ role: 'admin' }, { merge: true });
-        } else {
-            await auth.setCustomUserClaims(uid, { admin: false });
-            await userRef.set({ role: 'user' }, { merge: true });
-        }
-
-        return { success: true, madeAdmin: isAdmin };
+        return { success: true, madeAdmin: isAdminRole };
     } catch (error: any) {
         console.error("Failed to set admin role:", error);
         return { success: false, error: error.message };
@@ -78,27 +75,44 @@ export async function setAdminRole(uid: string, isAdminRole: boolean) {
 
 export async function updateUserRole(uid: string, newRole: 'admin' | 'user') {
     try {
-        const adminApp = getFirebaseAdminApp();
-        const auth = adminApp.auth();
+        const supabase = getSupabaseAdmin();
 
         // Server-side check to prevent removing the last admin
         if (newRole === 'user') {
-            const usersRef = firestore.collection('users');
-            const adminUsersQuery = usersRef.where('role', '==', 'admin');
-            const adminUsersSnap = await adminUsersQuery.get();
+            const { data: requestorProfile } = await supabase
+                .from('profiles')
+                .select('role')
+                .eq('id', uid)
+                .single();
 
-            if (adminUsersSnap.docs.length <= 1) {
-                const lastAdmin = adminUsersSnap.docs[0];
-                if (lastAdmin.id === uid) {
+            // Check how many admins exist
+            const { count, error } = await supabase
+                .from('profiles')
+                .select('*', { count: 'exact', head: true })
+                .eq('role', 'admin');
+
+            if (count !== null && count <= 1 && requestorProfile?.role === 'admin') {
+                // If there is only 1 admin and we are demoting them (presumably the target user is an admin)
+                // Actually logic check: we are updating `uid`. Is `uid` the last admin?
+                // We should check if `uid` IS an admin currently.
+                const { data: targetProfile } = await supabase
+                    .from('profiles')
+                    .select('role')
+                    .eq('id', uid)
+                    .single();
+
+                if (targetProfile?.role === 'admin' && count <= 1) {
                     throw new Error("Cannot remove the last admin.");
                 }
             }
         }
 
-        const userRef = firestore.collection('users').doc(uid);
+        const { error } = await supabase
+            .from('profiles')
+            .update({ role: newRole })
+            .eq('id', uid);
 
-        await auth.setCustomUserClaims(uid, { admin: newRole === 'admin' });
-        await userRef.set({ role: newRole }, { merge: true });
+        if (error) throw error;
 
         // Revalidate the path to ensure the UI updates everywhere
         revalidatePath(`/dashboard/users`);

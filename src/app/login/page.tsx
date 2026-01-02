@@ -14,13 +14,9 @@ import {
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Mail, Lock } from 'lucide-react';
-import { useAuth, useFirestore, useUser } from '@/firebase';
-import { GoogleAuthProvider, signInWithPopup, signInWithEmailAndPassword } from 'firebase/auth';
 import { useRouter } from 'next/navigation';
 import { useToast } from '@/hooks/use-toast';
 import { useState, useEffect } from 'react';
-import { updateUserProfile } from '@/firebase/firestore/users';
-import { mockDb } from '@/lib/mock-db'; // Keeping for reference/fallback if needed
 import { supabase } from '@/lib/supabase/client';
 
 function GoogleIcon(props: React.SVGProps<SVGSVGElement>) {
@@ -53,37 +49,37 @@ function GoogleIcon(props: React.SVGProps<SVGSVGElement>) {
 }
 
 export default function LoginPage() {
-  const auth = useAuth();
-  const firestore = useFirestore();
-  const { user, loading } = useUser();
   const router = useRouter();
   const { toast } = useToast();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [isSigningIn, setIsSigningIn] = useState(false);
 
+  // Check if already logged in
   useEffect(() => {
-    // If user is already logged in, redirect them to the dashboard.
-    if (!loading && user) {
-      router.replace('/dashboard');
-    }
-  }, [user, loading, router]);
-
+    const checkUser = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session) {
+        router.replace('/dashboard');
+      }
+    };
+    checkUser();
+  }, [router]);
 
   const handleGoogleSignIn = async () => {
-    if (!auth || !firestore) return;
     setIsSigningIn(true);
-    const provider = new GoogleAuthProvider();
     try {
-      const result = await signInWithPopup(auth, provider);
-      await updateUserProfile(firestore, result.user);
-      await result.user.getIdToken(true); // Force token refresh
-      toast({ title: 'Signed in successfully!' });
-      router.push('/dashboard');
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: {
+          redirectTo: `${window.location.origin}/auth/callback`,
+        },
+      });
+      if (error) throw error;
+      // Triggers redirect, so no toast/router.push needed immediately
     } catch (error: any) {
       console.error('Google sign-in error:', error);
       toast({ variant: 'destructive', title: 'Sign-in failed', description: 'Could not sign in with Google.' });
-    } finally {
       setIsSigningIn(false);
     }
   };
@@ -105,9 +101,9 @@ export default function LoginPage() {
     } catch (error: any) {
       console.error('Email sign-in error:', error);
       toast({ variant: 'destructive', title: 'Sign-in failed', description: error.message || 'Invalid credentials' });
-    } finally {
-      setIsSigningIn(false);
+      setIsSigningIn(false); // Stop loading only on error/failure
     }
+    // No finally block to stop loading on success because we redirect
   };
 
   return (

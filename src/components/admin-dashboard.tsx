@@ -1,7 +1,6 @@
-
 'use client';
 
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect } from 'react';
 import {
   Card,
   CardContent,
@@ -18,11 +17,10 @@ import {
   YAxis,
   Tooltip,
 } from 'recharts';
-import { useUser, useCollection, useFirestore, useMemoFirebase } from '@/firebase';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { getInitials } from '@/lib/utils';
 import { Skeleton } from '@/components/ui/skeleton';
-import { collection } from 'firebase/firestore';
+import { supabase } from '@/lib/supabase/client';
 
 const generateChartData = () => [
   { name: 'Jan', total: Math.floor(Math.random() * 5000) + 1000 },
@@ -40,26 +38,49 @@ const generateChartData = () => [
 ];
 
 export default function AdminDashboard() {
-  const { user, loading: userLoading } = useUser();
-  const firestore = useFirestore();
-
-  const servicesCollection = 'services';
-  const productsCollection = 'products';
-  const pricingCollection = 'pricing';
-
-  const { data: services, isLoading: servicesLoading } = useCollection(servicesCollection);
-  const { data: products, isLoading: productsLoading } = useCollection(productsCollection);
-  const { data: pricing, isLoading: pricingLoading } = useCollection(pricingCollection);
-  const { data: sales, isLoading: salesLoading } = useCollection('sales');
-
+  const [user, setUser] = useState<any>(null);
+  const [services, setServices] = useState<any[]>([]);
+  const [products, setProducts] = useState<any[]>([]);
+  const [pricing, setPricing] = useState<any[]>([]);
+  const [sales, setSales] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
   const [chartData, setChartData] = useState<any[]>([]);
 
   useEffect(() => {
-    // This effect runs only on the client
-    setChartData(generateChartData());
-  }, []);
+    const fetchDashboardData = async () => {
+      setLoading(true);
+      try {
+        const { data: { user } } = await supabase.auth.getUser();
+        setUser(user);
 
-  const loading = userLoading || servicesLoading || productsLoading || pricingLoading || salesLoading;
+        const [
+          { data: servicesData },
+          { data: productsData },
+          { data: pricingData },
+          { data: salesData }
+        ] = await Promise.all([
+          supabase.from('services').select('*'),
+          supabase.from('products').select('*'),
+          supabase.from('pricing').select('*'),
+          supabase.from('sales').select('*')
+        ]);
+
+        if (servicesData) setServices(servicesData);
+        if (productsData) setProducts(productsData);
+        if (pricingData) setPricing(pricingData);
+        if (salesData) setSales(salesData);
+
+        setChartData(generateChartData()); // Keep demo chart for now
+
+      } catch (error) {
+        console.error("Error fetching dashboard data:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchDashboardData();
+  }, []);
 
   return (
     <div className="space-y-6">
@@ -69,7 +90,7 @@ export default function AdminDashboard() {
           <CardDescription>Here's a quick overview of your business and site activity.</CardDescription>
         </CardHeader>
         <CardContent>
-          {userLoading ? (
+          {loading ? (
             <div className="flex items-center space-x-4">
               <Skeleton className="h-16 w-16 rounded-full" />
               <div className="space-y-2">
@@ -80,11 +101,11 @@ export default function AdminDashboard() {
           ) : user ? (
             <div className="flex items-center space-x-4">
               <Avatar className="h-16 w-16">
-                <AvatarImage src={user.photoURL || undefined} />
-                <AvatarFallback>{getInitials(user.displayName)}</AvatarFallback>
+                <AvatarImage src={user.user_metadata?.avatar_url || undefined} />
+                <AvatarFallback>{getInitials(user.user_metadata?.full_name || user.email)}</AvatarFallback>
               </Avatar>
               <div>
-                <h3 className="text-xl font-bold font-headline">{user.displayName || 'Welcome, Admin!'}</h3>
+                <h3 className="text-xl font-bold font-headline">{user.user_metadata?.full_name || 'Welcome, Admin!'}</h3>
                 <p className="text-muted-foreground flex items-center gap-2 mt-1">
                   <Mail className="h-4 w-4" />
                   {user.email}
@@ -102,7 +123,7 @@ export default function AdminDashboard() {
             <Wrench className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            {loading ? <Skeleton className="h-8 w-16" /> : <div className="text-2xl font-bold">{services?.length || 0}</div>}
+            {loading ? <Skeleton className="h-8 w-16" /> : <div className="text-2xl font-bold">{services.length}</div>}
             <p className="text-xs text-muted-foreground">
               Different service offerings
             </p>
@@ -116,7 +137,7 @@ export default function AdminDashboard() {
             <Package className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            {loading ? <Skeleton className="h-8 w-16" /> : <div className="text-2xl font-bold">{products?.length || 0}</div>}
+            {loading ? <Skeleton className="h-8 w-16" /> : <div className="text-2xl font-bold">{products.length}</div>}
             <p className="text-xs text-muted-foreground">
               Products in inventory
             </p>
@@ -128,7 +149,7 @@ export default function AdminDashboard() {
             <DollarSign className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            {loading ? <Skeleton className="h-8 w-16" /> : <div className="text-2xl font-bold">{pricing?.length || 0}</div>}
+            {loading ? <Skeleton className="h-8 w-16" /> : <div className="text-2xl font-bold">{pricing.length}</div>}
             <p className="text-xs text-muted-foreground">
               Available pricing plans
             </p>
@@ -143,7 +164,7 @@ export default function AdminDashboard() {
             {loading ? <Skeleton className="h-8 w-24" /> : (
               <>
                 <div className="text-2xl font-bold text-green-600">
-                  ${(products?.reduce((acc: number, curr: any) => acc + ((curr.price - (curr.netPrice || 0)) * curr.stock), 0) || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                  ${(products?.reduce((acc: number, curr: any) => acc + ((curr.price - (curr.net_price || 0)) * curr.stock), 0) || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                 </div>
                 <p className="text-xs text-muted-foreground">
                   Potential profit from current inventory

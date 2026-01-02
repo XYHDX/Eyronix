@@ -13,6 +13,8 @@ import {
   CardTitle,
   CardFooter,
 } from '@/components/ui/card';
+import { useToast } from '@/hooks/use-toast';
+import { Skeleton } from '@/components/ui/skeleton';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import {
@@ -23,17 +25,6 @@ import {
   FormLabel,
   FormMessage,
 } from '@/components/ui/form';
-import {
-  useFirestore,
-  useDoc,
-  useMemoFirebase,
-  errorEmitter,
-  FirestorePermissionError,
-} from '@/firebase';
-import { useToast } from '@/hooks/use-toast';
-import { doc, setDoc } from 'firebase/firestore';
-import { Skeleton } from '@/components/ui/skeleton';
-import { mockDb } from '@/lib/mock-db'; // Keeping for reference if needed
 import { supabase } from '@/lib/supabase/client';
 
 const settingsFormSchema = z.object({
@@ -50,15 +41,10 @@ const settingsFormSchema = z.object({
 type SiteSettings = z.infer<typeof settingsFormSchema>;
 
 export default function SettingsPage() {
-  const firestore = useFirestore();
   const { toast } = useToast();
   const [isSaving, setIsSaving] = React.useState(false);
-
-  const settingsDocRef = useMemoFirebase(() => {
-    return 'settings/footer';
-  }, [firestore]);
-
-  const { data: settings, isLoading } = useDoc<SiteSettings>(settingsDocRef);
+  const [settings, setSettings] = React.useState<SiteSettings | null>(null);
+  const [isLoading, setIsLoading] = React.useState(true);
 
   const form = useForm<SiteSettings>({
     resolver: zodResolver(settingsFormSchema),
@@ -75,10 +61,41 @@ export default function SettingsPage() {
   });
 
   React.useEffect(() => {
-    if (settings) {
-      form.reset(settings);
-    }
-  }, [settings, form]);
+    const fetchSettings = async () => {
+      try {
+        const { data, error } = await supabase
+          .from('settings')
+          .select('*')
+          .eq('id', 'footer')
+          .single();
+
+        if (error && error.code !== 'PGRST116') { // PGRST116 is code for 0 rows if single() called
+          console.error("Error fetching settings:", error);
+        }
+
+        if (data) {
+          const loadedSettings = {
+            facebookUrl: data.facebook_url || '',
+            twitterUrl: data.twitter_url || '',
+            instagramUrl: data.instagram_url || '',
+            phoneNumber: data.phone_number || '',
+            email: data.email || '',
+            address: data.address || '',
+            termsUrl: data.terms_url || '',
+            privacyUrl: data.privacy_url || '',
+          };
+          setSettings(loadedSettings);
+          form.reset(loadedSettings);
+        }
+      } catch (e) {
+        console.error("Unexpected error fetching settings:", e);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchSettings();
+  }, [form]);
 
   async function onSubmit(data: SiteSettings) {
     setIsSaving(true);

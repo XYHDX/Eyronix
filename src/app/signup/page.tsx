@@ -14,8 +14,6 @@ import {
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { User, Mail, Lock } from 'lucide-react';
-import { useAuth, useFirestore } from '@/firebase';
-import { GoogleAuthProvider, signInWithPopup, createUserWithEmailAndPassword, updateProfile, type User as FirebaseUser } from 'firebase/auth';
 import { useRouter } from 'next/navigation';
 import { useToast } from '@/hooks/use-toast';
 import { useState } from 'react';
@@ -51,8 +49,6 @@ function GoogleIcon(props: React.SVGProps<SVGSVGElement>) {
 }
 
 export default function SignupPage() {
-  const auth = useAuth();
-  const firestore = useFirestore();
   const router = useRouter();
   const { toast } = useToast();
   const [name, setName] = useState('');
@@ -95,15 +91,25 @@ export default function SignupPage() {
     } catch (error: any) {
       console.error('Email sign-up error:', error);
       toast({ variant: 'destructive', title: 'Sign-up failed', description: error.message || 'Could not create account.' });
-    } finally {
       setIsSigningUp(false);
     }
   };
 
-  // Google Sign In not implemented via Supabase in this snippet yet due to complexity with redirects vs popups in SSR.
-  // We will disable it or leave it as a placeholder.
   const handleGoogleSignIn = async () => {
-    toast({ title: 'Coming Soon', description: 'Google Sign-In is being updated.' });
+    setIsSigningUp(true);
+    try {
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: {
+          redirectTo: `${window.location.origin}/auth/callback`,
+        },
+      });
+      if (error) throw error;
+    } catch (e: any) {
+      console.error('Google sign-up error', e);
+      toast({ variant: 'destructive', title: 'Google Sign-up failed' });
+      setIsSigningUp(false);
+    }
   };
 
   return (

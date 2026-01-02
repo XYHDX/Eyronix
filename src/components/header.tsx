@@ -9,55 +9,121 @@ import Image from 'next/image';
 import React, { useState, useEffect, useCallback } from 'react';
 
 import { Button } from '@/components/ui/button';
-import { useAuth, useUser } from '@/firebase';
-import { signOut } from 'firebase/auth';
 import { useToast } from '@/hooks/use-toast';
 import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator, DropdownMenuLabel } from './ui/dropdown-menu';
 import { getInitials } from '@/lib/utils';
 import { Skeleton } from './ui/skeleton';
 import { hasPermission } from '@/lib/permissions';
-import { mockDb } from '@/lib/mock-db';
 import { supabase } from '@/lib/supabase/client';
+
 
 export default function Header() {
   const router = useRouter();
   const { toast } = useToast();
-  const { user, loading, isAdmin } = useUser();
-  const auth = useAuth();
+  const [user, setUser] = useState<any>(null);
+  const [isAdmin, setIsAdmin] = useState(false);
+  const [loading, setLoading] = useState(true);
   const { setTheme, theme } = useTheme();
   const [pendingCount, setPendingCount] = useState(0);
 
-  const fetchPendingOrders = useCallback(async () => {
+  // Auth Status Subscription
+  useEffect(() => {
+    const checkUser = async () => {
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+
+        if (session?.user) {
+          setUser(session.user);
+          // Check admin status
+          const { data: profile } = await supabase
+            .from('profiles')
+            .select('role')
+            .eq('id', session.user.id)
+            .single();
+
+          setIsAdmin(profile?.role === 'admin');
+        } else {
+          setUser(null);
+          setIsAdmin(false);
+        }
+      } catch (error) {
+        console.error("Header Auth Check Error:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    checkUser();
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
+      if (session?.user) {
+        setUser(session.user);
+        // Re-check admin on auth change if needed, or rely on initial check + session persistence
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('role')
+          .eq('id', session.user.id)
+          .single();
+        setIsAdmin(profile?.role === 'admin');
+      } else {
+        setUser(null);
+        setIsAdmin(false);
+      }
+      setLoading(false);
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
+
+  const fetchNotificationStatus = useCallback(async () => {
     if (!user) {
       setPendingCount(0);
       return;
     }
-    const { count, error } = await supabase
-      .from('sales')
-      .select('*', { count: 'exact', head: true })
-      .eq('user_id', user.uid) // useUser provides firebase user, map to supabase user id if needed or consistent
-      .eq('status', 'Pending Info');
 
-    if (!error && count !== null) {
-      setPendingCount(count);
+    const { data: orders, error } = await supabase
+      .from('sales')
+      .select('status, updated_at')
+      .eq('user_id', user.id);
+
+    if (error || !orders) {
+      console.error('Error fetching orders for notification:', error);
+      return;
     }
+
+    const lastViewed = localStorage.getItem('lastViewedOrders');
+    const lastViewedDate = lastViewed ? new Date(lastViewed) : new Date(0); // Default to epoch if never viewed
+
+    const hasPendingInfo = orders.some(o => o.status === 'Pending Info');
+    const hasNewUpdates = orders.some(o => {
+      if (!o.updated_at) return false;
+      return new Date(o.updated_at) > lastViewedDate;
+    });
+
+    setPendingCount(hasPendingInfo || hasNewUpdates ? 1 : 0);
   }, [user]);
 
   useEffect(() => {
-    fetchPendingOrders();
+    fetchNotificationStatus();
 
     const channel = supabase
       .channel('header-notification')
       .on('postgres_changes', { event: '*', schema: 'public', table: 'sales' }, () => {
-        fetchPendingOrders();
+        fetchNotificationStatus();
       })
       .subscribe();
 
+    const handleOrdersViewed = () => fetchNotificationStatus();
+    window.addEventListener('orders-viewed', handleOrdersViewed);
+    window.addEventListener('storage', handleOrdersViewed);
+
     return () => {
       supabase.removeChannel(channel);
+      window.removeEventListener('orders-viewed', handleOrdersViewed);
+      window.removeEventListener('storage', handleOrdersViewed);
     }
-  }, [fetchPendingOrders]);
+  }, [fetchNotificationStatus]);
 
   const handleLogout = async () => {
     try {
@@ -65,6 +131,9 @@ export default function Header() {
       if (error) throw error;
 
       toast({ title: "You've been logged out." });
+      // Reset state
+      setUser(null);
+      setIsAdmin(false);
       router.push('/');
     } catch (error) {
       console.error('Logout error:', error);
@@ -106,8 +175,8 @@ export default function Header() {
               <DropdownMenuTrigger asChild>
                 <Button variant="ghost" className="relative h-10 w-10 rounded-full">
                   <Avatar>
-                    <AvatarImage src={user?.photoURL || undefined} />
-                    <AvatarFallback>{getInitials(user?.displayName)}</AvatarFallback>
+                    <AvatarImage src={user.user_metadata?.avatar_url || undefined} />
+                    <AvatarFallback>{getInitials(user.user_metadata?.full_name || user.email)}</AvatarFallback>
                   </Avatar>
                 </Button>
               </DropdownMenuTrigger>
@@ -121,7 +190,6 @@ export default function Header() {
                   </Link>
                 </DropdownMenuItem>
 
-                {/* Dashboard generic link - usually for admins but safe to check */}
                 {hasPermission(isAdmin ? 'admin' : 'user', '/dashboard') && (
                   <DropdownMenuItem asChild>
                     <Link href="/dashboard">
@@ -188,7 +256,6 @@ export default function Header() {
                   </DropdownMenuItem>
                 )}
 
-                {/* Removed duplicate My Orders from dropdown if desired, or keep both. Keeping for now as redundant is fine */}
                 <DropdownMenuItem asChild>
                   <Link href="/dashboard/my-orders">
                     <ShoppingBag className="mr-2 h-4 w-4" />

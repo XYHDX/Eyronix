@@ -9,9 +9,9 @@
  * - ChatbotConversationOutput - The return type for the chatbotConversation function.
  */
 
-import {ai} from '@/ai/genkit';
-import {z} from 'genkit';
-import {Message} from 'genkit/experimental/ai';
+import { ai } from '@/ai/genkit';
+import { z } from 'genkit';
+import { Message } from 'genkit/experimental/ai';
 import { servicesTool, productsTool, pricingTool } from '../tools/data-tools';
 
 const ChatbotConversationInputSchema = z.object({
@@ -19,7 +19,7 @@ const ChatbotConversationInputSchema = z.object({
     .array(
       z.object({
         role: z.enum(['user', 'model']),
-        content: z.array(z.object({text: z.string()})),
+        content: z.array(z.object({ text: z.string() })),
       })
     )
     .describe('The conversation history.'),
@@ -44,8 +44,8 @@ export async function chatbotConversation(
 
 const prompt = ai.definePrompt({
   name: 'chatbotConversationPrompt',
-  input: {schema: ChatbotConversationInputSchema},
-  output: {schema: ChatbotConversationOutputSchema},
+  input: { schema: ChatbotConversationInputSchema },
+  output: { schema: ChatbotConversationOutputSchema },
   // Provide the tools to the AI
   tools: [servicesTool, productsTool, pricingTool],
   system: `You are a friendly and helpful customer support assistant for Eyronix Syria, a modern security solutions provider. Your goal is to answer user questions about products (CCTV, Dashcams), services (installation, maintenance), and pricing.
@@ -67,10 +67,10 @@ const chatbotConversationFlow = ai.defineFlow(
   },
   async input => {
     // The history is now passed to the prompt along with the new message.
-    const {output} = await prompt({
+    const { output } = await prompt({
       history: input.history as Message[],
       message: input.message,
     });
-    return {response: output!.response};
+    return { response: output!.response };
   }
 );

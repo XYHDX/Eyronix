@@ -178,6 +178,13 @@ export default function MyOrdersPage() {
 
     React.useEffect(() => {
         fetchOrders();
+
+        // Update last viewed timestamp in local storage
+        const now = new Date().toISOString();
+        localStorage.setItem('lastViewedOrders', now);
+        // Dispatch custom event to update header immediately
+        window.dispatchEvent(new Event('orders-viewed'));
+
         const channel = supabase
             .channel('my-orders-realtime')
             .on('postgres_changes', { event: '*', schema: 'public', table: 'sales' }, () => {

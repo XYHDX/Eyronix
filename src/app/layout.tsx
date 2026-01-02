@@ -4,7 +4,7 @@ import { Poppins, Exo_2 } from 'next/font/google';
 import './globals.css';
 import { cn } from '@/lib/utils';
 import { Toaster } from '@/components/ui/toaster';
-import { FirebaseClientProvider } from '@/firebase/client-provider';
+
 import { ThemeProvider } from '@/components/theme-provider';
 
 const poppins = Poppins({
@@ -36,7 +36,7 @@ export default function RootLayout({
     <html lang="en" className="scroll-smooth" suppressHydrationWarning>
       <head>
         <link rel="preconnect" href="https://www.googleapis.com" />
-        <link rel="preconnect" href="https://*.firebaseapp.com" />
+
       </head>
       <body className={cn('antialiased', poppins.variable, exo2.variable)} suppressHydrationWarning>
         <ThemeProvider
@@ -45,12 +45,10 @@ export default function RootLayout({
           enableSystem
           disableTransitionOnChange
         >
-          <FirebaseClientProvider>
-            {children}
-            <Toaster />
-          </FirebaseClientProvider>
+          <Toaster />
+
         </ThemeProvider>
       </body>
-    </html>
+    </html >
   );
 }

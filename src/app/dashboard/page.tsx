@@ -1,29 +1,42 @@
-
 'use client';
 
 import * as React from 'react';
-import { useUser } from '@/firebase';
 import { Loader } from 'lucide-react';
 import AdminDashboard from '@/components/admin-dashboard';
 import { useRouter } from 'next/navigation';
+import { supabase } from '@/lib/supabase/client';
 
 export default function DashboardPage() {
-  const { user, loading, isAdmin } = useUser();
+  const [loading, setLoading] = React.useState(true);
+  const [isAdmin, setIsAdmin] = React.useState(false);
   const router = useRouter();
 
-  // The layout now handles all redirection logic.
-  // This page just needs to decide what to render based on the final state.
-  // The layout now handles all redirection logic based on permissions.
-  // We just wait for auth to load.
   React.useEffect(() => {
-    if (loading) return;
-    if (!user) {
-      router.replace('/login-required');
-    }
-  }, [user, loading, router]);
+    const checkRole = async () => {
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (!session) {
+          // Layout handles redirect, but just in case
+          setLoading(false);
+          return;
+        }
 
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('role')
+          .eq('id', session.user.id)
+          .single();
 
-  // While loading, show a spinner. This prevents a flash of incorrect content.
+        setIsAdmin(profile?.role === 'admin');
+      } catch (e) {
+        console.error("Dashboard check error", e);
+      } finally {
+        setLoading(false);
+      }
+    };
+    checkRole();
+  }, []);
+
   if (loading) {
     return (
       <div className="flex items-center justify-center h-[60vh]">
@@ -32,9 +45,6 @@ export default function DashboardPage() {
     );
   }
 
-  // After loading, if the user is an admin, show the full admin dashboard.
-  // If not, the useEffect above will have already initiated a redirect to their profile,
-  // so we can just return null here to avoid rendering anything for a split second.
   if (isAdmin) {
     return <AdminDashboard />;
   }

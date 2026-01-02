@@ -20,14 +20,8 @@ import {
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
-import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
-import {
-  useFirestore,
-  useCollection,
-  useMemoFirebase,
-  errorEmitter,
-  FirestorePermissionError,
-} from '@/firebase';
+
+
 import { supabase } from '@/lib/supabase/client';
 
 import Header from '@/components/header';
@@ -109,14 +103,34 @@ export default function Home() {
   const scrollRef = useRef<HTMLDivElement>(null);
   const [forceReflow, setForceReflow] = useState(false);
 
-  const firestore = useFirestore();
-  const servicesCollection = 'services';
-  const productsCollection = 'products';
-  const pricingCollection = 'pricing';
+  const [services, setServices] = useState<Service[]>([]);
+  const [products, setProducts] = useState<Product[]>([]);
+  const [pricingPackages, setPricingPackages] = useState<PricingPackage[]>([]);
+  const [servicesLoading, setServicesLoading] = useState(true);
+  const [productsLoading, setProductsLoading] = useState(true);
+  const [pricingLoading, setPricingLoading] = useState(true);
 
-  const { data: services, isLoading: servicesLoading } = useCollection<Service>(servicesCollection);
-  const { data: products, isLoading: productsLoading } = useCollection<Product>(productsCollection);
-  const { data: pricingPackages, isLoading: pricingLoading } = useCollection<PricingPackage>(pricingCollection);
+  // Fetch Data on Mount
+  useEffect(() => {
+    const fetchData = async () => {
+      // Services
+      const { data: servicesData } = await supabase.from('services').select('*');
+      if (servicesData) setServices(servicesData);
+      setServicesLoading(false);
+
+      // Products
+      const { data: productsData } = await supabase.from('products').select('*');
+      if (productsData) setProducts(productsData);
+      setProductsLoading(false);
+
+      // Pricing
+      const { data: pricingData } = await supabase.from('pricing').select('*');
+      if (pricingData) setPricingPackages(pricingData);
+      setPricingLoading(false);
+    };
+
+    fetchData();
+  }, []);
 
   const featuredProducts = useMemo(() => products?.slice(0, 4) || [], [products]);
 
@@ -140,46 +154,30 @@ export default function Home() {
   };
 
   async function onSurveySubmit(values: z.infer<typeof formSchema>) {
-    if (!firestore) {
+    try {
+      const { error } = await supabase.from('survey_requests').insert([{
+        name: values.name,
+        email: values.email,
+        phone: values.phone,
+        message: values.message,
+        status: 'New'
+      }]);
+
+      if (error) throw error;
+
+      toast({
+        title: 'Request Sent!',
+        description: "We've received your request and will contact you shortly.",
+      });
+      form.reset();
+    } catch (error) {
+      console.error("Survey submission error:", error);
       toast({
         variant: 'destructive',
-        title: 'Uh oh! Something went wrong.',
-        description: 'Database service is not available.',
+        title: 'Submission Failed',
+        description: 'Could not send your request. Please try again.',
       });
-      return;
     }
-
-
-
-    const dataToSave = {
-      ...values,
-      status: 'New',
-      createdAt: serverTimestamp(),
-    };
-
-    const requestsCollectionRef = collection(firestore, 'survey-requests');
-    addDoc(requestsCollectionRef, dataToSave)
-      .then(() => {
-        toast({
-          title: 'Request Sent!',
-          description: "We've received your request and will contact you shortly.",
-        });
-        form.reset();
-      })
-      .catch((error) => {
-        console.error("Survey submission error:", error);
-        errorEmitter.emit(
-          'permission-error',
-          new FirestorePermissionError({
-            path: requestsCollectionRef.path,
-            operation: 'create',
-            requestResourceData: dataToSave,
-          })
-        );
-      })
-      .finally(() => {
-
-      });
   }
 
   const fileToDataUri = (file: File): Promise<string> => {

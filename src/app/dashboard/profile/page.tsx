@@ -221,26 +221,7 @@ export default function ProfilePage() {
             <FormItem>
               <div className="flex items-center justify-between">
                 <FormLabel>Role</FormLabel>
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="sm"
-                  className="h-6 text-xs text-muted-foreground hover:text-primary"
-                  onClick={async () => {
-                    if (!user) return;
-                    try {
-                      const { setAdminRole } = await import('@/app/actions');
-                      await setAdminRole(user.uid, false);
-                      await user.getIdToken(true);
-                      window.location.reload();
-                    } catch (e) {
-                      console.error(e);
-                      toast({ title: "Sync failed", variant: "destructive" });
-                    }
-                  }}
-                >
-                  Sync Permissions
-                </Button>
+                {/* Sync Button Removed - Supabase handles roles via Database directly */}
               </div>
               <div>
                 <Badge variant={isAdmin ? 'default' : 'secondary'}>

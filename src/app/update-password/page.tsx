@@ -14,7 +14,7 @@ import { Label } from '@/components/ui/label';
 import { Lock } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useToast } from '@/hooks/use-toast';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase/client';
 
 export default function UpdatePasswordPage() {
@@ -22,6 +22,15 @@ export default function UpdatePasswordPage() {
     const { toast } = useToast();
     const [password, setPassword] = useState('');
     const [isLoading, setIsLoading] = useState(false);
+    const [isSessionValid, setIsSessionValid] = useState(false);
+
+    useEffect(() => {
+        supabase.auth.onAuthStateChange(async (event, session) => {
+            if (event === 'PASSWORD_RECOVERY' || session) {
+                setIsSessionValid(true);
+            }
+        });
+    }, []);
 
     const handleUpdatePassword = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -64,27 +73,31 @@ export default function UpdatePasswordPage() {
                     </CardDescription>
                 </CardHeader>
                 <CardContent>
-                    <form className="space-y-4" onSubmit={handleUpdatePassword}>
-                        <div className="space-y-2">
-                            <Label htmlFor="password">New Password</Label>
-                            <div className="relative">
-                                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                                <Input
-                                    id="password"
-                                    type="password"
-                                    required
-                                    className="pl-10"
-                                    value={password}
-                                    onChange={(e) => setPassword(e.target.value)}
-                                    disabled={isLoading}
-                                    minLength={6}
-                                />
+                    {!isSessionValid ? (
+                        <div className="text-center py-4">Verifying reset link...</div>
+                    ) : (
+                        <form className="space-y-4" onSubmit={handleUpdatePassword}>
+                            <div className="space-y-2">
+                                <Label htmlFor="password">New Password</Label>
+                                <div className="relative">
+                                    <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                                    <Input
+                                        id="password"
+                                        type="password"
+                                        required
+                                        className="pl-10"
+                                        value={password}
+                                        onChange={(e) => setPassword(e.target.value)}
+                                        disabled={isLoading}
+                                        minLength={6}
+                                    />
+                                </div>
                             </div>
-                        </div>
-                        <Button type="submit" className="w-full" disabled={isLoading}>
-                            {isLoading ? 'Updating Password...' : 'Update Password'}
-                        </Button>
-                    </form>
+                            <Button type="submit" className="w-full" disabled={isLoading}>
+                                {isLoading ? 'Updating Password...' : 'Update Password'}
+                            </Button>
+                        </form>
+                    )}
                 </CardContent>
             </Card>
         </div>

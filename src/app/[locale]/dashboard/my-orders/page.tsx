@@ -1,6 +1,6 @@
 'use client';
 
-import * as React from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
     Card,
     CardContent,
@@ -73,7 +73,7 @@ const checkoutSchema = z.object({
 })
 
 function CompleteOrderDialog({ orderId, onSuccess }: { orderId: string, onSuccess: () => void }) {
-    const [open, setOpen] = React.useState(false);
+    const [open, setOpen] = useState(false);
     const { toast } = useToast();
     const form = useForm<z.infer<typeof checkoutSchema>>({
         resolver: zodResolver(checkoutSchema),
@@ -158,10 +158,11 @@ function CompleteOrderDialog({ orderId, onSuccess }: { orderId: string, onSucces
 }
 
 export default function MyOrdersPage() {
-    const [sales, setSales] = React.useState<Sale[]>([]);
-    const [loading, setLoading] = React.useState(true);
+    const [sales, setSales] = useState<Sale[]>([]);
+    const [loading, setLoading] = useState(true);
+    const { toast } = useToast();
 
-    const fetchOrders = React.useCallback(async () => {
+    const fetchOrders = useCallback(async () => {
         try {
             setLoading(true);
             const { data: { user } } = await supabase.auth.getUser();

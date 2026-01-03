@@ -25,11 +25,23 @@ export default function UpdatePasswordPage() {
     const [isSessionValid, setIsSessionValid] = useState(false);
 
     useEffect(() => {
-        supabase.auth.onAuthStateChange(async (event, session) => {
+        const checkSession = async () => {
+            const { data: { session } } = await supabase.auth.getSession();
+            if (session) {
+                setIsSessionValid(true);
+            }
+        };
+        checkSession();
+
+        const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
             if (event === 'PASSWORD_RECOVERY' || session) {
                 setIsSessionValid(true);
             }
         });
+
+        return () => {
+            subscription.unsubscribe();
+        };
     }, []);
 
     const handleUpdatePassword = async (e: React.FormEvent) => {

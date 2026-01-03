@@ -22,6 +22,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 
 
+import { useTranslations } from 'next-intl';
 import { supabase } from '@/lib/supabase/client';
 
 import Header from '@/components/header';
@@ -94,6 +95,7 @@ const defaultAiImage = PlaceHolderImages.find(img => img.id === 'ai-motion-detec
 
 
 export default function Home() {
+  const t = useTranslations('HomePage');
   const { toast } = useToast();
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [analysisResult, setAnalysisResult] = useState('');
@@ -231,6 +233,8 @@ export default function Home() {
 
   const heroImage = PlaceHolderImages.find(img => img.id === 'hero-background');
 
+
+
   return (
     <>
       <Header />
@@ -243,21 +247,21 @@ export default function Home() {
           </div>
           <div className="container mx-auto relative z-10">
             <h1 className="text-4xl md:text-6xl font-bold tracking-tighter mb-4 font-headline leading-tight">
-              Modern Security,
-              <span className="block text-primary mt-2">Unmatched Clarity.</span>
+              {t('heroTitle')}
+              <span className="block text-primary mt-2">{t('heroSubtitle')}</span>
             </h1>
             <p className="max-w-2xl mx-auto text-lg md:text-xl text-muted-foreground mb-8">
-              Eyronix Syria delivers cutting-edge security solutions tailored for your peace of mind.
+              {t('subText')}
             </p>
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
               <Button size="lg" onClick={() => document.getElementById('survey')?.scrollIntoView({ behavior: 'smooth' })}>
                 <ShieldCheck className="mr-2 h-5 w-5" />
-                Request a Free Survey
+                {t('requestSurvey')}
               </Button>
               <Button size="lg" asChild variant="secondary">
                 <Link href="/products">
                   <ShoppingBag className="mr-2 h-5 w-5" />
-                  View Products
+                  {t('viewProducts')}
                 </Link>
               </Button>
             </div>

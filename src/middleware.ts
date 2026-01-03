@@ -1,9 +1,14 @@
 import { NextResponse, type NextRequest } from 'next/server';
 import { updateSession } from './lib/supabase/middleware';
+import createMiddleware from 'next-intl/middleware';
+import { routing } from './i18n/routing';
+
+const intlMiddleware = createMiddleware(routing);
 
 export async function middleware(request: NextRequest) {
     try {
-        return await updateSession(request);
+        const response = intlMiddleware(request);
+        return await updateSession(request, response);
     } catch (e) {
         console.error('Middleware execution failed:', e);
         // Fallback to allowing request if middleware fails

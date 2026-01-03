@@ -1,0 +1,26 @@
+{
+    "Header": {
+        "services": "خدماتنا",
+        "products": "منتجاتنا",
+        "packages": "الباقات",
+        "contact": "تواصل معنا",
+        "login": "تسجيل الدخول",
+        "signup": "إنشاء حساب",
+        "logout": "تسجيل الخروج",
+        "profile": "الملف الشخصي",
+        "dashboard": "لوحة التحكم",
+        "settings": "الإعدادات",
+        "users": "المستخدمين",
+        "requests": "الطلبات",
+        "myOrders": "طلباتي",
+        "allOrders": "كل الطلبات",
+        "toggleTheme": "تغيير المظهر"
+    },
+    "HomePage": {
+        "heroTitle": "أمان متطور،",
+        "heroSubtitle": "وضوح لا يضاهى.",
+        "subText": "أيرونيكس سوريا تقدم لك حلولاً أمنية متطورة مصممة لراحة بالك.",
+        "requestSurvey": "اطلب معاينة مجانية",
+        "viewProducts": "تصفح المنتجات"
+    }
+}

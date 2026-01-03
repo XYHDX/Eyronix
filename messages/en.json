@@ -1,0 +1,26 @@
+{
+    "Header": {
+        "services": "Services",
+        "products": "Products",
+        "packages": "Packages",
+        "contact": "Contact",
+        "login": "Login",
+        "signup": "Sign Up",
+        "logout": "Logout",
+        "profile": "Profile",
+        "dashboard": "Dashboard",
+        "settings": "Settings",
+        "users": "Users",
+        "requests": "Requests",
+        "myOrders": "My Orders",
+        "allOrders": "All Orders",
+        "toggleTheme": "Toggle Theme"
+    },
+    "HomePage": {
+        "heroTitle": "Modern Security,",
+        "heroSubtitle": "Unmatched Clarity.",
+        "subText": "Eyronix Syria delivers cutting-edge security solutions tailored for your peace of mind.",
+        "requestSurvey": "Request a Free Survey",
+        "viewProducts": "View Products"
+    }
+}

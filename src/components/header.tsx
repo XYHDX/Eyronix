@@ -158,23 +158,23 @@ export default function Header() {
     <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <div className="container flex h-16 items-center relative">
         {/* Mobile Menu Trigger Placeholder if needed, but using helper div below */}
-        <div className="md:hidden mr-2">
+        <div className="md:hidden me-2">
         </div>
 
-        <Link href="/" className="mr-6 flex items-center space-x-2">
+        <Link href="/" className="me-6 flex items-center space-x-2 rtl:space-x-reverse">
           <Image src="/logo.png" alt="Eyronix Syria Logo" width={32} height={32} />
           <span className="font-bold text-lg font-headline">Eyronix Syria</span>
         </Link>
 
         {/* Desktop Nav */}
-        <nav className="hidden md:flex absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 items-center justify-center space-x-6 text-sm font-medium">
+        <nav className="hidden md:flex absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 items-center justify-center space-x-6 rtl:space-x-reverse text-sm font-medium">
           <Link href="/#services" className="transition-colors hover:text-foreground/80 text-foreground/60">{t('services')}</Link>
           <Link href="/products" className="transition-colors hover:text-foreground/80 text-foreground/60">{t('products')}</Link>
           <Link href="/#pricing" className="transition-colors hover:text-foreground/80 text-foreground/60">{t('packages')}</Link>
           <Link href="/#survey" className="transition-colors hover:text-foreground/80 text-foreground/60">{t('contact')}</Link>
         </nav>
 
-        <div className="flex ml-auto items-center justify-end space-x-2">
+        <div className="flex ms-auto items-center justify-end space-x-2 rtl:space-x-reverse">
           <LanguageSwitcher />
           {/* Mobile Nav Trigger Button using Sheet */}
           <div className="md:hidden">
@@ -187,7 +187,7 @@ export default function Header() {
               </SheetTrigger>
               <SheetContent side="left" className="w-[80vw] sm:w-[350px]">
                 <SheetHeader>
-                  <SheetTitle className="text-left flex items-center gap-2">
+                  <SheetTitle className="text-start flex items-center gap-2">
                     <Image src="/logo.png" alt="Logo" width={24} height={24} />
                     Eyronix Syria
                   </SheetTitle>
@@ -200,11 +200,11 @@ export default function Header() {
           </div>
 
           {user && (
-            <Button variant="ghost" size="icon" asChild className="mr-2 relative">
+            <Button variant="ghost" size="icon" asChild className="me-2 relative">
               <Link href="/dashboard/my-orders">
                 <ShoppingBag className="h-5 w-5" />
                 {pendingCount > 0 && (
-                  <span className="absolute top-1 right-1 h-2.5 w-2.5 rounded-full bg-red-600 ring-2 ring-background animate-pulse" />
+                  <span className="absolute top-1 right-1 rtl:right-auto rtl:left-1 h-2.5 w-2.5 rounded-full bg-red-600 ring-2 ring-background animate-pulse" />
                 )}
                 <span className="sr-only">My Orders</span>
               </Link>
@@ -228,14 +228,14 @@ export default function Header() {
                 <DropdownMenuSeparator />
                 <DropdownMenuItem asChild>
                   <Link href="/dashboard/profile">
-                    <User className="mr-2 h-4 w-4" />
+                    <User className="me-2 h-4 w-4" />
                     <span>{t('profile')}</span>
                   </Link>
                 </DropdownMenuItem>
                 {hasPermission(isAdmin ? 'admin' : 'user', '/dashboard') && (
                   <DropdownMenuItem asChild>
                     <Link href="/dashboard">
-                      <LayoutDashboard className="mr-2 h-4 w-4" />
+                      <LayoutDashboard className="me-2 h-4 w-4" />
                       <span>{t('dashboard')}</span>
                     </Link>
                   </DropdownMenuItem>
@@ -245,7 +245,7 @@ export default function Header() {
                 {hasPermission(isAdmin ? 'admin' : 'user', '/dashboard/settings') && (
                   <DropdownMenuItem asChild>
                     <Link href="/dashboard/settings">
-                      <Settings className="mr-2 h-4 w-4" />
+                      <Settings className="me-2 h-4 w-4" />
                       <span>{t('settings')}</span>
                     </Link>
                   </DropdownMenuItem>
@@ -253,7 +253,7 @@ export default function Header() {
                 {hasPermission(isAdmin ? 'admin' : 'user', '/dashboard/users') && (
                   <DropdownMenuItem asChild>
                     <Link href="/dashboard/users">
-                      <Users className="mr-2 h-4 w-4" />
+                      <Users className="me-2 h-4 w-4" />
                       <span>{t('users')}</span>
                     </Link>
                   </DropdownMenuItem>
@@ -261,7 +261,7 @@ export default function Header() {
                 {hasPermission(isAdmin ? 'admin' : 'user', '/dashboard/requests') && (
                   <DropdownMenuItem asChild>
                     <Link href="/dashboard/requests">
-                      <Mail className="mr-2 h-4 w-4" />
+                      <Mail className="me-2 h-4 w-4" />
                       <span>{t('requests')}</span>
                     </Link>
                   </DropdownMenuItem>
@@ -269,7 +269,7 @@ export default function Header() {
                 {hasPermission(isAdmin ? 'admin' : 'user', '/dashboard/services') && (
                   <DropdownMenuItem asChild>
                     <Link href="/dashboard/services">
-                      <Wrench className="mr-2 h-4 w-4" />
+                      <Wrench className="me-2 h-4 w-4" />
                       <span>{t('services')}</span>
                     </Link>
                   </DropdownMenuItem>
@@ -277,7 +277,7 @@ export default function Header() {
                 {hasPermission(isAdmin ? 'admin' : 'user', '/dashboard/products') && (
                   <DropdownMenuItem asChild>
                     <Link href="/dashboard/products">
-                      <Package className="mr-2 h-4 w-4" />
+                      <Package className="me-2 h-4 w-4" />
                       <span>{t('products')}</span>
                     </Link>
                   </DropdownMenuItem>
@@ -285,33 +285,33 @@ export default function Header() {
                 {hasPermission(isAdmin ? 'admin' : 'user', '/dashboard/pricing') && (
                   <DropdownMenuItem asChild>
                     <Link href="/dashboard/pricing">
-                      <DollarSign className="mr-2 h-4 w-4" />
+                      <DollarSign className="me-2 h-4 w-4" />
                       <span>{t('packages')}</span>
                     </Link>
                   </DropdownMenuItem>
                 )}
                 <DropdownMenuItem asChild>
                   <Link href="/dashboard/my-orders">
-                    <ShoppingBag className="mr-2 h-4 w-4" />
+                    <ShoppingBag className="me-2 h-4 w-4" />
                     <span>{t('myOrders')}</span>
                   </Link>
                 </DropdownMenuItem>
                 {isAdmin && (
                   <DropdownMenuItem asChild>
                     <Link href="/dashboard/orders">
-                      <Activity className="mr-2 h-4 w-4" />
+                      <Activity className="me-2 h-4 w-4" />
                       <span>{t('allOrders')}</span>
                     </Link>
                   </DropdownMenuItem>
                 )}
                 <DropdownMenuSeparator />
                 <DropdownMenuItem onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}>
-                  {theme === 'dark' ? <Sun className="mr-2 h-4 w-4" /> : <Moon className="mr-2 h-4 w-4" />}
+                  {theme === 'dark' ? <Sun className="me-2 h-4 w-4" /> : <Moon className="me-2 h-4 w-4" />}
                   <span>{t('toggleTheme')}</span>
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem onClick={handleLogout}>
-                  <LogOut className="mr-2 h-4 w-4" />
+                  <LogOut className="me-2 h-4 w-4" />
                   <span>{t('logout')}</span>
                 </DropdownMenuItem>
               </DropdownMenuContent>
@@ -321,7 +321,7 @@ export default function Header() {
               <div className="hidden md:flex gap-2">
                 <Button variant="ghost" asChild>
                   <Link href="/login">
-                    <LogIn className="mr-2 h-4 w-4" />
+                    <LogIn className="me-2 h-4 w-4" />
                     {t('login')}
                   </Link>
                 </Button>

@@ -1,6 +1,6 @@
 
 import type { Metadata } from 'next';
-import { Poppins, Exo_2 } from 'next/font/google';
+import { Poppins, Exo_2, Cairo } from 'next/font/google';
 import '../globals.css';
 import { cn } from '@/lib/utils';
 import { Toaster } from '@/components/ui/toaster';
@@ -21,6 +21,12 @@ const exo2 = Exo_2({
   subsets: ['latin'],
   weight: ['400', '500', '700'],
   variable: '--font-body',
+});
+
+const cairo = Cairo({
+  subsets: ['arabic'],
+  weight: ['400', '600', '700'],
+  variable: '--font-cairo',
 });
 
 export const metadata: Metadata = {
@@ -57,7 +63,14 @@ export default async function RootLayout({
       <head>
         <link rel="preconnect" href="https://www.googleapis.com" />
       </head>
-      <body className={cn('antialiased', poppins.variable, exo2.variable)} suppressHydrationWarning>
+      <body
+        className={cn('antialiased', poppins.variable, exo2.variable, cairo.variable)}
+        style={{
+          '--font-mapper': locale === 'ar' ? 'var(--font-cairo)' : 'var(--font-body)',
+          '--font-headline-mapper': locale === 'ar' ? 'var(--font-cairo)' : 'var(--font-headline)',
+        } as React.CSSProperties}
+        suppressHydrationWarning
+      >
         <NextIntlClientProvider messages={messages}>
           <ThemeProvider
             attribute="class"

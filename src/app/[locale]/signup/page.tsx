@@ -18,6 +18,7 @@ import { useRouter } from 'next/navigation';
 import { useToast } from '@/hooks/use-toast';
 import { useState } from 'react';
 import { supabase } from '@/lib/supabase/client';
+import { useTranslations } from 'next-intl';
 
 function GoogleIcon(props: React.SVGProps<SVGSVGElement>) {
   return (
@@ -49,6 +50,7 @@ function GoogleIcon(props: React.SVGProps<SVGSVGElement>) {
 }
 
 export default function SignupPage() {
+  const t = useTranslations('Auth');
   const router = useRouter();
   const { toast } = useToast();
   const [name, setName] = useState('');
@@ -75,13 +77,13 @@ export default function SignupPage() {
 
       if (data.session) {
         // Auto-login active
-        toast({ title: 'Account created!', description: 'Welcome to Eyronix.' });
+        toast({ title: t('accountCreated'), description: t('welcomeMessage') });
         router.push('/dashboard');
       } else if (data.user) {
         // Email confirmation required
         toast({
-          title: 'Account created! Please check your email.',
-          description: 'We sent you a confirmation link. Please check your spam folder.',
+          title: t('checkEmail'),
+          description: t('checkSpam'),
           duration: 10000
         });
         // Optional: Redirect to a "Verify Email" page or just Login
@@ -90,7 +92,7 @@ export default function SignupPage() {
 
     } catch (error: any) {
       console.error('Email sign-up error:', error);
-      toast({ variant: 'destructive', title: 'Sign-up failed', description: error.message || 'Could not create account.' });
+      toast({ variant: 'destructive', title: t('signUpFailed'), description: error.message || t('couldNotCreate') });
       setIsSigningUp(false);
     }
   };
@@ -107,7 +109,7 @@ export default function SignupPage() {
       if (error) throw error;
     } catch (e: any) {
       console.error('Google sign-up error', e);
-      toast({ variant: 'destructive', title: 'Google Sign-up failed' });
+      toast({ variant: 'destructive', title: t('googleFailed') });
       setIsSigningUp(false);
     }
   };
@@ -119,46 +121,46 @@ export default function SignupPage() {
           <div className='mx-auto mb-2'>
             <Image src="/logo.png" alt="Eyronix Logo" width={48} height={48} />
           </div>
-          <CardTitle className="text-3xl font-headline">Create an Account</CardTitle>
+          <CardTitle className="text-3xl font-headline">{t('createAccount')}</CardTitle>
           <CardDescription>
-            Join Eyronix to manage your security solutions.
+            {t('joinEyronix')}
           </CardDescription>
         </CardHeader>
         <CardContent>
           <form className="space-y-4" onSubmit={handleEmailSignUp}>
             <div className="space-y-2">
-              <Label htmlFor="name">Full Name</Label>
+              <Label htmlFor="name">{t('fullName')}</Label>
               <div className="relative">
-                <User className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                <Input id="name" placeholder="John Doe" required className="pl-10" value={name} onChange={(e) => setName(e.target.value)} disabled={isSigningUp} />
+                <User className="absolute start-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Input id="name" placeholder={t('namePlaceholder')} required className="ps-10" value={name} onChange={(e) => setName(e.target.value)} disabled={isSigningUp} />
               </div>
             </div>
             <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
+              <Label htmlFor="email">{t('email')}</Label>
               <div className="relative">
-                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                <Input id="email" type="email" placeholder="m@example.com" required className="pl-10" value={email} onChange={(e) => setEmail(e.target.value)} disabled={isSigningUp} />
+                <Mail className="absolute start-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Input id="email" type="email" placeholder={t('emailPlaceholder')} required className="ps-10" value={email} onChange={(e) => setEmail(e.target.value)} disabled={isSigningUp} />
               </div>
             </div>
             <div className="space-y-2">
-              <Label htmlFor="password">Password</Label>
+              <Label htmlFor="password">{t('password')}</Label>
               <div className="relative">
-                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                <Input id="password" type="password" required className="pl-10" value={password} onChange={(e) => setPassword(e.target.value)} disabled={isSigningUp} />
+                <Lock className="absolute start-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Input id="password" type="password" required className="ps-10" value={password} onChange={(e) => setPassword(e.target.value)} disabled={isSigningUp} />
               </div>
             </div>
             <Button type="submit" className="w-full" disabled={isSigningUp}>
-              {isSigningUp ? 'Creating Account...' : 'Create Account'}
+              {isSigningUp ? t('signingUp') : t('signUp')}
             </Button>
             <Button variant="outline" className="w-full" type="button" onClick={handleGoogleSignIn} disabled={isSigningUp}>
-              <GoogleIcon className="mr-2 h-4 w-4" />
-              Sign up with Google
+              <GoogleIcon className="me-2 h-4 w-4" />
+              {t('googleSignUp')}
             </Button>
           </form>
           <div className="mt-4 text-center text-sm">
-            Already have an account?{' '}
+            {t('hasAccount')}{' '}
             <Link href="/login" className="underline">
-              Sign in
+              {t('signIn')}
             </Link>
           </div>
         </CardContent>

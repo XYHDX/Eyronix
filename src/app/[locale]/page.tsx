@@ -255,12 +255,12 @@ export default function Home() {
             </p>
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
               <Button size="lg" onClick={() => document.getElementById('survey')?.scrollIntoView({ behavior: 'smooth' })}>
-                <ShieldCheck className="mr-2 h-5 w-5" />
+                <ShieldCheck className="me-2 h-5 w-5" />
                 {t('requestSurvey')}
               </Button>
               <Button size="lg" asChild variant="secondary">
                 <Link href="/products">
-                  <ShoppingBag className="mr-2 h-5 w-5" />
+                  <ShoppingBag className="me-2 h-5 w-5" />
                   {t('viewProducts')}
                 </Link>
               </Button>
@@ -278,7 +278,7 @@ export default function Home() {
             <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
               {servicesLoading ? (
                 Array.from({ length: 3 }).map((_, i) => (
-                  <Card key={i} className="text-left overflow-hidden">
+                  <Card key={i} className="text-start overflow-hidden">
                     <Skeleton className="h-48 w-full" />
                     <CardHeader>
                       <Skeleton className="h-8 w-1/2" />
@@ -292,7 +292,7 @@ export default function Home() {
               ) : services?.map((service) => {
                 const Icon = iconMap[service.icon];
                 return (
-                  <Card key={service.id} className="text-left overflow-hidden transform transition-transform duration-300 hover:scale-105 hover:shadow-xl">
+                  <Card key={service.id} className="text-start overflow-hidden transform transition-transform duration-300 hover:scale-105 hover:shadow-xl">
                     {service.imageUrl && (
                       <div className="relative h-48 w-full">
                         <Image src={service.imageUrl} alt={service.description} fill style={{ objectFit: 'cover' }} />
@@ -324,7 +324,7 @@ export default function Home() {
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
               {productsLoading ? (
                 Array.from({ length: 4 }).map((_, i) => (
-                  <Card key={i} className="text-left overflow-hidden">
+                  <Card key={i} className="text-start overflow-hidden">
                     <Skeleton className="h-48 w-full" />
                     <CardHeader>
                       <Skeleton className="h-6 w-3/4" />
@@ -338,7 +338,7 @@ export default function Home() {
               ) : featuredProducts.map((product) => {
                 const image = product.imageUrl ? { imageUrl: product.imageUrl, imageHint: product.name } : getProductImage(product);
                 return (
-                  <Card key={product.id} className="text-left overflow-hidden flex flex-col">
+                  <Card key={product.id} className="text-start overflow-hidden flex flex-col">
                     <div className="relative h-48 w-full">
                       {image ? (
                         <Image src={image.imageUrl} alt={product.name} width={400} height={400} className="object-cover w-full h-full" data-ai-hint={image.imageHint} />
@@ -393,7 +393,7 @@ export default function Home() {
               <Button asChild size="lg">
                 <Link href="/products">
                   View All Products
-                  <ArrowRight className="ml-2 h-5 w-5" />
+                  <ArrowRight className="ms-2 h-5 w-5 rtl:rotate-180" />
                 </Link>
               </Button>
             </div>
@@ -404,14 +404,14 @@ export default function Home() {
         <section id="ai-feature" className="py-16 md:py-24 bg-background">
           <div className="container mx-auto">
             <div className="grid md:grid-cols-2 gap-12 items-center">
-              <div className="text-left">
+              <div className="text-start">
                 <h2 className="text-3xl md:text-4xl font-bold mb-4 font-headline">Interactive AI Analysis</h2>
                 <p className="text-muted-foreground text-lg mb-6">
                   Test our AI's capabilities. Upload any image, and our advanced system will instantly analyze it to detect human or vehicle presence. Experience firsthand how intelligent analysis can distinguish significant events from background noise.
                 </p>
                 <div className="flex gap-4">
                   <Button onClick={() => fileInputRef.current?.click()} variant="secondary">
-                    <Upload className="mr-2 h-5 w-5" />
+                    <Upload className="me-2 h-5 w-5" />
                     Upload Image
                   </Button>
                   <Input
@@ -422,7 +422,7 @@ export default function Home() {
                     accept="image/*"
                   />
                   <Button onClick={handleAiAnalysis} disabled={isAnalyzing || !selectedFile}>
-                    <BrainCircuit className="mr-2 h-5 w-5" />
+                    <BrainCircuit className="me-2 h-5 w-5" />
                     {isAnalyzing ? 'Analyzing...' : 'Run Analysis'}
                   </Button>
                 </div>
@@ -446,7 +446,7 @@ export default function Home() {
                   </div>
                 )}
                 <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent"></div>
-                <div className="absolute bottom-4 left-4 text-white">
+                <div className="absolute bottom-4 left-4 rtl:left-auto rtl:right-4 text-white">
                   <p className="font-bold text-lg">LIVE DEMO: SCENE ANALYSIS</p>
                   <p className="text-sm opacity-80">Upload any image to test</p>
                 </div>
@@ -482,7 +482,7 @@ export default function Home() {
                   </Card>
                 ))
               ) : pricingPackages?.sort((a, b) => a.price - b.price).map((pkg) => (
-                <Card key={pkg.id} className={`text-left ${pkg.popular ? 'border-primary border-2 shadow-primary/20 shadow-lg -translate-y-4' : ''}`}>
+                <Card key={pkg.id} className={`text-start ${pkg.popular ? 'border-primary border-2 shadow-primary/20 shadow-lg -translate-y-4' : ''}`}>
                   {pkg.popular && (
                     <div className="bg-primary text-primary-foreground text-center py-1.5 text-sm font-semibold rounded-t-lg -mt-px">
                       Most Popular
@@ -496,7 +496,7 @@ export default function Home() {
                     <ul className="space-y-3">
                       {pkg.features.map((feature) => (
                         <li key={feature} className="flex items-center">
-                          <CheckCircle className="h-5 w-5 text-green-500 mr-3" />
+                          <CheckCircle className="h-5 w-5 text-green-500 me-3" />
                           <span className="text-muted-foreground">{feature}</span>
                         </li>
                       ))}
@@ -521,7 +521,7 @@ export default function Home() {
                             <div className="grid grid-cols-4 items-center gap-4">
                               <span className="font-bold col-span-4">Camera Specifications</span>
                               <div className="col-span-4 text-sm text-muted-foreground">
-                                <ul className="list-disc pl-5 space-y-1">
+                                <ul className="list-disc ps-5 space-y-1">
                                   <li>Resolution: {pkg.name === 'Pro' ? '4K UHD (3840x2160)' : 'Full HD (1920x1080)'}</li>
                                   <li>Lens: 2.8mm Wide Angle</li>
                                   <li>Night Vision: Up to 30m IR</li>
@@ -532,7 +532,7 @@ export default function Home() {
                             <div className="grid grid-cols-4 items-center gap-4">
                               <span className="font-bold col-span-4">Recording Unit (NVR/DVR)</span>
                               <div className="col-span-4 text-sm text-muted-foreground">
-                                <ul className="list-disc pl-5 space-y-1">
+                                <ul className="list-disc ps-5 space-y-1">
                                   <li>Channels: {pkg.name === 'Basic' ? '4 Channel' : pkg.name === 'Standard' ? '8 Channel' : '16 Channel'}</li>
                                   <li>Storage: {pkg.features.find(f => f.includes('Storage')) || '1 TB'} HDD Included</li>
                                   <li>Compression: H.265+ High Efficiency</li>

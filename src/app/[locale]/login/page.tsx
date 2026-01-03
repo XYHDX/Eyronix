@@ -18,6 +18,7 @@ import { useRouter } from 'next/navigation';
 import { useToast } from '@/hooks/use-toast';
 import { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase/client';
+import { useTranslations } from 'next-intl';
 
 function GoogleIcon(props: React.SVGProps<SVGSVGElement>) {
   return (
@@ -49,6 +50,7 @@ function GoogleIcon(props: React.SVGProps<SVGSVGElement>) {
 }
 
 export default function LoginPage() {
+  const t = useTranslations('Auth');
   const router = useRouter();
   const { toast } = useToast();
   const [email, setEmail] = useState('');
@@ -79,7 +81,7 @@ export default function LoginPage() {
       // Triggers redirect, so no toast/router.push needed immediately
     } catch (error: any) {
       console.error('Google sign-in error:', error);
-      toast({ variant: 'destructive', title: 'Sign-in failed', description: 'Could not sign in with Google.' });
+      toast({ variant: 'destructive', title: t('googleFailed'), description: t('signInFailed') });
       setIsSigningIn(false);
     }
   };
@@ -96,11 +98,11 @@ export default function LoginPage() {
 
       if (error) throw error;
 
-      toast({ title: 'Signed in successfully!' });
+      toast({ title: t('signInSuccess') });
       router.push('/dashboard');
     } catch (error: any) {
       console.error('Email sign-in error:', error);
-      toast({ variant: 'destructive', title: 'Sign-in failed', description: error.message || 'Invalid credentials' });
+      toast({ variant: 'destructive', title: t('signInFailed'), description: error.message || t('invalidCredentials') });
       setIsSigningIn(false); // Stop loading only on error/failure
     }
     // No finally block to stop loading on success because we redirect
@@ -113,47 +115,47 @@ export default function LoginPage() {
           <div className='mx-auto mb-2'>
             <Image src="/logo.png" alt="Eyronix Logo" width={48} height={48} />
           </div>
-          <CardTitle className="text-3xl font-headline">Welcome Back</CardTitle>
+          <CardTitle className="text-3xl font-headline">{t('welcomeBack')}</CardTitle>
           <CardDescription>
-            Enter your credentials to access your account.
+            {t('enterCredentials')}
           </CardDescription>
         </CardHeader>
         <CardContent>
           <form className="space-y-4" onSubmit={handleEmailSignIn}>
             <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
+              <Label htmlFor="email">{t('email')}</Label>
               <div className="relative">
-                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                <Input id="email" type="email" placeholder="m@example.com" required className="pl-10" value={email} onChange={(e) => setEmail(e.target.value)} disabled={isSigningIn} />
+                <Mail className="absolute start-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Input id="email" type="email" placeholder={t('emailPlaceholder')} required className="ps-10" value={email} onChange={(e) => setEmail(e.target.value)} disabled={isSigningIn} />
               </div>
             </div>
             <div className="space-y-2">
               <div className="flex items-center">
-                <Label htmlFor="password">Password</Label>
+                <Label htmlFor="password">{t('password')}</Label>
                 <Link
                   href="/forgot-password"
-                  className="ml-auto inline-block text-sm underline"
+                  className="ms-auto inline-block text-sm underline"
                 >
-                  Forgot your password?
+                  {t('forgotPassword')}
                 </Link>
               </div>
               <div className="relative">
-                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                <Input id="password" type="password" required className="pl-10" value={password} onChange={(e) => setPassword(e.target.value)} disabled={isSigningIn} />
+                <Lock className="absolute start-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Input id="password" type="password" required className="ps-10" value={password} onChange={(e) => setPassword(e.target.value)} disabled={isSigningIn} />
               </div>
             </div>
             <Button type="submit" className="w-full" disabled={isSigningIn}>
-              {isSigningIn ? 'Signing In...' : 'Sign In'}
+              {isSigningIn ? t('signingIn') : t('signIn')}
             </Button>
             <Button variant="outline" className="w-full" type="button" onClick={handleGoogleSignIn} disabled={isSigningIn}>
-              <GoogleIcon className="mr-2 h-4 w-4" />
-              Sign in with Google
+              <GoogleIcon className="me-2 h-4 w-4" />
+              {t('googleSignIn')}
             </Button>
           </form>
           <div className="mt-4 text-center text-sm">
-            Don&apos;t have an account?{' '}
+            {t('noAccount')}{' '}
             <Link href="/signup" className="underline">
-              Sign up
+              {t('signUp')}
             </Link>
           </div>
         </CardContent>

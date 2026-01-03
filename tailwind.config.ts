@@ -1,4 +1,4 @@
-import type {Config} from 'tailwindcss';
+import type { Config } from 'tailwindcss';
 
 const { fontFamily } = require("tailwindcss/defaultTheme")
 
@@ -18,8 +18,9 @@ export default {
     },
     extend: {
       fontFamily: {
-        headline: ["var(--font-headline)", ...fontFamily.sans],
-        body: ["var(--font-body)", ...fontFamily.sans],
+        headline: ["var(--font-headline-mapper)", ...fontFamily.sans],
+        body: ["var(--font-mapper)", ...fontFamily.sans],
+        cairo: ["var(--font-cairo)", ...fontFamily.sans],
         code: ['monospace'],
       },
       colors: {

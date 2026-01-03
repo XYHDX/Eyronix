@@ -24,25 +24,51 @@ export default function UpdatePasswordPage() {
     const [isLoading, setIsLoading] = useState(false);
     const [isSessionValid, setIsSessionValid] = useState(false);
 
+    const [error, setError] = useState('');
+
     useEffect(() => {
+        let mounted = true;
+
         const checkSession = async () => {
-            const { data: { session } } = await supabase.auth.getSession();
-            if (session) {
+            console.log('Checking session...');
+            console.log('Hash:', window.location.hash);
+
+            const { data, error } = await supabase.auth.getSession();
+            console.log('Session result:', data.session, error);
+
+            if (data.session && mounted) {
+                console.log('Session found via getSession');
                 setIsSessionValid(true);
             }
         };
         checkSession();
 
         const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
-            if (event === 'PASSWORD_RECOVERY' || session) {
+            console.log('Auth state changed:', event, session?.user?.id);
+            if ((event === 'PASSWORD_RECOVERY' || session) && mounted) {
+                console.log('Session found via event');
                 setIsSessionValid(true);
             }
         });
 
+        // Timeout fallback
+        const timer = setTimeout(() => {
+            if (mounted && !isSessionValid) {
+                // Check one last time or show error
+                supabase.auth.getSession().then(({ data }) => {
+                    if (!data.session && mounted) {
+                        setError('Could not verify link. It may be expired or invalid.');
+                    }
+                });
+            }
+        }, 5000);
+
         return () => {
+            mounted = false;
             subscription.unsubscribe();
+            clearTimeout(timer);
         };
-    }, []);
+    }, [isSessionValid]);
 
     const handleUpdatePassword = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -86,7 +112,16 @@ export default function UpdatePasswordPage() {
                 </CardHeader>
                 <CardContent>
                     {!isSessionValid ? (
-                        <div className="text-center py-4">Verifying reset link...</div>
+                        <div className="text-center py-4">
+                            {error ? (
+                                <div className="text-red-500 mb-4">{error}</div>
+                            ) : (
+                                <div>Verifying reset link...</div>
+                            )}
+                            {error && (
+                                <Button variant="outline" onClick={() => window.location.reload()}>Try Again</Button>
+                            )}
+                        </div>
                     ) : (
                         <form className="space-y-4" onSubmit={handleUpdatePassword}>
                             <div className="space-y-2">

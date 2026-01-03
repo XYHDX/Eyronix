@@ -1,8 +1,9 @@
-
 'use client';
 
 import * as React from 'react';
 import { supabase } from '@/lib/supabase/client';
+import { useTranslations } from 'next-intl';
+import { format } from 'date-fns';
 
 import {
   Card,
@@ -64,6 +65,7 @@ const statusColors: { [key: string]: 'default' | 'secondary' | 'destructive' | '
 };
 
 function RequestActions({ request, isUpdating, handleStatusChange, setItemToDelete }: { request: SurveyRequest; isUpdating: string | null; handleStatusChange: (id: string, status: SurveyRequest['status']) => void; setItemToDelete: (req: SurveyRequest) => void; }) {
+  const t = useTranslations('RequestsPage');
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
@@ -73,7 +75,7 @@ function RequestActions({ request, isUpdating, handleStatusChange, setItemToDele
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end">
-        <DropdownMenuLabel>Change Status</DropdownMenuLabel>
+        <DropdownMenuLabel>{t('actions.changeStatus')}</DropdownMenuLabel>
         {Object.keys(statusColors).map(status => (
           <DropdownMenuItem
             key={status}
@@ -86,7 +88,7 @@ function RequestActions({ request, isUpdating, handleStatusChange, setItemToDele
         <DropdownMenuSeparator />
         <AlertDialogTrigger asChild>
           <DropdownMenuItem className="text-red-600" onSelect={(e) => { e.preventDefault(); setItemToDelete(request) }}>
-            Delete
+            {t('actions.delete')}
           </DropdownMenuItem>
         </AlertDialogTrigger>
       </DropdownMenuContent>
@@ -96,6 +98,7 @@ function RequestActions({ request, isUpdating, handleStatusChange, setItemToDele
 
 
 export default function RequestsPage() {
+  const t = useTranslations('RequestsPage');
   const { toast } = useToast();
   const [requests, setRequests] = React.useState<SurveyRequest[]>([]);
   const [isLoading, setIsLoading] = React.useState(true);
@@ -149,8 +152,8 @@ export default function RequestsPage() {
       if (error) throw error;
 
       toast({
-        title: 'Status Updated',
-        description: `Request has been marked as ${newStatus}.`
+        title: t('toasts.statusUpdated'),
+        description: t('toasts.statusUpdatedDesc', { status: newStatus })
       });
     } catch (error: any) {
       console.error('Error updating status:', error);
@@ -177,15 +180,15 @@ export default function RequestsPage() {
       if (error) throw error;
 
       toast({
-        title: 'Request Deleted',
-        description: `The request from ${itemToDelete.name} has been deleted.`,
+        title: t('toasts.deleted'),
+        description: t('toasts.deletedDesc', { name: itemToDelete.name }),
       });
       setItemToDelete(null);
     } catch (error: any) {
       console.error('Error deleting request:', error);
       toast({
         variant: 'destructive',
-        title: 'Delete Failed',
+        title: t('toasts.error'),
         description: error.message || 'Could not delete request.'
       });
     } finally {
@@ -252,12 +255,12 @@ export default function RequestsPage() {
       <Table>
         <TableHeader>
           <TableRow>
-            <TableHead>Customer</TableHead>
-            <TableHead>Message</TableHead>
-            <TableHead>Submitted</TableHead>
-            <TableHead>Status</TableHead>
+            <TableHead>{t('table.customer')}</TableHead>
+            <TableHead>{t('table.message')}</TableHead>
+            <TableHead>{t('table.submitted')}</TableHead>
+            <TableHead>{t('table.status')}</TableHead>
             <TableHead>
-              <span className="sr-only">Actions</span>
+              <span className="sr-only">{t('table.actions')}</span>
             </TableHead>
           </TableRow>
         </TableHeader>
@@ -325,9 +328,9 @@ export default function RequestsPage() {
   const renderEmptyState = () => (
     <div className="text-center p-8">
       <Inbox className="mx-auto h-12 w-12 text-muted-foreground" />
-      <h3 className="mt-4 text-lg font-semibold">No survey requests yet</h3>
+      <h3 className="mt-4 text-lg font-semibold">{t('table.noRequests')}</h3>
       <p className="mt-1 text-muted-foreground">
-        New submissions from your website will appear here.
+        {t('table.noRequestsDesc')}
       </p>
     </div>
   );
@@ -335,15 +338,15 @@ export default function RequestsPage() {
   const renderAlertDialog = () => (
     <AlertDialogContent>
       <AlertDialogHeader>
-        <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+        <AlertDialogTitle>{t('dialog.title')}</AlertDialogTitle>
         <AlertDialogDescription>
-          This action cannot be undone. This will permanently delete the request from <span className="font-bold">{itemToDelete?.name}</span>.
+          {t('dialog.description', { name: itemToDelete?.name })}
         </AlertDialogDescription>
       </AlertDialogHeader>
       <AlertDialogFooter>
-        <AlertDialogCancel onClick={() => setItemToDelete(null)} disabled={isDeleting}>Cancel</AlertDialogCancel>
+        <AlertDialogCancel onClick={() => setItemToDelete(null)} disabled={isDeleting}>{t('actions.changeStatus')}</AlertDialogCancel>
         <AlertDialogAction onClick={() => handleDelete()} disabled={isDeleting} className="bg-red-600 hover:bg-red-700">
-          {isDeleting ? 'Deleting...' : 'Delete'}
+          {isDeleting ? t('actions.delete') : t('actions.delete')}
         </AlertDialogAction>
       </AlertDialogFooter>
     </AlertDialogContent>
@@ -352,9 +355,9 @@ export default function RequestsPage() {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Survey Requests</CardTitle>
+        <CardTitle>{t('title')}</CardTitle>
         <CardDescription>
-          Manage incoming requests for site surveys from potential customers.
+          {t('description')}
         </CardDescription>
       </CardHeader>
       <CardContent>

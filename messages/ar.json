@@ -23,7 +23,74 @@
         "heroSubtitle": "وضوح لا يضاهى.",
         "subText": "أيرونيكس سوريا تقدم لك حلولاً أمنية متطورة مصممة لراحة بالك.",
         "requestSurvey": "اطلب معاينة مجانية",
-        "viewProducts": "تصفح المنتجات"
+        "viewProducts": "تصفح المنتجات",
+        "ourExpertise": "خبراتنا",
+        "expertiseSubtext": "من التركيب إلى الصيانة، نقدم خدمات أمنية شاملة.",
+        "featuredProducts": "منتجات مميزة",
+        "productsSubtext": "أجهزة أمنية عالية الجودة لحماية ما يهمك.",
+        "viewAllProducts": "عراض كل المنتجات",
+        "aiAnalysis": "تحليل ذكي تفاعلي",
+        "aiAnalysisDesc": "جرب قدرات الذكاء الاصطناعي لدينا. حمل أي صورة، وسيقوم نظامنا المتطور بتحليلها فوراً للكشف عن وجود أشخاص أو مركبات. اختبر بنفسك كيف يمكن للتحليل الذكي تمييز الأحداث الهامة عن الضوضاء الخلفية.",
+        "uploadImage": "رفع صورة",
+        "runAnalysis": "بدء التحليل",
+        "analyzing": "جاري التحليل...",
+        "analysisComplete": "كتمل التحليل",
+        "liveDemo": "عرض حي: تحليل المشهد",
+        "uploadToBegin": "ارفع صورة للبدء",
+        "uploadToTest": "ارفع أي صورة للتجربة",
+        "packages": "الباقات الأمنية",
+        "packagesSubtext": "اختر الباقة التي تناسب احتياجاتك. بدون رسوم خفية.",
+        "mostPopular": "الأكثر طلباً",
+        "viewDetails": "التفاصيل والشراء",
+        "contactUs": "تواصل معنا",
+        "packageSpecs": "مواصفات الباقة",
+        "cameraSpecs": "مواصفات الكاميرا",
+        "recordingUnit": "وحدة التسجيل (NVR/DVR)",
+        "confirmPurchase": "تأكيد الشراء",
+        "surveyTitle": "طلب معاينة مجانية",
+        "surveySubtext": "دع خبراءنا يقيمون احتياجاتك الأمنية. املأ النموذج أدناه وسنتواصل معك.",
+        "submitRequest": "إرسال الطلب",
+        "sending": "جاري الإرسال...",
+        "formLabels": {
+            "fullName": "الاسم الكامل",
+            "email": "البريد الإلكتروني",
+            "phone": "رقم الهاتف",
+            "message": "رسالتك",
+            "messagePlaceholder": "أخبرنا عن احتياجاتك الأمنية..."
+        }
+    },
+    "Footer": {
+        "quickLinks": "روابط سريعة",
+        "services": "خدماتنا",
+        "pricing": "الأسعار",
+        "requestSurvey": "طلب معاينة",
+        "products": "المنتجات",
+        "contactUs": "تواصل معنا",
+        "legal": "قانوني",
+        "privacyPolicy": "سياسة الخصوصية",
+        "termsOfService": "شروط الخدمة",
+        "rightsReserved": "جميع الحقوق محفوظة.",
+        "tagline": "شريكك الموثوق في حلول الأمان الحديثة."
+    },
+    "ForgotPassword": {
+        "title": "إعادة تعيين كلمة المرور",
+        "description": "أدخل بريدك الإلكتروني وسنرسل لك رابطاً لإعادة تعيين كلمة المرور.",
+        "emailLabel": "البريد الإلكتروني",
+        "emailPlaceholder": "name@example.com",
+        "submitButton": "إرسال رابط إعادة التعيين",
+        "sending": "جاري الإرسال...",
+        "backToLogin": "العودة لتسجيل الدخول",
+        "checkEmailTitle": "تحقق من بريدك الإلكتروني",
+        "checkEmailDesc": "أرسلنا لك رابطاً لإعادة تعيين كلمة المرور.",
+        "errorTitle": "خطأ",
+        "errorDesc": "تعذر إرسال بريد إعادة التعيين."
+    },
+    "Chatbot": {
+        "supportBot": "المساعد الآلي",
+        "online": "متصل",
+        "typeMessage": "اكتب رسالة...",
+        "welcomeMessage": "مرحباً بك في أيرونيكس! أنا المساعد الآلي. كيف يمكنني مساعدتك في احتياجاتك الأمنية اليوم؟",
+        "errorMessage": "أواجه بعض المشاكل حالياً. سيقوم موظف بالرد عليك قريباً. للحصول على مساعدة فورية، يرجى تصفح موقعنا."
     },
     "Dashboard": {
         "welcomeTitle": "مرحباً بك في لوحة التحكم",
@@ -71,5 +138,200 @@
         "googleFailed": "فشل التسجيل عبر Google",
         "invalidCredentials": "بيانات الدخول غير صحيحة",
         "couldNotCreate": "تعذر إنشاء الحساب."
+    },
+    "UsersPage": {
+        "title": "إدارة المستخدمين",
+        "description": "عرض وإدارة الصلاحيات وحذف المستخدمين في نظامك.",
+        "table": {
+            "user": "المستخدم",
+            "role": "الصلاحية",
+            "dateJoined": "تاريخ الانضمام",
+            "actions": "إجراءات",
+            "noUsers": "لا يوجد مستخدمين."
+        },
+        "actions": {
+            "makeAdmin": "تعيين كمسؤول",
+            "makeUser": "تعيين كمستخدم",
+            "delete": "حذف المستخدم",
+            "cancel": "إلغاء",
+            "confirm": "حذف",
+            "deleting": "جاري الحذف..."
+        },
+        "dialog": {
+            "title": "هل أنت متأكد تماماً؟",
+            "description": "هذا الإجراء لا يمكن التراجع عنه. سيتم حذف سجل المستخدم {name} نهائياً."
+        },
+        "toasts": {
+            "roleUpdated": "تم تحديث الصلاحية",
+            "roleUpdatedDesc": "تم تغيير صلاحية {name} إلى {role}.",
+            "updateFailed": "فشل التحديث",
+            "deleted": "تم حذف سجل المستخدم",
+            "deletedDesc": "تم حذف سجل المستخدم لـ {name}.",
+            "deleteFailed": "فشل الحذف"
+        }
+    },
+    "ProductsPage": {
+        "title": "المنتجات",
+        "description": "إدارة مخزون منتجاتك.",
+        "seedData": "إضافة بيانات تجريبية",
+        "seeding": "جاري الإضافة...",
+        "addProduct": "إضافة منتج",
+        "table": {
+            "image": "صورة",
+            "name": "الاسم",
+            "status": "الحالة",
+            "netPrice": "سعر التكلفة",
+            "sellPrice": "سعر البيع",
+            "stock": "المخزون",
+            "actions": "إجراءات",
+            "noProducts": "لا توجد منتجات. حاول إضافة بيانات تجريبية أو منتج جديد."
+        },
+        "form": {
+            "editTitle": "تعديل المنتج",
+            "addTitle": "إضافة منتج جديد",
+            "description": "املأ تفاصيل المنتج.",
+            "name": "اسم المنتج",
+            "namePlaceholder": "مثال: كاميرا قبة",
+            "sku": "رمز SKU",
+            "skuPlaceholder": "CAM-DOME-01",
+            "price": "سعر البيع ($)",
+            "netPrice": "سعر التكلفة ($)",
+            "stock": "المخزون",
+            "status": "الحالة",
+            "selectStatus": "اختر الحالة",
+            "image": "صورة المنتج",
+            "cancel": "إلغاء",
+            "save": "حفظ المنتج",
+            "saving": "جاري الحفظ...",
+            "saveChanges": "حفظ التغييرات"
+        },
+        "actions": {
+            "edit": "تعديل",
+            "delete": "حذف"
+        },
+        "dialog": {
+            "title": "هل أنت متأكد تماماً؟",
+            "description": "هذا الإجراء لا يمكن التراجع عنه. سيتم حذف المنتج {name} نهائياً."
+        },
+        "toasts": {
+            "updated": "تم تحديث المنتج",
+            "created": "تم إنشاء المنتج",
+            "deleted": "تم حذف المنتج",
+            "error": "خطأ"
+        }
+    },
+    "RequestsPage": {
+        "title": "طلبات المعاينة",
+        "description": "إدارة الطلبات الواردة للمعاينة الموقعية من العملاء المحتملين.",
+        "table": {
+            "customer": "العميل",
+            "message": "الرسالة",
+            "submitted": "تاريخ الطلب",
+            "status": "الحالة",
+            "actions": "إجراءات",
+            "noRequests": "لاتوجد طلبات معاينة بعد",
+            "noRequestsDesc": "الطلبات الجديدة من موقعك ستظهر هنا."
+        },
+        "actions": {
+            "changeStatus": "تغيير الحالة",
+            "delete": "حذف"
+        },
+        "dialog": {
+            "title": "هل أنت متأكد تماماً؟",
+            "description": "هذا الإجراء لا يمكن التراجع عنه. سيتم حذف الطلب من {name} نهائياً."
+        },
+        "toasts": {
+            "statusUpdated": "تم تحديث الحالة",
+            "statusUpdatedDesc": "تم تمييز الطلب كـ {status}.",
+            "deleted": "تم حذف الطلب",
+            "deletedDesc": "تم حذف الطلب من {name}.",
+            "error": "خطأ"
+        }
+    },
+    "OrdersPage": {
+        "title": "كل الطلبات",
+        "description": "إدارة وتتبع جميع طلبات العملاء.",
+        "tabs": {
+            "all": "الكل",
+            "pending": "قيد الانتظار",
+            "active": "نشط",
+            "done": "منتهي"
+        },
+        "table": {
+            "date": "التاريخ",
+            "customer": "العميل",
+            "details": "التفاصيل",
+            "amount": "المبلغ",
+            "info": "معلومات",
+            "status": "الحالة",
+            "actions": "إجراءات",
+            "guest": "زائر/غير معروف",
+            "noDetails": "لا توجد تفاصيل",
+            "noOrders": "لا توجد طلبات."
+        },
+        "actions": {
+            "updateStatus": "تحديث الحالة",
+            "approvePrepare": "موافقة وتجهيز",
+            "markShipped": "تم الشحن",
+            "markDelivered": "تم التوصيل",
+            "reject": "رفض الطلب"
+        },
+        "badges": {
+            "pendingInfo": "بانتظار معلومات",
+            "needsApproval": "يحتاج موافقة",
+            "preparing": "جاري التجهيز",
+            "shipping": "جاري الشحن",
+            "completed": "مكتمل",
+            "rejected": "مرفوض"
+        },
+        "toasts": {
+            "statusUpdated": "تم تحديث الحالة",
+            "statusUpdatedDesc": "تم تغيير حالة الطلب إلى {status}",
+            "error": "خطأ"
+        }
+    },
+    "SettingsPage": {
+        "title": "إعدادات الموقع",
+        "description": "إدارة الإعدادات العامة لموقعك، بما في ذلك محتوى التذييل.",
+        "contactInfo": "معلومات الاتصال",
+        "contactInfoDesc": "تحديث الهاتف، البريد الإلكتروني، والعنوان.",
+        "socialMedia": "وسائل التواصل الاجتماعي",
+        "socialMediaDesc": "أدخل الروابط الكاملة لحساباتك الاجتماعية.",
+        "legalPages": "الصفحات القانونية",
+        "legalPagesDesc": "روابط لصفحات الشروط وسياسة الخصوصية.",
+        "form": {
+            "phone": "رقم الهاتف",
+            "email": "البريد الإلكتروني",
+            "address": "العنوان",
+            "facebook": "رابط Facebook",
+            "twitter": "رابط Twitter",
+            "instagram": "رابط Instagram",
+            "terms": "رابط شروط الخدمة",
+            "privacy": "رابط سياسة الخصوصية",
+            "save": "حفظ التغييرات",
+            "saving": "جاري الحفظ..."
+        },
+        "toasts": {
+            "saved": "تم حفظ الإعدادات",
+            "savedDesc": "تم تحديث إعدادات موقعك بنجاح.",
+            "error": "خطأ"
+        }
+    },
+    "ProfilePage": {
+        "title": "ملفك الشخصي",
+        "description": "إدارة معلوماتك الشخصية وصورة الملف الشخصي.",
+        "picture": "صورة الملف الشخصي",
+        "upload": "رفع صورة",
+        "uploadHint": "PNG, JPG حتى 1 ميجابايت",
+        "displayName": "الاسم الظاهر",
+        "email": "البريد الإلكتروني",
+        "role": "الدور",
+        "save": "حفظ التغييرات",
+        "saving": "جاري الحفظ...",
+        "toasts": {
+            "updated": "تم تحديث الملف الشخصي",
+            "updatedDesc": "تم تحديث ملفك الشخصي بنجاح.",
+            "error": "فشل التحديث"
+        }
     }
 }

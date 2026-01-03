@@ -1,4 +1,3 @@
-
 'use client';
 
 import * as React from 'react';
@@ -26,6 +25,7 @@ import {
   FormMessage,
 } from '@/components/ui/form';
 import { supabase } from '@/lib/supabase/client';
+import { useTranslations } from 'next-intl';
 
 const settingsFormSchema = z.object({
   facebookUrl: z.string().url().or(z.literal('')),
@@ -41,6 +41,7 @@ const settingsFormSchema = z.object({
 type SiteSettings = z.infer<typeof settingsFormSchema>;
 
 export default function SettingsPage() {
+  const t = useTranslations('SettingsPage');
   const { toast } = useToast();
   const [isSaving, setIsSaving] = React.useState(false);
   const [settings, setSettings] = React.useState<SiteSettings | null>(null);
@@ -119,12 +120,12 @@ export default function SettingsPage() {
       if (error) throw error;
 
       toast({
-        title: 'Settings Saved',
-        description: 'Your site settings have been successfully updated.',
+        title: t('toasts.saved'),
+        description: t('toasts.savedDesc'),
       });
     } catch (error: any) {
       console.error("Error saving settings:", error);
-      toast({ variant: 'destructive', title: 'Error', description: error.message || 'Failed to save settings.' });
+      toast({ variant: 'destructive', title: t('toasts.error'), description: error.message || 'Failed to save settings.' });
     } finally {
       setIsSaving(false);
     }
@@ -133,8 +134,8 @@ export default function SettingsPage() {
   const renderFormFields = () => (
     <div className="space-y-6">
       <div>
-        <h3 className="text-lg font-medium">Contact Information</h3>
-        <p className="text-sm text-muted-foreground">Update phone, email, and address.</p>
+        <h3 className="text-lg font-medium">{t('sections.contactInfo')}</h3>
+        <p className="text-sm text-muted-foreground">{t('sections.contactInfoDesc')}</p>
       </div>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <FormField
@@ -142,9 +143,9 @@ export default function SettingsPage() {
           name="phoneNumber"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Phone Number</FormLabel>
+              <FormLabel>{t('form.phone')}</FormLabel>
               <FormControl>
-                <Input placeholder="+963 912 345 678" {...field} />
+                <Input placeholder={t('form.phonePlaceholder')} {...field} />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -155,9 +156,9 @@ export default function SettingsPage() {
           name="email"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Email</FormLabel>
+              <FormLabel>{t('form.email')}</FormLabel>
               <FormControl>
-                <Input placeholder="contact@eyronix.sy" {...field} />
+                <Input placeholder={t('form.emailPlaceholder')} {...field} />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -169,9 +170,9 @@ export default function SettingsPage() {
         name="address"
         render={({ field }) => (
           <FormItem>
-            <FormLabel>Address</FormLabel>
+            <FormLabel>{t('form.address')}</FormLabel>
             <FormControl>
-              <Input placeholder="Damascus, Syria" {...field} />
+              <Input placeholder={t('form.addressPlaceholder')} {...field} />
             </FormControl>
             <FormMessage />
           </FormItem>
@@ -179,8 +180,8 @@ export default function SettingsPage() {
       />
 
       <div className="pt-6">
-        <h3 className="text-lg font-medium">Social Media</h3>
-        <p className="text-sm text-muted-foreground">Enter the full URLs for your social profiles.</p>
+        <h3 className="text-lg font-medium">{t('sections.socialMedia')}</h3>
+        <p className="text-sm text-muted-foreground">{t('sections.socialMediaDesc')}</p>
       </div>
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <FormField
@@ -188,7 +189,7 @@ export default function SettingsPage() {
           name="facebookUrl"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Facebook URL</FormLabel>
+              <FormLabel>{t('form.facebook')}</FormLabel>
               <FormControl>
                 <Input placeholder="https://facebook.com/..." {...field} />
               </FormControl>
@@ -201,7 +202,7 @@ export default function SettingsPage() {
           name="twitterUrl"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Twitter URL</FormLabel>
+              <FormLabel>{t('form.twitter')}</FormLabel>
               <FormControl>
                 <Input placeholder="https://twitter.com/..." {...field} />
               </FormControl>
@@ -214,7 +215,7 @@ export default function SettingsPage() {
           name="instagramUrl"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Instagram URL</FormLabel>
+              <FormLabel>{t('form.instagram')}</FormLabel>
               <FormControl>
                 <Input placeholder="https://instagram.com/..." {...field} />
               </FormControl>
@@ -225,8 +226,8 @@ export default function SettingsPage() {
       </div>
 
       <div className="pt-6">
-        <h3 className="text-lg font-medium">Legal Pages</h3>
-        <p className="text-sm text-muted-foreground">Links to your terms and privacy policy pages.</p>
+        <h3 className="text-lg font-medium">{t('sections.legalPages')}</h3>
+        <p className="text-sm text-muted-foreground">{t('sections.legalPagesDesc')}</p>
       </div>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <FormField
@@ -234,9 +235,9 @@ export default function SettingsPage() {
           name="termsUrl"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Terms of Service URL</FormLabel>
+              <FormLabel>{t('form.termsUrl')}</FormLabel>
               <FormControl>
-                <Input placeholder="/terms" {...field} />
+                <Input placeholder={t('form.termsUrlPlaceholder')} {...field} />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -247,9 +248,9 @@ export default function SettingsPage() {
           name="privacyUrl"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Privacy Policy URL</FormLabel>
+              <FormLabel>{t('form.privacyUrl')}</FormLabel>
               <FormControl>
-                <Input placeholder="/privacy" {...field} />
+                <Input placeholder={t('form.privacyUrlPlaceholder')} {...field} />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -279,9 +280,9 @@ export default function SettingsPage() {
       <form onSubmit={form.handleSubmit(onSubmit)}>
         <Card>
           <CardHeader>
-            <CardTitle>Site Settings</CardTitle>
+            <CardTitle>{t('title')}</CardTitle>
             <CardDescription>
-              Manage global settings for your website, including footer content.
+              {t('description')}
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -289,7 +290,7 @@ export default function SettingsPage() {
           </CardContent>
           <CardFooter className="border-t px-6 py-4">
             <Button type="submit" disabled={isSaving || isLoading}>
-              {isSaving ? 'Saving...' : 'Save Changes'}
+              {isSaving ? t('actions.saving') : t('actions.saveChanges')}
             </Button>
           </CardFooter>
         </Card>

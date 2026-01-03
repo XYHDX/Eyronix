@@ -45,6 +45,7 @@ import { useToast } from '@/hooks/use-toast';
 import { getInitials } from '@/lib/utils';
 import { formatDistanceToNow } from 'date-fns';
 import { supabase } from '@/lib/supabase/client';
+import { useTranslations } from 'next-intl';
 
 type UserProfile = {
   id: string;
@@ -55,7 +56,9 @@ type UserProfile = {
   created_at: string;
 };
 
+
 export default function UsersPage() {
+  const t = useTranslations('UsersPage');
   const { toast } = useToast();
   const [users, setUsers] = React.useState<UserProfile[]>([]);
   const [isLoading, setIsLoading] = React.useState(true);
@@ -111,15 +114,15 @@ export default function UsersPage() {
       if (error) throw error;
 
       toast({
-        title: 'Role Updated',
-        description: `${userToUpdate.full_name || userToUpdate.email}'s role has been changed to ${newRole}.`,
+        title: t('toasts.roleUpdated'),
+        description: t('toasts.roleUpdatedDesc', { name: userToUpdate.full_name || userToUpdate.email, role: newRole }),
       });
       // UI updates automatically via subscription
     } catch (error: any) {
       console.error('Error updating role:', error);
       toast({
         variant: 'destructive',
-        title: 'Update failed',
+        title: t('toasts.updateFailed'),
         description: error.message || 'Could not update user role.',
       });
     } finally {
@@ -143,14 +146,14 @@ export default function UsersPage() {
       if (error) throw error;
 
       toast({
-        title: 'User Record Deleted',
-        description: `The user record for ${itemToDelete.full_name} has been deleted.`,
+        title: t('toasts.deleted'),
+        description: t('toasts.deletedDesc', { name: itemToDelete.full_name }),
       });
     } catch (error: any) {
       console.error("Error deleting user record:", error);
       toast({
         variant: 'destructive',
-        title: 'Delete failed',
+        title: t('toasts.deleteFailed'),
         description: error.message,
       });
     } finally {
@@ -162,9 +165,9 @@ export default function UsersPage() {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>User Management</CardTitle>
+        <CardTitle>{t('title')}</CardTitle>
         <CardDescription>
-          View, manage roles, and delete users in your system.
+          {t('description')}
         </CardDescription>
       </CardHeader>
       <CardContent>
@@ -172,11 +175,11 @@ export default function UsersPage() {
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>User</TableHead>
-                <TableHead className="hidden sm:table-cell">Role</TableHead>
-                <TableHead className="hidden md:table-cell">Date Joined</TableHead>
+                <TableHead>{t('table.user')}</TableHead>
+                <TableHead className="hidden sm:table-cell">{t('table.role')}</TableHead>
+                <TableHead className="hidden md:table-cell">{t('table.dateJoined')}</TableHead>
                 <TableHead>
-                  <span className="sr-only">Actions</span>
+                  <span className="sr-only">{t('table.actions')}</span>
                 </TableHead>
               </TableRow>
             </TableHeader>
@@ -245,23 +248,23 @@ export default function UsersPage() {
                             </Button>
                           </DropdownMenuTrigger>
                           <DropdownMenuContent align="end">
-                            <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                            <DropdownMenuLabel>{t('table.actions')}</DropdownMenuLabel>
                             <DropdownMenuItem
                               onSelect={() => handleRoleChange(user, 'admin')}
                               disabled={user.role === 'admin' || isUpdating === user.id}
                             >
-                              Make Admin
+                              {t('actions.makeAdmin')}
                             </DropdownMenuItem>
                             <DropdownMenuItem
                               onSelect={() => handleRoleChange(user, 'user')}
                               disabled={user.role === 'user' || isUpdating === user.id}
                             >
-                              Make User
+                              {t('actions.makeUser')}
                             </DropdownMenuItem>
                             <DropdownMenuSeparator />
                             <AlertDialogTrigger asChild>
                               <DropdownMenuItem className="text-red-600" onSelect={(e) => { e.preventDefault(); setItemToDelete(user); }} disabled={currentUser?.id === user.id}>
-                                Delete User
+                                {t('actions.delete')}
                               </DropdownMenuItem>
                             </AlertDialogTrigger>
                           </DropdownMenuContent>
@@ -269,15 +272,15 @@ export default function UsersPage() {
                         {itemToDelete && itemToDelete.id === user.id && (
                           <AlertDialogContent>
                             <AlertDialogHeader>
-                              <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+                              <AlertDialogTitle>{t('dialog.title')}</AlertDialogTitle>
                               <AlertDialogDescription>
-                                This action cannot be undone. This will permanently delete the user record for <span className="font-bold">{itemToDelete.full_name}</span>.
+                                {t('dialog.description', { name: itemToDelete.full_name })}
                               </AlertDialogDescription>
                             </AlertDialogHeader>
                             <AlertDialogFooter>
-                              <AlertDialogCancel onClick={() => setItemToDelete(null)} disabled={isDeleting}>Cancel</AlertDialogCancel>
+                              <AlertDialogCancel onClick={() => setItemToDelete(null)} disabled={isDeleting}>{t('actions.cancel')}</AlertDialogCancel>
                               <AlertDialogAction onClick={handleDelete} className="bg-red-600 hover:bg-red-700" disabled={isDeleting}>
-                                {isDeleting ? 'Deleting...' : 'Delete'}
+                                {isDeleting ? t('actions.deleting') : t('actions.confirm')}
                               </AlertDialogAction>
                             </AlertDialogFooter>
                           </AlertDialogContent>
@@ -290,7 +293,7 @@ export default function UsersPage() {
                 <TableRow>
                   <TableCell colSpan={4} className="h-24 text-center">
                     <Users className="mx-auto h-8 w-8 text-muted-foreground mb-2" />
-                    No users found.
+                    {t('table.noUsers')}
                   </TableCell>
                 </TableRow>
               )}

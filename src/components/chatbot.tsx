@@ -2,6 +2,7 @@
 'use client';
 
 import { useState, useRef, useEffect } from 'react';
+import { useTranslations, useLocale } from 'next-intl';
 import { Bot, MessageSquare, Send, X, User } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
@@ -27,6 +28,9 @@ export default function Chatbot() {
   const [isBotTyping, setIsBotTyping] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
+  const t = useTranslations('Chatbot');
+  const locale = useLocale();
+
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   };
@@ -41,7 +45,12 @@ export default function Chatbot() {
       if (isOpen && messages.length === 0) {
         setIsBotTyping(true);
         try {
-          await setupChatbot({ initialQa: 'Common questions about Eyronix security solutions.' });
+          // Pass locale instructions to the setup
+          await setupChatbot({
+            initialQa: locale === 'ar'
+              ? 'Respond in Arabic unless the user speaks English. You are a support bot for Eyronix Syria.'
+              : 'Common questions about Eyronix security solutions.'
+          });
         } catch (e) {
           console.error("Failed to setup chatbot", e);
         }
@@ -50,7 +59,7 @@ export default function Chatbot() {
           setMessages([
             {
               id: 1,
-              text: 'Welcome to Eyronix! I am a support bot. How can I assist you with your security needs today?',
+              text: t('welcomeMessage'),
               sender: 'bot',
             },
           ]);
@@ -59,7 +68,7 @@ export default function Chatbot() {
       }
     }
     initializeBot();
-  }, [isOpen, messages.length]);
+  }, [isOpen, messages.length, locale]); // Add locale dependency
 
   useEffect(() => {
     const handleOpenChatbot = (event: Event) => {
@@ -100,6 +109,7 @@ export default function Chatbot() {
       const result = await chatbotConversation({
         history,
         message: currentInput,
+        locale: locale
       });
 
       const botResponse: Message = {
@@ -112,7 +122,7 @@ export default function Chatbot() {
       console.error("Chatbot conversation error:", error);
       const botResponse: Message = {
         id: Date.now() + 1,
-        text: "I seem to be having some trouble right now. A human agent will get back to you shortly. For immediate assistance, please check our website.",
+        text: t('errorMessage'),
         sender: 'bot',
       };
       setMessages((prev) => [...prev, botResponse]);
@@ -141,10 +151,10 @@ export default function Chatbot() {
                 <AvatarFallback className='bg-primary text-primary-foreground'><Bot /></AvatarFallback>
               </Avatar>
               <div>
-                <CardTitle className="text-base">Support Bot</CardTitle>
+                <CardTitle className="text-base">{t('supportBot')}</CardTitle>
                 <div className="flex items-center gap-1.5">
                   <span className="h-2 w-2 rounded-full bg-green-500"></span>
-                  <p className="text-xs text-muted-foreground">Online</p>
+                  <p className="text-xs text-muted-foreground">{t('online')}</p>
                 </div>
               </div>
             </div>
@@ -212,7 +222,7 @@ export default function Chatbot() {
               <Input
                 value={inputValue}
                 onChange={(e) => setInputValue(e.target.value)}
-                placeholder="Type a message..."
+                placeholder={t('typeMessage')}
                 autoComplete="off"
                 disabled={isBotTyping}
               />

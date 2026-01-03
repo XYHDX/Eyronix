@@ -271,9 +271,9 @@ export default function Home() {
         {/* Services Section */}
         <section id="services" className="py-16 md:py-24 bg-background">
           <div className="container mx-auto text-center">
-            <h2 className="text-3xl md:text-4xl font-bold mb-2 font-headline">Our Expertise</h2>
+            <h2 className="text-3xl md:text-4xl font-bold mb-2 font-headline">{t('ourExpertise')}</h2>
             <p className="max-w-2xl mx-auto text-muted-foreground mb-12">
-              From installation to maintenance, we provide comprehensive security services.
+              {t('expertiseSubtext')}
             </p>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
               {servicesLoading ? (
@@ -317,9 +317,9 @@ export default function Home() {
         {/* Featured Products Section */}
         <section id="products" className="py-16 md:py-24 bg-card">
           <div className="container mx-auto text-center">
-            <h2 className="text-3xl md:text-4xl font-bold mb-2 font-headline">Featured Products</h2>
+            <h2 className="text-3xl md:text-4xl font-bold mb-2 font-headline">{t('featuredProducts')}</h2>
             <p className="max-w-2xl mx-auto text-muted-foreground mb-12">
-              High-quality security hardware to protect what matters most.
+              {t('productsSubtext')}
             </p>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
               {productsLoading ? (
@@ -392,7 +392,7 @@ export default function Home() {
             <div className="mt-12">
               <Button asChild size="lg">
                 <Link href="/products">
-                  View All Products
+                  {t('viewAllProducts')}
                   <ArrowRight className="ms-2 h-5 w-5 rtl:rotate-180" />
                 </Link>
               </Button>
@@ -405,14 +405,14 @@ export default function Home() {
           <div className="container mx-auto">
             <div className="grid md:grid-cols-2 gap-12 items-center">
               <div className="text-start">
-                <h2 className="text-3xl md:text-4xl font-bold mb-4 font-headline">Interactive AI Analysis</h2>
+                <h2 className="text-3xl md:text-4xl font-bold mb-4 font-headline">{t('aiAnalysis')}</h2>
                 <p className="text-muted-foreground text-lg mb-6">
-                  Test our AI's capabilities. Upload any image, and our advanced system will instantly analyze it to detect human or vehicle presence. Experience firsthand how intelligent analysis can distinguish significant events from background noise.
+                  {t('aiAnalysisDesc')}
                 </p>
                 <div className="flex gap-4">
                   <Button onClick={() => fileInputRef.current?.click()} variant="secondary">
                     <Upload className="me-2 h-5 w-5" />
-                    Upload Image
+                    {t('uploadImage')}
                   </Button>
                   <Input
                     type="file"
@@ -423,13 +423,13 @@ export default function Home() {
                   />
                   <Button onClick={handleAiAnalysis} disabled={isAnalyzing || !selectedFile}>
                     <BrainCircuit className="me-2 h-5 w-5" />
-                    {isAnalyzing ? 'Analyzing...' : 'Run Analysis'}
+                    {isAnalyzing ? t('analyzing') : t('runAnalysis')}
                   </Button>
                 </div>
                 {analysisResult && (
                   <Alert className="mt-6">
                     <Zap className="h-4 w-4" />
-                    <AlertTitle>Analysis Complete</AlertTitle>
+                    <AlertTitle>{t('analysisComplete')}</AlertTitle>
                     <AlertDescription>
                       {analysisResult}
                     </AlertDescription>
@@ -442,13 +442,13 @@ export default function Home() {
                 ) : (
                   <div className="w-full h-full flex flex-col items-center justify-center text-muted-foreground">
                     <Camera className="w-16 h-16" />
-                    <p className="mt-2">Upload an image to begin</p>
+                    <p className="mt-2">{t('uploadToBegin')}</p>
                   </div>
                 )}
                 <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent"></div>
                 <div className="absolute bottom-4 left-4 rtl:left-auto rtl:right-4 text-white">
-                  <p className="font-bold text-lg">LIVE DEMO: SCENE ANALYSIS</p>
-                  <p className="text-sm opacity-80">Upload any image to test</p>
+                  <p className="font-bold text-lg">{t('liveDemo')}</p>
+                  <p className="text-sm opacity-80">{t('uploadToTest')}</p>
                 </div>
               </div>
             </div>
@@ -459,9 +459,9 @@ export default function Home() {
         {/* Pricing Section */}
         <section id="pricing" className="py-16 md:py-24 bg-card">
           <div className="container mx-auto text-center">
-            <h2 className="text-3xl md:text-4xl font-bold mb-2 font-headline">Security Packages</h2>
+            <h2 className="text-3xl md:text-4xl font-bold mb-2 font-headline">{t('packages')}</h2>
             <p className="max-w-2xl mx-auto text-muted-foreground mb-12">
-              Choose the package that fits your needs. No hidden fees.
+              {t('packagesSubtext')}
             </p>
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
               {pricingLoading ? (
@@ -485,7 +485,7 @@ export default function Home() {
                 <Card key={pkg.id} className={`text-start ${pkg.popular ? 'border-primary border-2 shadow-primary/20 shadow-lg -translate-y-4' : ''}`}>
                   {pkg.popular && (
                     <div className="bg-primary text-primary-foreground text-center py-1.5 text-sm font-semibold rounded-t-lg -mt-px">
-                      Most Popular
+                      {t('mostPopular')}
                     </div>
                   )}
                   <CardHeader>
@@ -507,19 +507,19 @@ export default function Home() {
                       <Dialog>
                         <DialogTrigger asChild>
                           <Button className="w-full" variant={pkg.popular ? 'default' : 'outline'}>
-                            {pkg.price > 0 ? 'View Details & Buy' : 'Contact Us'}
+                            {pkg.price > 0 ? t('viewDetails') : t('contactUs')}
                           </Button>
                         </DialogTrigger>
                         <DialogContent className="sm:max-w-[425px]">
                           <DialogHeader>
-                            <DialogTitle>{pkg.name} Package Specs</DialogTitle>
+                            <DialogTitle>{pkg.name} - {t('packageSpecs')}</DialogTitle>
                             <DialogDescription>
                               Detailed technical specifications for this security setup.
                             </DialogDescription>
                           </DialogHeader>
                           <div className="grid gap-4 py-4">
                             <div className="grid grid-cols-4 items-center gap-4">
-                              <span className="font-bold col-span-4">Camera Specifications</span>
+                              <span className="font-bold col-span-4">{t('cameraSpecs')}</span>
                               <div className="col-span-4 text-sm text-muted-foreground">
                                 <ul className="list-disc ps-5 space-y-1">
                                   <li>Resolution: {pkg.name === 'Pro' ? '4K UHD (3840x2160)' : 'Full HD (1920x1080)'}</li>
@@ -530,7 +530,7 @@ export default function Home() {
                               </div>
                             </div>
                             <div className="grid grid-cols-4 items-center gap-4">
-                              <span className="font-bold col-span-4">Recording Unit (NVR/DVR)</span>
+                              <span className="font-bold col-span-4">{t('recordingUnit')}</span>
                               <div className="col-span-4 text-sm text-muted-foreground">
                                 <ul className="list-disc ps-5 space-y-1">
                                   <li>Channels: {pkg.name === 'Basic' ? '4 Channel' : pkg.name === 'Standard' ? '8 Channel' : '16 Channel'}</li>
@@ -559,7 +559,7 @@ export default function Home() {
                                 toast({ variant: 'destructive', title: 'Order Failed', description: 'Could not purchase package.' });
                               }
                             }}>
-                              Confirm Purchase
+                              {t('confirmPurchase')}
                             </Button>
                           </DialogFooter>
                         </DialogContent>
@@ -576,9 +576,9 @@ export default function Home() {
         <section id="survey" className="py-16 md:py-24 bg-background">
           <div ref={scrollRef} className="container mx-auto max-w-3xl">
             <div className="text-center mb-12">
-              <h2 className="text-3xl md:text-4xl font-bold mb-2 font-headline">Request a Free Site Survey</h2>
+              <h2 className="text-3xl md:text-4xl font-bold mb-2 font-headline">{t('surveyTitle')}</h2>
               <p className="text-muted-foreground">
-                Let our experts assess your security needs. Fill out the form below and we'll be in touch.
+                {t('surveySubtext')}
               </p>
             </div>
             <Form {...form}>
@@ -589,9 +589,9 @@ export default function Home() {
                     name="name"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Full Name</FormLabel>
+                        <FormLabel>{t('formLabels.fullName')}</FormLabel>
                         <FormControl>
-                          <Input placeholder="John Doe" {...field} />
+                          <Input placeholder={t('formLabels.fullName')} {...field} />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -602,7 +602,7 @@ export default function Home() {
                     name="email"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Email Address</FormLabel>
+                        <FormLabel>{t('formLabels.email')}</FormLabel>
                         <FormControl>
                           <Input placeholder="you@example.com" {...field} />
                         </FormControl>
@@ -616,7 +616,7 @@ export default function Home() {
                   name="phone"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Phone Number</FormLabel>
+                      <FormLabel>{t('formLabels.phone')}</FormLabel>
                       <FormControl>
                         <Input placeholder="(123) 456-7890" {...field} />
                       </FormControl>
@@ -629,9 +629,9 @@ export default function Home() {
                   name="message"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Your Message</FormLabel>
+                      <FormLabel>{t('formLabels.message')}</FormLabel>
                       <FormControl>
-                        <Textarea placeholder="Tell us about your security needs..." className="min-h-[120px]" {...field} />
+                        <Textarea placeholder={t('formLabels.messagePlaceholder')} className="min-h-[120px]" {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -639,7 +639,7 @@ export default function Home() {
                 />
                 <div className="text-center">
                   <Button type="submit" size="lg" disabled={form.formState.isSubmitting}>
-                    {form.formState.isSubmitting ? 'Sending...' : 'Submit Request'}
+                    {form.formState.isSubmitting ? t('sending') : t('submitRequest')}
                   </Button>
                 </div>
               </form>

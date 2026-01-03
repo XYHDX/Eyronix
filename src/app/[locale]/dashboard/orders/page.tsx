@@ -37,6 +37,7 @@ import {
     TabsTrigger,
 } from "@/components/ui/tabs"
 import { useToast } from '@/hooks/use-toast';
+import { useTranslations } from 'next-intl';
 
 type Sale = {
     id: string;
@@ -52,6 +53,7 @@ type Sale = {
 };
 
 export default function OrdersPage() {
+    const t = useTranslations('OrdersPage');
     const [sales, setSales] = React.useState<Sale[]>([]);
     const [loading, setLoading] = React.useState(true);
     const [filterStatus, setFilterStatus] = React.useState<string>('all');
@@ -107,28 +109,28 @@ export default function OrdersPage() {
 
             if (error) throw error;
 
-            toast({ title: "Status Updated", description: `Order status changed to ${newStatus}` });
+            toast({ title: t('toasts.statusUpdated'), description: t('toasts.statusUpdatedDesc', { status: newStatus }) });
             fetchOrders();
         } catch (error) {
             console.error("Failed to update status", error);
-            toast({ variant: "destructive", title: "Error", description: "Failed to update status." });
+            toast({ variant: "destructive", title: t('toasts.error'), description: "Failed to update status." });
         }
     }
 
     const getStatusBadge = (status: string) => {
         switch (status) {
             case 'Pending Info':
-                return <Badge variant="outline" className="text-gray-500">Pending Info</Badge>;
+                return <Badge variant="outline" className="text-gray-500">{t('badges.pendingInfo')}</Badge>;
             case 'Pending Approval':
-                return <Badge variant="outline" className="bg-yellow-100 text-yellow-800 border-yellow-200">Needs Approval</Badge>;
+                return <Badge variant="outline" className="bg-yellow-100 text-yellow-800 border-yellow-200">{t('badges.needsApproval')}</Badge>;
             case 'Preparing':
-                return <Badge variant="outline" className="bg-blue-100 text-blue-800 border-blue-200">Preparing</Badge>;
+                return <Badge variant="outline" className="bg-blue-100 text-blue-800 border-blue-200">{t('badges.preparing')}</Badge>;
             case 'Shipping':
-                return <Badge variant="outline" className="bg-indigo-100 text-indigo-800 border-indigo-200">Shipping</Badge>;
+                return <Badge variant="outline" className="bg-indigo-100 text-indigo-800 border-indigo-200">{t('badges.shipping')}</Badge>;
             case 'Completed':
-                return <Badge variant="outline" className="bg-green-100 text-green-800 border-green-200">Completed</Badge>;
+                return <Badge variant="outline" className="bg-green-100 text-green-800 border-green-200">{t('badges.completed')}</Badge>;
             case 'Rejected':
-                return <Badge variant="destructive">Rejected</Badge>;
+                return <Badge variant="destructive">{t('badges.rejected')}</Badge>;
             default:
                 return <Badge variant="secondary">{status}</Badge>;
         }
@@ -139,15 +141,15 @@ export default function OrdersPage() {
             <CardHeader>
                 <div className="flex items-center justify-between">
                     <div>
-                        <CardTitle>All Orders</CardTitle>
-                        <CardDescription>Manage and track all customer orders.</CardDescription>
+                        <CardTitle>{t('title')}</CardTitle>
+                        <CardDescription>{t('description')}</CardDescription>
                     </div>
                     <Tabs defaultValue="all" onValueChange={setFilterStatus} className="w-[400px]">
                         <TabsList className="grid w-full grid-cols-4">
-                            <TabsTrigger value="all">All</TabsTrigger>
-                            <TabsTrigger value="pending">Pending</TabsTrigger>
-                            <TabsTrigger value="active">Active</TabsTrigger>
-                            <TabsTrigger value="completed">Done</TabsTrigger>
+                            <TabsTrigger value="all">{t('tabs.all')}</TabsTrigger>
+                            <TabsTrigger value="pending">{t('tabs.pending')}</TabsTrigger>
+                            <TabsTrigger value="active">{t('tabs.active')}</TabsTrigger>
+                            <TabsTrigger value="completed">{t('tabs.done')}</TabsTrigger>
                         </TabsList>
                     </Tabs>
                 </div>
@@ -156,13 +158,13 @@ export default function OrdersPage() {
                 <Table>
                     <TableHeader>
                         <TableRow>
-                            <TableHead>Date</TableHead>
-                            <TableHead>Customer</TableHead>
-                            <TableHead>Details</TableHead>
-                            <TableHead>Amnt</TableHead>
-                            <TableHead>Info</TableHead>
-                            <TableHead>Status</TableHead>
-                            <TableHead className="text-right">Actions</TableHead>
+                            <TableHead>{t('table.date')}</TableHead>
+                            <TableHead>{t('table.customer')}</TableHead>
+                            <TableHead>{t('table.details')}</TableHead>
+                            <TableHead>{t('table.amount')}</TableHead>
+                            <TableHead>{t('table.info')}</TableHead>
+                            <TableHead>{t('table.status')}</TableHead>
+                            <TableHead className="text-right">{t('table.actions')}</TableHead>
                         </TableRow>
                     </TableHeader>
                     <TableBody>
@@ -184,7 +186,7 @@ export default function OrdersPage() {
                                     <TableCell className="text-xs text-muted-foreground">{format(new Date(sale.created_at), 'MMM dd, HH:mm')}</TableCell>
                                     <TableCell>
                                         <div className="flex flex-col">
-                                            <span className="font-medium text-sm">{sale.profiles?.display_name || 'Guest/Unknown'}</span>
+                                            <span className="font-medium text-sm">{sale.profiles?.display_name || t('table.guest')}</span>
                                             <span className="text-xs text-muted-foreground">{sale.profiles?.email || sale.user_id}</span>
                                         </div>
                                     </TableCell>
@@ -199,7 +201,7 @@ export default function OrdersPage() {
                                                 <span className="text-muted-foreground">{sale.phone}</span>
                                             </div>
                                         ) : (
-                                            <span className="text-xs text-muted-foreground italic">No details</span>
+                                            <span className="text-xs text-muted-foreground italic">{t('table.noDetails')}</span>
                                         )}
                                     </TableCell>
                                     <TableCell>
@@ -214,26 +216,26 @@ export default function OrdersPage() {
                                                 </Button>
                                             </DropdownMenuTrigger>
                                             <DropdownMenuContent align="end">
-                                                <DropdownMenuLabel>Update Status</DropdownMenuLabel>
+                                                <DropdownMenuLabel>{t('actions.updateStatus')}</DropdownMenuLabel>
                                                 <DropdownMenuSeparator />
                                                 {sale.status === 'Pending Approval' && (
                                                     <DropdownMenuItem onClick={() => updateStatus(sale.id, 'Preparing')}>
-                                                        Approve & Prepare
+                                                        {t('actions.approvePrepare')}
                                                     </DropdownMenuItem>
                                                 )}
                                                 {sale.status === 'Preparing' && (
                                                     <DropdownMenuItem onClick={() => updateStatus(sale.id, 'Shipping')}>
-                                                        Mark Shipped
+                                                        {t('actions.markShipped')}
                                                     </DropdownMenuItem>
                                                 )}
                                                 {sale.status === 'Shipping' && (
                                                     <DropdownMenuItem onClick={() => updateStatus(sale.id, 'Completed')}>
-                                                        Mark Delivered
+                                                        {t('actions.markDelivered')}
                                                     </DropdownMenuItem>
                                                 )}
                                                 <DropdownMenuSeparator />
                                                 <DropdownMenuItem className="text-red-600" onClick={() => updateStatus(sale.id, 'Rejected')}>
-                                                    Reject Order
+                                                    {t('actions.reject')}
                                                 </DropdownMenuItem>
                                             </DropdownMenuContent>
                                         </DropdownMenu>
@@ -243,7 +245,7 @@ export default function OrdersPage() {
                         ) : (
                             <TableRow>
                                 <TableCell colSpan={7} className="h-24 text-center text-muted-foreground">
-                                    No orders found.
+                                    {t('table.noOrders')}
                                 </TableCell>
                             </TableRow>
                         )}

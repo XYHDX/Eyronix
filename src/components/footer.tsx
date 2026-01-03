@@ -20,7 +20,10 @@ type SiteSettings = {
 };
 
 
+import { useTranslations } from 'next-intl';
+
 export default function Footer() {
+  const t = useTranslations('Footer');
   const [settings, setSettings] = useState<SiteSettings | null>(null);
 
   useEffect(() => {
@@ -70,7 +73,7 @@ export default function Footer() {
               <span className="font-bold text-xl font-headline">Eyronix Syria</span>
             </Link>
             <p className="text-muted-foreground">
-              Your trusted partner in modern security solutions.
+              {t('tagline')}
             </p>
             <div className="flex space-x-4">
               <Link href={facebook} aria-label="Facebook" className="text-muted-foreground hover:text-primary"><Facebook size={20} /></Link>
@@ -79,41 +82,41 @@ export default function Footer() {
             </div>
           </div>
           <div>
-            <h3 className="text-lg font-semibold font-headline mb-4">Quick Links</h3>
+            <h3 className="text-lg font-semibold font-headline mb-4">{t('quickLinks')}</h3>
             <ul className="space-y-2">
-              <li><Link href="/#services" className="text-muted-foreground hover:text-primary">Services</Link></li>
-              <li><Link href="/#pricing" className="text-muted-foreground hover:text-primary">Pricing</Link></li>
-              <li><Link href="/#survey" className="text-muted-foreground hover:text-primary">Request Survey</Link></li>
-              <li><Link href="/products" className="text-muted-foreground hover:text-primary">Products</Link></li>
+              <li><Link href="/#services" className="text-muted-foreground hover:text-primary">{t('services')}</Link></li>
+              <li><Link href="/#pricing" className="text-muted-foreground hover:text-primary">{t('pricing')}</Link></li>
+              <li><Link href="/#survey" className="text-muted-foreground hover:text-primary">{t('requestSurvey')}</Link></li>
+              <li><Link href="/products" className="text-muted-foreground hover:text-primary">{t('products')}</Link></li>
             </ul>
           </div>
           <div>
-            <h3 className="text-lg font-semibold font-headline mb-4">Contact Us</h3>
+            <h3 className="text-lg font-semibold font-headline mb-4">{t('contactUs')}</h3>
             <ul className="space-y-3 text-muted-foreground">
               <li className="flex items-start">
-                <Mail size={18} className="mr-3 mt-1 shrink-0" />
+                <Mail size={18} className="me-3 mt-1 shrink-0" />
                 <a href={`mailto:${email}`} className="hover:text-primary">{email}</a>
               </li>
               <li className="flex items-start">
-                <Phone size={18} className="mr-3 mt-1 shrink-0" />
+                <Phone size={18} className="me-3 mt-1 shrink-0" />
                 <a href={`tel:${phone}`} className="hover:text-primary">{phone}</a>
               </li>
               <li className="flex items-start">
-                <MapPin size={18} className="mr-3 mt-1 shrink-0" />
+                <MapPin size={18} className="me-3 mt-1 shrink-0" />
                 <span>{address}</span>
               </li>
             </ul>
           </div>
           <div>
-            <h3 className="text-lg font-semibold font-headline mb-4">Legal</h3>
+            <h3 className="text-lg font-semibold font-headline mb-4">{t('legal')}</h3>
             <ul className="space-y-2">
-              <li><Link href={privacy} className="text-muted-foreground hover:text-primary">Privacy Policy</Link></li>
-              <li><Link href={terms} className="text-muted-foreground hover:text-primary">Terms of Service</Link></li>
+              <li><Link href={privacy} className="text-muted-foreground hover:text-primary">{t('privacyPolicy')}</Link></li>
+              <li><Link href={terms} className="text-muted-foreground hover:text-primary">{t('termsOfService')}</Link></li>
             </ul>
           </div>
         </div>
         <div className="mt-12 pt-8 border-t text-center text-muted-foreground text-sm">
-          <p>&copy; {new Date().getFullYear()} Eyronix Syria. All rights reserved.</p>
+          <p>&copy; {new Date().getFullYear()} Eyronix Syria. {t('rightsReserved')}</p>
         </div>
       </div>
     </footer>

@@ -2,6 +2,7 @@
 
 import Link from 'next/link';
 import Image from 'next/image';
+import { useTranslations } from 'next-intl';
 import { Button } from '@/components/ui/button';
 import {
     Card,
@@ -18,6 +19,7 @@ import { useState } from 'react';
 import { supabase } from '@/lib/supabase/client';
 
 export default function ForgotPasswordPage() {
+    const t = useTranslations('ForgotPassword');
     const { toast } = useToast();
     const [email, setEmail] = useState('');
     const [isLoading, setIsLoading] = useState(false);
@@ -34,15 +36,15 @@ export default function ForgotPasswordPage() {
             if (error) throw error;
 
             toast({
-                title: 'Check your email',
-                description: 'We sent you a link to reset your password.',
+                title: t('checkEmailTitle'),
+                description: t('checkEmailDesc'),
             });
         } catch (error: any) {
             console.error('Reset password error:', error);
             toast({
                 variant: 'destructive',
-                title: 'Error',
-                description: error.message || 'Could not send reset email.',
+                title: t('errorTitle'),
+                description: error.message || t('errorDesc'),
             });
         } finally {
             setIsLoading(false);
@@ -56,23 +58,23 @@ export default function ForgotPasswordPage() {
                     <div className='mx-auto mb-2'>
                         <Image src="/logo.png" alt="Eyronix Logo" width={48} height={48} />
                     </div>
-                    <CardTitle className="text-3xl font-headline">Reset Password</CardTitle>
+                    <CardTitle className="text-3xl font-headline">{t('title')}</CardTitle>
                     <CardDescription>
-                        Enter your email address and we'll send you a link to reset your password.
+                        {t('description')}
                     </CardDescription>
                 </CardHeader>
                 <CardContent>
                     <form className="space-y-4" onSubmit={handleResetPassword}>
                         <div className="space-y-2">
-                            <Label htmlFor="email">Email</Label>
+                            <Label htmlFor="email">{t('emailLabel')}</Label>
                             <div className="relative">
-                                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                                <Mail className="absolute start-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                                 <Input
                                     id="email"
                                     type="email"
-                                    placeholder="m@example.com"
+                                    placeholder={t('emailPlaceholder')}
                                     required
-                                    className="pl-10"
+                                    className="ps-10"
                                     value={email}
                                     onChange={(e) => setEmail(e.target.value)}
                                     disabled={isLoading}
@@ -80,12 +82,12 @@ export default function ForgotPasswordPage() {
                             </div>
                         </div>
                         <Button type="submit" className="w-full" disabled={isLoading}>
-                            {isLoading ? 'Sending Link...' : 'Send Reset Link'}
+                            {isLoading ? t('sending') : t('submitButton')}
                         </Button>
                         <Button variant="ghost" className="w-full" asChild>
                             <Link href="/login">
-                                <ArrowLeft className="mr-2 h-4 w-4" />
-                                Back to Login
+                                <ArrowLeft className="me-2 h-4 w-4 rtl:rotate-180" />
+                                {t('backToLogin')}
                             </Link>
                         </Button>
                     </form>

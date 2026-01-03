@@ -23,7 +23,74 @@
         "heroSubtitle": "Unmatched Clarity.",
         "subText": "Eyronix Syria delivers cutting-edge security solutions tailored for your peace of mind.",
         "requestSurvey": "Request a Free Survey",
-        "viewProducts": "View Products"
+        "viewProducts": "View Products",
+        "ourExpertise": "Our Expertise",
+        "expertiseSubtext": "From installation to maintenance, we provide comprehensive security services.",
+        "featuredProducts": "Featured Products",
+        "productsSubtext": "High-quality security hardware to protect what matters most.",
+        "viewAllProducts": "View All Products",
+        "aiAnalysis": "Interactive AI Analysis",
+        "aiAnalysisDesc": "Test our AI's capabilities. Upload any image, and our advanced system will instantly analyze it to detect human or vehicle presence. Experience firsthand how intelligent analysis can distinguish significant events from background noise.",
+        "uploadImage": "Upload Image",
+        "runAnalysis": "Run Analysis",
+        "analyzing": "Analyzing...",
+        "analysisComplete": "Analysis Complete",
+        "liveDemo": "LIVE DEMO: SCENE ANALYSIS",
+        "uploadToBegin": "Upload an image to begin",
+        "uploadToTest": "Upload any image to test",
+        "packages": "Security Packages",
+        "packagesSubtext": "Choose the package that fits your needs. No hidden fees.",
+        "mostPopular": "Most Popular",
+        "viewDetails": "View Details & Buy",
+        "contactUs": "Contact Us",
+        "packageSpecs": "Package Specs",
+        "cameraSpecs": "Camera Specifications",
+        "recordingUnit": "Recording Unit (NVR/DVR)",
+        "confirmPurchase": "Confirm Purchase",
+        "surveyTitle": "Request a Free Site Survey",
+        "surveySubtext": "Let our experts assess your security needs. Fill out the form below and we'll be in touch.",
+        "submitRequest": "Submit Request",
+        "sending": "Sending...",
+        "formLabels": {
+            "fullName": "Full Name",
+            "email": "Email Address",
+            "phone": "Phone Number",
+            "message": "Your Message",
+            "messagePlaceholder": "Tell us about your security needs..."
+        }
+    },
+    "Footer": {
+        "quickLinks": "Quick Links",
+        "services": "Services",
+        "pricing": "Pricing",
+        "requestSurvey": "Request Survey",
+        "products": "Products",
+        "contactUs": "Contact Us",
+        "legal": "Legal",
+        "privacyPolicy": "Privacy Policy",
+        "termsOfService": "Terms of Service",
+        "rightsReserved": "All rights reserved.",
+        "tagline": "Your trusted partner in modern security solutions."
+    },
+    "ForgotPassword": {
+        "title": "Reset Password",
+        "description": "Enter your email address and we'll send you a link to reset your password.",
+        "emailLabel": "Email",
+        "emailPlaceholder": "m@example.com",
+        "submitButton": "Send Reset Link",
+        "sending": "Sending Link...",
+        "backToLogin": "Back to Login",
+        "checkEmailTitle": "Check your email",
+        "checkEmailDesc": "We sent you a link to reset your password.",
+        "errorTitle": "Error",
+        "errorDesc": "Could not send reset email."
+    },
+    "Chatbot": {
+        "supportBot": "Support Bot",
+        "online": "Online",
+        "typeMessage": "Type a message...",
+        "welcomeMessage": "Welcome to Eyronix! I am a support bot. How can I assist you with your security needs today?",
+        "errorMessage": "I seem to be having some trouble right now. A human agent will get back to you shortly. For immediate assistance, please check our website."
     },
     "Dashboard": {
         "welcomeTitle": "Welcome to your Dashboard",
@@ -71,5 +138,200 @@
         "googleFailed": "Google sign-in failed",
         "invalidCredentials": "Invalid credentials",
         "couldNotCreate": "Could not create account."
+    },
+    "UsersPage": {
+        "title": "User Management",
+        "description": "View, manage roles, and delete users in your system.",
+        "table": {
+            "user": "User",
+            "role": "Role",
+            "dateJoined": "Date Joined",
+            "actions": "Actions",
+            "noUsers": "No users found."
+        },
+        "actions": {
+            "makeAdmin": "Make Admin",
+            "makeUser": "Make User",
+            "delete": "Delete User",
+            "cancel": "Cancel",
+            "confirm": "Delete",
+            "deleting": "Deleting..."
+        },
+        "dialog": {
+            "title": "Are you absolutely sure?",
+            "description": "This action cannot be undone. This will permanently delete the user record for {name}."
+        },
+        "toasts": {
+            "roleUpdated": "Role Updated",
+            "roleUpdatedDesc": "{name}'s role has been changed to {role}.",
+            "updateFailed": "Update failed",
+            "deleted": "User Record Deleted",
+            "deletedDesc": "The user record for {name} has been deleted.",
+            "deleteFailed": "Delete failed"
+        }
+    },
+    "ProductsPage": {
+        "title": "Products",
+        "description": "Manage your product inventory.",
+        "seedData": "Seed Sample Data",
+        "seeding": "Seeding...",
+        "addProduct": "Add Product",
+        "table": {
+            "image": "Image",
+            "name": "Name",
+            "status": "Status",
+            "netPrice": "Net Price",
+            "sellPrice": "Sell Price",
+            "stock": "Stock",
+            "actions": "Actions",
+            "noProducts": "No products found. Try seeding sample data or add a new product."
+        },
+        "form": {
+            "editTitle": "Edit Product",
+            "addTitle": "Add New Product",
+            "description": "Fill in the details for the product.",
+            "name": "Product Name",
+            "namePlaceholder": "e.g., Dome Camera",
+            "sku": "SKU",
+            "skuPlaceholder": "CAM-DOME-01",
+            "price": "Sell Price ($)",
+            "netPrice": "Net Price (Cost) ($)",
+            "stock": "Stock",
+            "status": "Status",
+            "selectStatus": "Select status",
+            "image": "Product Image",
+            "cancel": "Cancel",
+            "save": "Save Product",
+            "saving": "Saving...",
+            "saveChanges": "Save Changes"
+        },
+        "actions": {
+            "edit": "Edit",
+            "delete": "Delete"
+        },
+        "dialog": {
+            "title": "Are you absolutely sure?",
+            "description": "This action cannot be undone. This will permanently delete the {name} product."
+        },
+        "toasts": {
+            "updated": "Product updated",
+            "created": "Product created",
+            "deleted": "Product Deleted",
+            "error": "Error"
+        }
+    },
+    "RequestsPage": {
+        "title": "Survey Requests",
+        "description": "Manage incoming requests for site surveys from potential customers.",
+        "table": {
+            "customer": "Customer",
+            "message": "Message",
+            "submitted": "Submitted",
+            "status": "Status",
+            "actions": "Actions",
+            "noRequests": "No survey requests yet",
+            "noRequestsDesc": "New submissions from your website will appear here."
+        },
+        "actions": {
+            "changeStatus": "Change Status",
+            "delete": "Delete"
+        },
+        "dialog": {
+            "title": "Are you absolutely sure?",
+            "description": "This action cannot be undone. This will permanently delete the request from {name}."
+        },
+        "toasts": {
+            "statusUpdated": "Status Updated",
+            "statusUpdatedDesc": "Request has been marked as {status}.",
+            "deleted": "Request Deleted",
+            "deletedDesc": "The request from {name} has been deleted.",
+            "error": "Error"
+        }
+    },
+    "OrdersPage": {
+        "title": "All Orders",
+        "description": "Manage and track all customer orders.",
+        "tabs": {
+            "all": "All",
+            "pending": "Pending",
+            "active": "Active",
+            "done": "Done"
+        },
+        "table": {
+            "date": "Date",
+            "customer": "Customer",
+            "details": "Details",
+            "amount": "Amnt",
+            "info": "Info",
+            "status": "Status",
+            "actions": "Actions",
+            "guest": "Guest/Unknown",
+            "noDetails": "No details",
+            "noOrders": "No orders found."
+        },
+        "actions": {
+            "updateStatus": "Update Status",
+            "approvePrepare": "Approve & Prepare",
+            "markShipped": "Mark Shipped",
+            "markDelivered": "Mark Delivered",
+            "reject": "Reject Order"
+        },
+        "badges": {
+            "pendingInfo": "Pending Info",
+            "needsApproval": "Needs Approval",
+            "preparing": "Preparing",
+            "shipping": "Shipping",
+            "completed": "Completed",
+            "rejected": "Rejected"
+        },
+        "toasts": {
+            "statusUpdated": "Status Updated",
+            "statusUpdatedDesc": "Order status changed to {status}",
+            "error": "Error"
+        }
+    },
+    "SettingsPage": {
+        "title": "Site Settings",
+        "description": "Manage global settings for your website, including footer content.",
+        "contactInfo": "Contact Information",
+        "contactInfoDesc": "Update phone, email, and address.",
+        "socialMedia": "Social Media",
+        "socialMediaDesc": "Enter the full URLs for your social profiles.",
+        "legalPages": "Legal Pages",
+        "legalPagesDesc": "Links to your terms and privacy policy pages.",
+        "form": {
+            "phone": "Phone Number",
+            "email": "Email",
+            "address": "Address",
+            "facebook": "Facebook URL",
+            "twitter": "Twitter URL",
+            "instagram": "Instagram URL",
+            "terms": "Terms of Service URL",
+            "privacy": "Privacy Policy URL",
+            "save": "Save Changes",
+            "saving": "Saving..."
+        },
+        "toasts": {
+            "saved": "Settings Saved",
+            "savedDesc": "Your site settings have been successfully updated.",
+            "error": "Error"
+        }
+    },
+    "ProfilePage": {
+        "title": "Your Profile",
+        "description": "Manage your personal information and profile picture.",
+        "picture": "Profile Picture",
+        "upload": "Upload Image",
+        "uploadHint": "PNG, JPG up to 1MB",
+        "displayName": "Display Name",
+        "email": "Email Address",
+        "role": "Role",
+        "save": "Save Changes",
+        "saving": "Saving...",
+        "toasts": {
+            "updated": "Profile Updated",
+            "updatedDesc": "Your profile has been successfully updated.",
+            "error": "Update Failed"
+        }
     }
 }

@@ -1,4 +1,3 @@
-
 'use client';
 
 import * as React from 'react';
@@ -20,7 +19,7 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
-import { PlusCircle, Database, MoreHorizontal, ShoppingBag } from 'lucide-react';
+import { PlusCircle, Database, MoreHorizontal, ShoppingBag, Loader2 } from 'lucide-react';
 import { PlaceHolderImages, ImagePlaceholder } from '@/lib/placeholder-images';
 import { supabase } from '@/lib/supabase/client';
 import { useToast } from '@/hooks/use-toast';
@@ -48,6 +47,7 @@ import {
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
+import { useTranslations } from 'next-intl';
 import {
   Form,
   FormControl,
@@ -78,11 +78,11 @@ type Product = {
   name: string;
   sku: string;
   price: number;
-  net_price: number; // Changed to match Supabase schema snake_case
+  net_price: number;
   stock: number;
   status: 'In Stock' | 'Low Stock' | 'Out of Stock';
-  image_url?: string | null; // Changed to snake_case
-  image_id?: string | null; // Changed to snake_case
+  image_url?: string | null;
+  image_id?: string | null;
 };
 
 const productSchema = z.object({
@@ -102,6 +102,7 @@ function ProductForm({
   onSuccess: () => void;
   product?: Product;
 }) {
+  const t = useTranslations('ProductsPage');
   const { toast } = useToast();
   const [isSaving, setIsSaving] = React.useState(false);
 
@@ -170,20 +171,20 @@ function ProductForm({
           .update(productData)
           .eq('id', initialProductData.id);
         if (error) throw error;
-        toast({ title: 'Product updated', description: `${values.name} has been updated.` });
+        toast({ title: t('toasts.updated'), description: t('toasts.updated') });
       } else {
         const { error } = await supabase
           .from('products')
           .insert([productData]);
         if (error) throw error;
-        toast({ title: 'Product created', description: `${values.name} has been added.` });
+        toast({ title: t('toasts.created'), description: t('toasts.created') });
       }
 
       form.reset();
       onSuccess();
     } catch (error: any) {
       console.error('Error saving product:', error);
-      toast({ variant: 'destructive', title: 'Error', description: error.message || 'Failed to save product.' });
+      toast({ variant: 'destructive', title: t('toasts.error'), description: error.message || 'Failed to save product.' });
     } finally {
       setIsSaving(false);
     }
@@ -193,9 +194,9 @@ function ProductForm({
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
         <DialogHeader>
-          <DialogTitle>{initialProductData ? 'Edit' : 'Add New'} Product</DialogTitle>
+          <DialogTitle>{initialProductData ? t('form.editTitle') : t('form.addTitle')}</DialogTitle>
           <p className="text-sm text-muted-foreground">
-            Fill in the details for the product.
+            {t('form.description')}
           </p>
         </DialogHeader>
         <div className="space-y-4 py-4 max-h-[60vh] overflow-y-auto pr-4">
@@ -204,9 +205,9 @@ function ProductForm({
             name="name"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Product Name</FormLabel>
+                <FormLabel>{t('form.name')}</FormLabel>
                 <FormControl>
-                  <Input placeholder="e.g., Dome Camera" {...field} disabled={isSaving} />
+                  <Input placeholder={t('form.namePlaceholder')} {...field} disabled={isSaving} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -217,9 +218,9 @@ function ProductForm({
             name="sku"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>SKU</FormLabel>
+                <FormLabel>{t('form.sku')}</FormLabel>
                 <FormControl>
-                  <Input placeholder="CAM-DOME-01" {...field} disabled={isSaving} />
+                  <Input placeholder={t('form.skuPlaceholder')} {...field} disabled={isSaving} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -230,7 +231,7 @@ function ProductForm({
             name="price"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Sell Price ($)</FormLabel>
+                <FormLabel>{t('form.price')}</FormLabel>
                 <FormControl>
                   <Input type="number" placeholder="199.99" {...field} disabled={isSaving} />
                 </FormControl>
@@ -243,7 +244,7 @@ function ProductForm({
             name="netPrice"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Net Price (Cost) ($)</FormLabel>
+                <FormLabel>{t('form.netPrice')}</FormLabel>
                 <FormControl>
                   <Input type="number" placeholder="100.00" {...field} disabled={isSaving} />
                 </FormControl>
@@ -256,7 +257,7 @@ function ProductForm({
             name="stock"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Stock</FormLabel>
+                <FormLabel>{t('form.stock')}</FormLabel>
                 <FormControl>
                   <Input type="number" placeholder="100" {...field} disabled={isSaving} />
                 </FormControl>
@@ -269,7 +270,7 @@ function ProductForm({
             name="status"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Status</FormLabel>
+                <FormLabel>{t('form.status')}</FormLabel>
                 <Select
                   onValueChange={field.onChange}
                   defaultValue={field.value}
@@ -277,7 +278,7 @@ function ProductForm({
                 >
                   <FormControl>
                     <SelectTrigger>
-                      <SelectValue placeholder="Select status" />
+                      <SelectValue placeholder={t('form.selectStatus')} />
                     </SelectTrigger>
                   </FormControl>
                   <SelectContent>
@@ -295,7 +296,7 @@ function ProductForm({
             name="image"
             render={({ field: { onChange, value, ...rest } }) => (
               <FormItem>
-                <FormLabel>Product Image</FormLabel>
+                <FormLabel>{t('form.image')}</FormLabel>
                 <FormControl>
                   <Input
                     type="file"
@@ -312,10 +313,10 @@ function ProductForm({
         </div>
         <DialogFooter>
           <Button type="button" variant="outline" onClick={onSuccess} disabled={isSaving}>
-            Cancel
+            {t('form.cancel')}
           </Button>
           <Button type="submit" disabled={isSaving}>
-            {isSaving ? 'Saving...' : `Save ${initialProductData ? 'Changes' : 'Product'}`}
+            {isSaving ? t('form.saving') : (initialProductData ? t('form.saveChanges') : t('form.save'))}
           </Button>
         </DialogFooter>
       </form>
@@ -325,6 +326,7 @@ function ProductForm({
 
 
 export default function ProductsPage() {
+  const t = useTranslations('ProductsPage');
   const [products, setProducts] = React.useState<Product[]>([]);
   const [loading, setLoading] = React.useState(true);
   const { toast } = useToast();
@@ -384,11 +386,11 @@ export default function ProductsPage() {
     try {
       const { error } = await supabase.from('products').insert(sampleProducts);
       if (error) throw error;
-      toast({ title: 'Success', description: 'Sample products have been added.' });
+      toast({ title: t('toasts.created'), description: 'Sample products have been added.' });
       fetchProducts();
     } catch (error: any) {
       console.error("Error seeding products:", error);
-      toast({ variant: 'destructive', title: 'Error', description: 'Failed to seed products.' });
+      toast({ variant: 'destructive', title: t('toasts.error'), description: 'Failed to seed products.' });
     } finally {
       setIsSeeding(false);
     }
@@ -403,13 +405,13 @@ export default function ProductsPage() {
       if (error) throw error;
 
       toast({
-        title: 'Product Deleted',
-        description: `${itemToDelete.name} has been successfully deleted.`,
+        title: t('toasts.deleted'),
+        description: t('toasts.deleted'),
       });
       fetchProducts();
     } catch (error: any) {
       console.error('Error deleting product:', error);
-      toast({ variant: 'destructive', title: 'Error', description: 'Failed to delete product.' });
+      toast({ variant: 'destructive', title: t('toasts.error'), description: 'Failed to delete product.' });
     } finally {
       setIsDeleting(false);
       setItemToDelete(null);
@@ -432,14 +434,14 @@ export default function ProductsPage() {
       <Card>
         <CardHeader className="flex flex-row items-center justify-between">
           <div>
-            <CardTitle>Products</CardTitle>
-            <CardDescription>Manage your product inventory.</CardDescription>
+            <CardTitle>{t('title')}</CardTitle>
+            <CardDescription>{t('description')}</CardDescription>
           </div>
           <div className="flex gap-2">
             <Button size="sm" className="gap-1" onClick={handleSeedData} disabled={isSeeding || (products && products.length > 0) || loading}>
-              <Database className="h-3.5 w-3.5" />
+              {isSeeding ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Database className="h-3.5 w-3.5" />}
               <span className="sr-only sm:not-sr-only sm:whitespace-nowrap">
-                {isSeeding ? 'Seeding...' : 'Seed Sample Data'}
+                {isSeeding ? t('seeding') : t('seedData')}
               </span>
             </Button>
             <Dialog open={isFormOpen} onOpenChange={setFormOpen}>
@@ -447,7 +449,7 @@ export default function ProductsPage() {
                 <Button size="sm" className="gap-1" onClick={() => handleOpenForm()}>
                   <PlusCircle className="h-3.5 w-3.5" />
                   <span className="sr-only sm:not-sr-only sm:whitespace-nowrap">
-                    Add Product
+                    {t('addProduct')}
                   </span>
                 </Button>
               </DialogTrigger>
@@ -462,15 +464,15 @@ export default function ProductsPage() {
             <TableHeader>
               <TableRow>
                 <TableHead className="hidden w-[100px] sm:table-cell">
-                  <span className="sr-only">Image</span>
+                  <span className="sr-only">{t('table.image')}</span>
                 </TableHead>
-                <TableHead>Name</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead className="hidden md:table-cell">Net Price</TableHead>
-                <TableHead className="hidden md:table-cell">Sell Price</TableHead>
-                <TableHead className="hidden md:table-cell">Stock</TableHead>
+                <TableHead>{t('table.name')}</TableHead>
+                <TableHead>{t('table.status')}</TableHead>
+                <TableHead className="hidden md:table-cell">{t('table.netPrice')}</TableHead>
+                <TableHead className="hidden md:table-cell">{t('table.sellPrice')}</TableHead>
+                <TableHead className="hidden md:table-cell">{t('table.stock')}</TableHead>
                 <TableHead>
-                  <span className="sr-only">Actions</span>
+                  <span className="sr-only">{t('table.actions')}</span>
                 </TableHead>
               </TableRow>
             </TableHeader>
@@ -527,27 +529,26 @@ export default function ProductsPage() {
                               </Button>
                             </DropdownMenuTrigger>
                             <DropdownMenuContent align="end">
-                              <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                              <DropdownMenuItem onSelect={(e) => { e.preventDefault(); handleOpenForm(product) }}>Edit</DropdownMenuItem>
+                              <DropdownMenuLabel>{t('table.actions')}</DropdownMenuLabel>
+                              <DropdownMenuItem onSelect={(e) => { e.preventDefault(); handleOpenForm(product) }}>{t('actions.edit')}</DropdownMenuItem>
                               <DropdownMenuSeparator />
                               <AlertDialogTrigger asChild>
-                                <DropdownMenuItem className="text-red-600" onSelect={(e) => { e.preventDefault(); setItemToDelete(product); }}>Delete</DropdownMenuItem>
+                                <DropdownMenuItem className="text-red-600" onSelect={(e) => { e.preventDefault(); setItemToDelete(product); }}>{t('actions.delete')}</DropdownMenuItem>
                               </AlertDialogTrigger>
                             </DropdownMenuContent>
                           </DropdownMenu>
                           {itemToDelete && itemToDelete.id === product.id && (
                             <AlertDialogContent>
                               <AlertDialogHeader>
-                                <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+                                <AlertDialogTitle>{t('dialog.title')}</AlertDialogTitle>
                                 <AlertDialogDescription>
-                                  This action cannot be undone. This will permanently delete the
-                                  <span className="font-bold"> {itemToDelete?.name} </span> product.
+                                  {t('dialog.description', { name: itemToDelete.name })}
                                 </AlertDialogDescription>
                               </AlertDialogHeader>
                               <AlertDialogFooter>
-                                <AlertDialogCancel onClick={() => setItemToDelete(null)} disabled={isDeleting}>Cancel</AlertDialogCancel>
+                                <AlertDialogCancel onClick={() => setItemToDelete(null)} disabled={isDeleting}>{t('actions.cancel')}</AlertDialogCancel>
                                 <AlertDialogAction onClick={handleDelete} className="bg-red-600 hover:bg-red-700" disabled={isDeleting}>
-                                  {isDeleting ? 'Deleting...' : 'Delete'}
+                                  {isDeleting ? t('actions.deleting') : t('actions.confirm')}
                                 </AlertDialogAction>
                               </AlertDialogFooter>
                             </AlertDialogContent>
@@ -560,7 +561,7 @@ export default function ProductsPage() {
               ) : (
                 <TableRow>
                   <TableCell colSpan={7} className="h-24 text-center">
-                    No products found. Try seeding sample data or add a new product.
+                    {t('table.noProducts')}
                   </TableCell>
                 </TableRow>
               )}
@@ -570,13 +571,4 @@ export default function ProductsPage() {
       </Card>
     </>
   );
-}
-
-function fileToBase64(file: File): Promise<string> {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.readAsDataURL(file);
-    reader.onload = () => resolve(reader.result as string);
-    reader.onerror = error => reject(error);
-  });
 }

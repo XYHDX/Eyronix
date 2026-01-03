@@ -1,4 +1,3 @@
-
 'use client';
 
 import * as React from 'react';
@@ -30,6 +29,7 @@ import { getInitials } from '@/lib/utils';
 import { User as UserIcon, Upload, Shield } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { supabase } from '@/lib/supabase/client';
+import { useTranslations } from 'next-intl';
 
 const profileFormSchema = z.object({
   displayName: z.string().min(2, {
@@ -40,6 +40,7 @@ const profileFormSchema = z.object({
 });
 
 export default function ProfilePage() {
+  const t = useTranslations('ProfilePage');
   const { toast } = useToast();
   const [isSaving, setIsSaving] = React.useState(false);
   const [photoPreview, setPhotoPreview] = React.useState<string | null>(null);
@@ -144,8 +145,8 @@ export default function ProfilePage() {
       setPhotoPreview(avatar_url);
 
       toast({
-        title: 'Profile Updated',
-        description: 'Your profile has been successfully updated.',
+        title: t('toasts.updated'),
+        description: t('toasts.updatedDesc'),
       });
       form.reset({ ...data, photo: null });
 
@@ -156,7 +157,7 @@ export default function ProfilePage() {
       console.error(error);
       toast({
         variant: 'destructive',
-        title: 'Update Failed',
+        title: t('toasts.error'),
         description: error.message || 'An error occurred while updating your profile.',
       });
     } finally {
@@ -170,9 +171,9 @@ export default function ProfilePage() {
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)}>
           <CardHeader>
-            <CardTitle>Your Profile</CardTitle>
+            <CardTitle>{t('title')}</CardTitle>
             <CardDescription>
-              Manage your personal information and profile picture.
+              {t('description')}
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-6">
@@ -184,11 +185,11 @@ export default function ProfilePage() {
                 </AvatarFallback>
               </Avatar>
               <div className="flex-grow">
-                <FormLabel>Profile Picture</FormLabel>
+                <FormLabel>{t('form.profilePicture')}</FormLabel>
                 <div className="flex items-center gap-2 mt-2">
                   <Button type="button" variant="outline" onClick={() => fileInputRef.current?.click()} disabled={isSaving}>
                     <Upload className="mr-2 h-4 w-4" />
-                    Upload Image
+                    {t('form.uploadImage')}
                   </Button>
                   <FormField
                     control={form.control}
@@ -208,7 +209,7 @@ export default function ProfilePage() {
                       </FormItem>
                     )}
                   />
-                  <p className="text-sm text-muted-foreground">PNG, JPG up to 1MB</p>
+                  <p className="text-sm text-muted-foreground">{t('form.imageHelp')}</p>
                 </div>
               </div>
             </div>
@@ -218,9 +219,9 @@ export default function ProfilePage() {
               name="displayName"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Display Name</FormLabel>
+                  <FormLabel>{t('form.displayName')}</FormLabel>
                   <FormControl>
-                    <Input placeholder="Your Name" {...field} disabled={isSaving} />
+                    <Input placeholder={t('form.displayNamePlaceholder')} {...field} disabled={isSaving} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -231,7 +232,7 @@ export default function ProfilePage() {
               name="email"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Email Address</FormLabel>
+                  <FormLabel>{t('form.email')}</FormLabel>
                   <FormControl>
                     <Input placeholder="your@email.com" {...field} disabled />
                   </FormControl>
@@ -241,14 +242,13 @@ export default function ProfilePage() {
             />
             <FormItem>
               <div className="flex items-center justify-between">
-                <FormLabel>Role</FormLabel>
-                {/* Sync Button Removed - Supabase handles roles via Database directly */}
+                <FormLabel>{t('form.role')}</FormLabel>
               </div>
               <div>
                 <Badge variant={isAdmin ? 'default' : 'secondary'}>
                   <div className="flex items-center gap-1">
                     {isAdmin ? <Shield className="h-3 w-3" /> : <UserIcon className="h-3 w-3" />}
-                    {isAdmin ? 'Admin' : 'User'}
+                    {isAdmin ? t('roles.admin') : t('roles.user')}
                   </div>
                 </Badge>
               </div>
@@ -256,7 +256,7 @@ export default function ProfilePage() {
           </CardContent>
           <CardFooter className="border-t px-6 py-4">
             <Button type="submit" disabled={isSaving}>
-              {isSaving ? 'Saving...' : 'Save Changes'}
+              {isSaving ? t('actions.saving') : t('actions.saveChanges')}
             </Button>
           </CardFooter>
         </form>

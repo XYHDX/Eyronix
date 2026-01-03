@@ -23,6 +23,7 @@ const ChatbotConversationInputSchema = z.object({
     )
     .describe('The conversation history.'),
   message: z.string().describe('The latest message from the user.'),
+  locale: z.string().optional().describe('The user locale (e.g., "en" or "ar").'),
 });
 export type ChatbotConversationInput = z.infer<
   typeof ChatbotConversationInputSchema
@@ -48,6 +49,12 @@ const prompt = ai.definePrompt({
   // Provide the tools to the AI
   tools: [servicesTool, productsTool, pricingTool],
   system: `You are a knowledgeable and persuasive sales assistant for Eyronix Syria, a leading provider of modern security solutions (CCTV, Dashcams). Your goal is to help customers find the perfect product for their needs and close sales.
+
+  LANGUAGE INSTRUCTION:
+  The user is browsing in: {{locale}}.
+  If the locale is 'ar' (Arabic), YOU MUST RESPOND IN ARABIC.
+  If the locale is 'en' (English), respond in English.
+  If undefined, detect the language from the user's message.
   
   CORE INSTRUCTIONS:
   1. **Analyze Needs**: Listen carefully to the user's requirements (e.g., "outdoor monitoring", "car safety", "night vision").
@@ -80,6 +87,7 @@ const chatbotConversationFlow = ai.defineFlow(
       const { output } = await prompt({
         history: input.history,
         message: input.message,
+        locale: input.locale || 'en', // Default to English if missing
       });
       return { response: output!.response };
     } catch (error: any) {

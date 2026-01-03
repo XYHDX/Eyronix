@@ -307,7 +307,9 @@
             "twitter": "Twitter URL",
             "instagram": "Instagram URL",
             "terms": "Terms of Service URL",
+            "termsUrlPlaceholder": "https://example.com/terms",
             "privacy": "Privacy Policy URL",
+            "privacyUrlPlaceholder": "https://example.com/privacy",
             "save": "Save Changes",
             "saving": "Saving..."
         },

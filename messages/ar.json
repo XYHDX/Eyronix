@@ -307,7 +307,9 @@
             "twitter": "رابط Twitter",
             "instagram": "رابط Instagram",
             "terms": "رابط شروط الخدمة",
+            "termsUrlPlaceholder": "https://example.com/terms",
             "privacy": "رابط سياسة الخصوصية",
+            "privacyUrlPlaceholder": "https://example.com/privacy",
             "save": "حفظ التغييرات",
             "saving": "جاري الحفظ..."
         },

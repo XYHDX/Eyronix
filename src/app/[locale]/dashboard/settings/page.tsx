@@ -235,7 +235,7 @@ export default function SettingsPage() {
           name="termsUrl"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>{t('form.termsUrl')}</FormLabel>
+              <FormLabel>{t('form.terms')}</FormLabel>
               <FormControl>
                 <Input placeholder={t('form.termsUrlPlaceholder')} {...field} />
               </FormControl>
@@ -248,7 +248,7 @@ export default function SettingsPage() {
           name="privacyUrl"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>{t('form.privacyUrl')}</FormLabel>
+              <FormLabel>{t('form.privacy')}</FormLabel>
               <FormControl>
                 <Input placeholder={t('form.privacyUrlPlaceholder')} {...field} />
               </FormControl>

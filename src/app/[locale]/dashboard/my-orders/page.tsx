@@ -44,6 +44,17 @@ import {
     FormMessage,
 } from "@/components/ui/form"
 import { useToast } from '@/hooks/use-toast';
+import {
+    AlertDialog,
+    AlertDialogAction,
+    AlertDialogCancel,
+    AlertDialogContent,
+    AlertDialogDescription,
+    AlertDialogFooter,
+    AlertDialogHeader,
+    AlertDialogTitle,
+    AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 
 type Sale = {
     id: string;
@@ -176,6 +187,41 @@ export default function MyOrdersPage() {
         }
     }, []);
 
+    const handleCancelOrder = async (sale: Sale) => {
+        try {
+            // Restore stock for product
+            if (sale.type === 'product' && sale.item_details?.id) {
+                const { data: product } = await supabase
+                    .from('products')
+                    .select('stock')
+                    .eq('id', sale.item_details.id)
+                    .single();
+
+                if (product) {
+                    await supabase
+                        .from('products')
+                        .update({ stock: product.stock + 1 })
+                        .eq('id', sale.item_details.id);
+                }
+            }
+
+            // Update sale status to Cancelled
+            const { error } = await supabase
+                .from('sales')
+                .update({ status: 'Cancelled' })
+                .eq('id', sale.id);
+
+            if (error) throw error;
+
+            toast({ title: "Order Cancelled", description: "Your order has been cancelled and stock restored." });
+            fetchOrders();
+
+        } catch (error) {
+            console.error("Failed to cancel order", error);
+            toast({ variant: "destructive", title: "Error", description: "Could not cancel order." });
+        }
+    };
+
     React.useEffect(() => {
         fetchOrders();
 
@@ -211,6 +257,8 @@ export default function MyOrdersPage() {
                 return <Badge variant="outline" className="border-green-200 text-green-700 bg-green-50">Completed</Badge>;
             case 'Rejected':
                 return <Badge variant="destructive">Rejected</Badge>;
+            case 'Cancelled':
+                return <Badge variant="outline" className="text-gray-500 border-gray-300">Cancelled</Badge>;
             default:
                 return <Badge variant="secondary">{status}</Badge>;
         }
@@ -258,9 +306,32 @@ export default function MyOrdersPage() {
                                     <TableCell>
                                         {getStatusBadge(sale.status)}
                                     </TableCell>
-                                    <TableCell className="text-right">
+                                    <TableCell className="text-right flex items-center justify-end gap-2">
                                         {sale.status === 'Pending Info' && (
                                             <CompleteOrderDialog orderId={sale.id} onSuccess={fetchOrders} />
+                                        )}
+                                        {['Pending Info', 'Pending Approval'].includes(sale.status) && (
+                                            <AlertDialog>
+                                                <AlertDialogTrigger asChild>
+                                                    <Button variant="ghost" size="sm" className="text-red-600 hover:text-red-700 hover:bg-red-50">
+                                                        Cancel
+                                                    </Button>
+                                                </AlertDialogTrigger>
+                                                <AlertDialogContent>
+                                                    <AlertDialogHeader>
+                                                        <AlertDialogTitle>Cancel Order</AlertDialogTitle>
+                                                        <AlertDialogDescription>
+                                                            Are you sure you want to cancel this order? This action cannot be undone.
+                                                        </AlertDialogDescription>
+                                                    </AlertDialogHeader>
+                                                    <AlertDialogFooter>
+                                                        <AlertDialogCancel>Keep Order</AlertDialogCancel>
+                                                        <AlertDialogAction onClick={() => handleCancelOrder(sale)} className="bg-red-600 hover:bg-red-700">
+                                                            Yes, Cancel Order
+                                                        </AlertDialogAction>
+                                                    </AlertDialogFooter>
+                                                </AlertDialogContent>
+                                            </AlertDialog>
                                         )}
                                     </TableCell>
                                 </TableRow>

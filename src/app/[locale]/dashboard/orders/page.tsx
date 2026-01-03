@@ -63,16 +63,10 @@ export default function OrdersPage() {
         try {
             setLoading(true);
 
-            // We need to join with profiles to get user info if possible
-            // Note: Supabase JS select can join if relationship exists. 
-            // Assuming 'sales.user_id' references 'profiles.id'
-
+            // 1. Fetch Sales
             let query = supabase
                 .from('sales')
-                .select(`
-                    *,
-                    profiles:user_id ( display_name, email )
-                `)
+                .select('*')
                 .order('created_at', { ascending: false });
 
             if (filterStatus !== 'all') {
@@ -85,12 +79,44 @@ export default function OrdersPage() {
                 }
             }
 
-            const { data, error } = await query;
-            if (error) throw error;
-            setSales(data || []);
+            const { data: salesData, error: salesError } = await query;
+            if (salesError) throw salesError;
+
+            if (!salesData || salesData.length === 0) {
+                setSales([]);
+                return;
+            }
+
+            // 2. Extract unique user IDs
+            const userIds = Array.from(new Set(salesData.map(s => s.user_id).filter(Boolean)));
+
+            // 3. Fetch Profiles manually
+            let profilesMap: Record<string, any> = {};
+            if (userIds.length > 0) {
+                const { data: profilesData, error: profilesError } = await supabase
+                    .from('profiles')
+                    .select('id, display_name:full_name, email') // mapping full_name to display_name for compatibility
+                    .in('id', userIds);
+
+                if (!profilesError && profilesData) {
+                    profilesMap = profilesData.reduce((acc, profile) => {
+                        acc[profile.id] = profile;
+                        return acc;
+                    }, {} as Record<string, any>);
+                }
+            }
+
+            // 4. Join Data
+            const joinedSales = salesData.map(sale => ({
+                ...sale,
+                profiles: profilesMap[sale.user_id] || { display_name: 'Unknown', email: 'N/A' }
+            }));
+
+            setSales(joinedSales);
 
         } catch (error) {
             console.error('Error fetching admin orders:', error);
+            toast({ variant: "destructive", title: "Error", description: "Could not fetch orders." });
         } finally {
             setLoading(false);
         }

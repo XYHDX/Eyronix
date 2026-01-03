@@ -320,14 +320,23 @@
     "ProfilePage": {
         "title": "ملفك الشخصي",
         "description": "إدارة معلوماتك الشخصية وصورة الملف الشخصي.",
-        "picture": "صورة الملف الشخصي",
-        "upload": "رفع صورة",
-        "uploadHint": "PNG, JPG حتى 1 ميجابايت",
-        "displayName": "الاسم الظاهر",
-        "email": "البريد الإلكتروني",
-        "role": "الدور",
-        "save": "حفظ التغييرات",
-        "saving": "جاري الحفظ...",
+        "form": {
+            "profilePicture": "صورة الملف الشخصي",
+            "uploadImage": "رفع صورة",
+            "imageHelp": "PNG, JPG حتى 1 ميجابايت",
+            "displayName": "الاسم الظاهر",
+            "displayNamePlaceholder": "الاسم",
+            "email": "البريد الإلكتروني",
+            "role": "الدور"
+        },
+        "roles": {
+            "admin": "مسؤول",
+            "user": "مستخدم"
+        },
+        "actions": {
+            "saveChanges": "حفظ التغييرات",
+            "saving": "جاري الحفظ..."
+        },
         "toasts": {
             "updated": "تم تحديث الملف الشخصي",
             "updatedDesc": "تم تحديث ملفك الشخصي بنجاح.",

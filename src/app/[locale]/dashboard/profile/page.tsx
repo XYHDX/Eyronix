@@ -1,6 +1,6 @@
 'use client';
 
-import * as React from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
@@ -42,14 +42,14 @@ const profileFormSchema = z.object({
 export default function ProfilePage() {
   const t = useTranslations('ProfilePage');
   const { toast } = useToast();
-  const [isSaving, setIsSaving] = React.useState(false);
-  const [photoPreview, setPhotoPreview] = React.useState<string | null>(null);
-  const fileInputRef = React.useRef<HTMLInputElement>(null);
-  const [user, setUser] = React.useState<any>(null);
-  const [isAdmin, setIsAdmin] = React.useState(false);
+  const [isSaving, setIsSaving] = useState(false);
+  const [photoPreview, setPhotoPreview] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [user, setUser] = useState<any>(null);
+  const [isAdmin, setIsAdmin] = useState(false);
 
   // Fetch initial user data
-  React.useEffect(() => {
+  useEffect(() => {
     async function loadProfile() {
       const { data: { user } } = await supabase.auth.getUser();
       if (user) {
@@ -78,7 +78,7 @@ export default function ProfilePage() {
   });
 
   // Update form when user data loads
-  React.useEffect(() => {
+  useEffect(() => {
     if (user) {
       form.reset({
         displayName: user.displayName || '',

@@ -320,14 +320,23 @@
     "ProfilePage": {
         "title": "Your Profile",
         "description": "Manage your personal information and profile picture.",
-        "picture": "Profile Picture",
-        "upload": "Upload Image",
-        "uploadHint": "PNG, JPG up to 1MB",
-        "displayName": "Display Name",
-        "email": "Email Address",
-        "role": "Role",
-        "save": "Save Changes",
-        "saving": "Saving...",
+        "form": {
+            "profilePicture": "Profile Picture",
+            "uploadImage": "Upload Image",
+            "imageHelp": "PNG, JPG up to 1MB",
+            "displayName": "Display Name",
+            "displayNamePlaceholder": "John Doe",
+            "email": "Email Address",
+            "role": "Role"
+        },
+        "roles": {
+            "admin": "Admin",
+            "user": "User"
+        },
+        "actions": {
+            "saveChanges": "Save Changes",
+            "saving": "Saving..."
+        },
         "toasts": {
             "updated": "Profile Updated",
             "updatedDesc": "Your profile has been successfully updated.",

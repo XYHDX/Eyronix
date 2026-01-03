@@ -11,6 +11,21 @@ export async function GET(request: Request) {
         const supabase = await createClient()
         const { error } = await supabase.auth.exchangeCodeForSession(code)
         if (!error) {
+            // SYNC PROFILE DATA (Avatar, Name)
+            const { data: { user } } = await supabase.auth.getUser();
+            if (user) {
+                const { user_metadata: { avatar_url, full_name, name } } = user;
+                // Only update if we have data
+                if (avatar_url || full_name || name) {
+                    await supabase.from('profiles').upsert({
+                        id: user.id,
+                        updated_at: new Date().toISOString(),
+                        ...(avatar_url && { avatar_url }),
+                        ...(full_name || name ? { full_name: full_name || name } : {})
+                    }, { onConflict: 'id' });
+                }
+            }
+
             const forwardedHost = request.headers.get('x-forwarded-host') // original origin before load balancer
             const isLocalEnv = process.env.NODE_ENV === 'development'
             if (isLocalEnv) {

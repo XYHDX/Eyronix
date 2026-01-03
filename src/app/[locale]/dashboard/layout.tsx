@@ -44,7 +44,9 @@ export default function DashboardLayout({
         setRole(userRole);
 
         // Check permissions
-        const hasAccess = hasPermission(userRole, pathname);
+        // Remove locale prefix (e.g., /en, /ar) to check against permissions which are defined as /dashboard/...
+        const cleanPathname = pathname.replace(/^\/(?:en|ar)/, '') || '/';
+        const hasAccess = hasPermission(userRole, cleanPathname);
 
         if (!hasAccess) {
           if (userRole === 'admin') {

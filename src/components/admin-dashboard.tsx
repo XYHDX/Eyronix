@@ -1,16 +1,73 @@
+'use client';
 
-// ... (imports)
+import React, { useState, useEffect } from 'react';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Skeleton } from '@/components/ui/skeleton';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { supabase } from '@/lib/supabase/client';
 import { useTranslations } from 'next-intl';
-
-// ... (outside component)
+import { getInitials } from '@/lib/utils';
+import { Wrench, Package, DollarSign, Mail, Users } from 'lucide-react';
+import { Bar, BarChart, ResponsiveContainer, XAxis, YAxis, Tooltip } from 'recharts';
 
 export default function AdminDashboard() {
   const t = useTranslations('Dashboard');
   const [user, setUser] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
+  const [products, setProducts] = useState<any[]>([]);
+  const [services, setServices] = useState<any[]>([]);
+  const [pricing, setPricing] = useState<any[]>([]);
+  const [sales, setSales] = useState<any[]>([]);
 
-  // ... (state)
+  useEffect(() => {
+    async function fetchData() {
+      try {
+        const { data: { user } } = await supabase.auth.getUser();
+        setUser(user);
 
-  // ... (useEffect)
+        const [
+          { data: productsData },
+          { data: servicesData },
+          { data: pricingData },
+          { data: salesData }
+        ] = await Promise.all([
+          supabase.from('products').select('*'),
+          supabase.from('services').select('*'),
+          supabase.from('pricing').select('*'),
+          supabase.from('sales').select('*')
+        ]);
+
+        setProducts(productsData || []);
+        setServices(servicesData || []);
+        setPricing(pricingData || []);
+        setSales(salesData || []);
+
+      } catch (error) {
+        console.error('Error fetching dashboard data:', error);
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    fetchData();
+  }, []);
+
+  // Prepare chart data (dummy data for now, or aggregated from sales if possible)
+  // For simplicity matching the previous structure, using a mock or simple aggregation
+  const chartData = [
+    { name: 'Jan', total: Math.floor(Math.random() * 5000) + 1000 },
+    { name: 'Feb', total: Math.floor(Math.random() * 5000) + 1000 },
+    { name: 'Mar', total: Math.floor(Math.random() * 5000) + 1000 },
+    { name: 'Apr', total: Math.floor(Math.random() * 5000) + 1000 },
+    { name: 'May', total: Math.floor(Math.random() * 5000) + 1000 },
+    { name: 'Jun', total: Math.floor(Math.random() * 5000) + 1000 },
+    { name: 'Jul', total: Math.floor(Math.random() * 5000) + 1000 },
+    { name: 'Aug', total: Math.floor(Math.random() * 5000) + 1000 },
+    { name: 'Sep', total: Math.floor(Math.random() * 5000) + 1000 },
+    { name: 'Oct', total: Math.floor(Math.random() * 5000) + 1000 },
+    { name: 'Nov', total: Math.floor(Math.random() * 5000) + 1000 },
+    { name: 'Dec', total: Math.floor(Math.random() * 5000) + 1000 },
+  ];
 
   return (
     <div className="space-y-6">
@@ -179,4 +236,3 @@ export default function AdminDashboard() {
     </div >
   );
 }
-

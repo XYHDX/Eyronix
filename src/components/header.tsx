@@ -2,7 +2,7 @@
 'use client';
 
 import { useTranslations } from 'next-intl';
-import Link from 'next/link';
+import { Link } from '@/i18n/routing';
 import { useRouter } from 'next/navigation';
 import { LogIn, LogOut, LayoutDashboard, Moon, Sun, User, Wrench, Package, DollarSign, Mail, Users, Settings, ShoppingBag, Activity, Menu } from 'lucide-react';
 import { useTheme } from 'next-themes';
@@ -163,7 +163,7 @@ export default function Header() {
 
         <Link href="/" className="me-6 flex items-center space-x-2 rtl:space-x-reverse">
           <Image src="/logo.png" alt="Eyronix Syria Logo" width={32} height={32} />
-          <span className="font-bold text-lg font-headline">Eyronix Syria</span>
+          <span className="font-bold text-lg font-headline hidden md:inline">Eyronix Syria</span>
         </Link>
 
         {/* Desktop Nav */}

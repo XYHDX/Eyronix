@@ -14,7 +14,9 @@
         "requests": "الطلبات",
         "myOrders": "طلباتي",
         "allOrders": "كل الطلبات",
-        "toggleTheme": "تغيير المظهر"
+        "toggleTheme": "تغيير المظهر",
+        "myAccount": "حسابي",
+        "manage": "إدارة"
     },
     "HomePage": {
         "heroTitle": "أمان متطور،",

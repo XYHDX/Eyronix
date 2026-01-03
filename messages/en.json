@@ -14,7 +14,9 @@
         "requests": "Requests",
         "myOrders": "My Orders",
         "allOrders": "All Orders",
-        "toggleTheme": "Toggle Theme"
+        "toggleTheme": "Toggle Theme",
+        "myAccount": "My Account",
+        "manage": "Manage"
     },
     "HomePage": {
         "heroTitle": "Modern Security,",

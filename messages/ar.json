@@ -301,8 +301,11 @@
         "legalPagesDesc": "روابط لصفحات الشروط وسياسة الخصوصية.",
         "form": {
             "phone": "رقم الهاتف",
+            "phonePlaceholder": "+963912345678",
             "email": "البريد الإلكتروني",
+            "emailPlaceholder": "admin@eyronix.com",
             "address": "العنوان",
+            "addressPlaceholder": "123 شارع الأمان، دمشق، سوريا",
             "facebook": "رابط Facebook",
             "twitter": "رابط Twitter",
             "instagram": "رابط Instagram",

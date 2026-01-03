@@ -301,8 +301,11 @@
         "legalPagesDesc": "Links to your terms and privacy policy pages.",
         "form": {
             "phone": "Phone Number",
+            "phonePlaceholder": "+1234567890",
             "email": "Email",
+            "emailPlaceholder": "admin@eyronix.com",
             "address": "Address",
+            "addressPlaceholder": "123 Security St, Damascus, Syria",
             "facebook": "Facebook URL",
             "twitter": "Twitter URL",
             "instagram": "Instagram URL",

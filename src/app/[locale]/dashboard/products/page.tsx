@@ -491,18 +491,18 @@ export default function ProductsPage() {
                 ))
               ) : products && products.length > 0 ? (
                 products.map((product) => {
-                  const image = product.image_url ? { imageUrl: product.image_url, imageHint: product.name } : getProductImage(product);
+                  const productImageObj = product.image_url ? { imageUrl: product.image_url, imageHint: product.name } : getProductImage(product);
                   return (
                     <TableRow key={product.id}>
                       <TableCell className="hidden sm:table-cell">
-                        {image ? (
+                        {productImageObj ? (
                           <Image
                             alt={product.name}
                             className="aspect-square rounded-md object-cover"
                             height="64"
-                            src={image.imageUrl}
+                            src={productImageObj.imageUrl}
                             width="64"
-                            data-ai-hint={image.imageHint}
+                            data-ai-hint={productImageObj.imageHint}
                           />
                         ) : (
                           <div className="w-16 h-16 bg-muted rounded-md flex items-center justify-center text-muted-foreground">

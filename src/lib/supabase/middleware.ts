@@ -59,5 +59,5 @@ export async function updateSession(request: NextRequest, response?: NextRespons
         console.error('Middleware Auth Error:', error);
     }
 
-    return response
+    return finalResponse
 }

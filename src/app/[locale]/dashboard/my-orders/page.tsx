@@ -176,6 +176,7 @@ export default function MyOrdersPage() {
                 .from('sales')
                 .select('*')
                 .eq('user_id', user.id)
+                .neq('status', 'Cancelled')
                 .order('created_at', { ascending: false });
 
             if (error) throw error;
@@ -206,13 +207,24 @@ export default function MyOrdersPage() {
                 }
             }
 
-            // Delete sale (Hard Delete)
-            const { error } = await supabase
+            // Update sale status to Cancelled first (to ensure it's hidden if delete is soft/fails)
+            const { error: updateError } = await supabase
+                .from('sales')
+                .update({ status: 'Cancelled' })
+                .eq('id', sale.id);
+
+            if (updateError) throw updateError;
+
+            // Try to hard delete
+            const { error: deleteError } = await supabase
                 .from('sales')
                 .delete()
                 .eq('id', sale.id);
 
-            if (error) throw error;
+            // If delete fails, we just log it, but the order is hidden thanks to status update
+            if (deleteError) {
+                console.warn("Soft delete fallback: Could not hard delete order", deleteError);
+            }
 
             toast({ title: "Order Cancelled", description: "Your order has been cancelled and stock restored." });
             fetchOrders();

@@ -206,10 +206,10 @@ export default function MyOrdersPage() {
                 }
             }
 
-            // Update sale status to Cancelled
+            // Delete sale (Hard Delete)
             const { error } = await supabase
                 .from('sales')
-                .update({ status: 'Cancelled' })
+                .delete()
                 .eq('id', sale.id);
 
             if (error) throw error;

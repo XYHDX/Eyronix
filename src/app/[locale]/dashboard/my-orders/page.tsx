@@ -85,23 +85,25 @@ function CompleteOrderDialog({ orderId, onSuccess }: { orderId: string, onSucces
 
     async function onSubmit(values: z.infer<typeof checkoutSchema>) {
         try {
-            const { error } = await supabase
+            const { error, count } = await supabase
                 .from('sales')
                 .update({
                     address: values.address,
                     phone: values.phone,
                     status: 'Pending Approval'
-                })
+                }, { count: 'exact' })
                 .eq('id', orderId);
+
+            if (count === 0) throw new Error("Access denied: Cannot update this order.");
 
             if (error) throw error;
 
             toast({ title: "Order Updated", description: "Your order details have been submitted for approval." });
             setOpen(false);
             onSuccess();
-        } catch (error) {
+        } catch (error: any) {
             console.error("Failed to update order", error);
-            toast({ variant: "destructive", title: "Error", description: "Could not submit order details." });
+            toast({ variant: "destructive", title: "Error", description: error.message || "Could not submit order details." });
         }
     }
 
@@ -208,30 +210,37 @@ export default function MyOrdersPage() {
             }
 
             // Update sale status to Cancelled first (to ensure it's hidden if delete is soft/fails)
-            const { error: updateError } = await supabase
+            const { error: updateError, count: updateCount } = await supabase
                 .from('sales')
-                .update({ status: 'Cancelled' })
+                .update({ status: 'Cancelled' }, { count: 'exact' })
                 .eq('id', sale.id);
 
             if (updateError) throw updateError;
 
+            // If update didn't affect any rows, it means RLS is hiding it or it doesn't exist
+            if (updateCount === 0) {
+                throw new Error("Access denied: Unable to update this order.");
+            }
+
             // Try to hard delete
-            const { error: deleteError } = await supabase
+            const { error: deleteError, count: deleteCount } = await supabase
                 .from('sales')
-                .delete()
+                .delete({ count: 'exact' })
                 .eq('id', sale.id);
 
             // If delete fails, we just log it, but the order is hidden thanks to status update
             if (deleteError) {
                 console.warn("Soft delete fallback: Could not hard delete order", deleteError);
+            } else if (deleteCount === 0) {
+                console.warn("Soft delete fallback: Delete count was 0 (RLS restricted hard delete)");
             }
 
             toast({ title: "Order Cancelled", description: "Your order has been cancelled and stock restored." });
             fetchOrders();
 
-        } catch (error) {
+        } catch (error: any) {
             console.error("Failed to cancel order", error);
-            toast({ variant: "destructive", title: "Error", description: "Could not cancel order." });
+            toast({ variant: "destructive", title: "Error", description: error.message || "Could not cancel order." });
         }
     };
 

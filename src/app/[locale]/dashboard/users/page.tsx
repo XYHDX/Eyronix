@@ -64,7 +64,6 @@ export default function UsersPage() {
   const [isLoading, setIsLoading] = React.useState(true);
   const [currentUser, setCurrentUser] = React.useState<any>(null);
 
-  const [isUpdating, setIsUpdating] = React.useState<string | null>(null);
   const [isDeleting, setIsDeleting] = React.useState(false);
   const [itemToDelete, setItemToDelete] = React.useState<UserProfile | null>(null);
 
@@ -101,34 +100,7 @@ export default function UsersPage() {
   }, [fetchUsers]);
 
 
-  const handleRoleChange = async (userToUpdate: UserProfile, newRole: 'admin' | 'user') => {
-    if (userToUpdate.role === newRole) return;
 
-    setIsUpdating(userToUpdate.id);
-    try {
-      const { error } = await supabase
-        .from('profiles')
-        .update({ role: newRole })
-        .eq('id', userToUpdate.id);
-
-      if (error) throw error;
-
-      toast({
-        title: t('toasts.roleUpdated'),
-        description: t('toasts.roleUpdatedDesc', { name: userToUpdate.full_name || userToUpdate.email, role: newRole }),
-      });
-      // UI updates automatically via subscription
-    } catch (error: any) {
-      console.error('Error updating role:', error);
-      toast({
-        variant: 'destructive',
-        title: t('toasts.updateFailed'),
-        description: error.message || 'Could not update user role.',
-      });
-    } finally {
-      setIsUpdating(null);
-    }
-  };
 
   const handleDelete = async () => {
     if (!itemToDelete) return;
@@ -241,7 +213,6 @@ export default function UsersPage() {
                               aria-haspopup="true"
                               size="icon"
                               variant="ghost"
-                              disabled={isUpdating === user.id}
                             >
                               <MoreHorizontal className="h-4 w-4" />
                               <span className="sr-only">Toggle menu</span>
@@ -249,18 +220,6 @@ export default function UsersPage() {
                           </DropdownMenuTrigger>
                           <DropdownMenuContent align="end">
                             <DropdownMenuLabel>{t('table.actions')}</DropdownMenuLabel>
-                            <DropdownMenuItem
-                              onSelect={() => handleRoleChange(user, 'admin')}
-                              disabled={user.role === 'admin' || isUpdating === user.id}
-                            >
-                              {t('actions.makeAdmin')}
-                            </DropdownMenuItem>
-                            <DropdownMenuItem
-                              onSelect={() => handleRoleChange(user, 'user')}
-                              disabled={user.role === 'user' || isUpdating === user.id}
-                            >
-                              {t('actions.makeUser')}
-                            </DropdownMenuItem>
                             <DropdownMenuSeparator />
                             <AlertDialogTrigger asChild>
                               <DropdownMenuItem className="text-red-600" onSelect={(e) => { e.preventDefault(); setItemToDelete(user); }} disabled={currentUser?.id === user.id}>

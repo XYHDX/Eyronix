@@ -185,7 +185,7 @@ export default function ProfilePage() {
                 </AvatarFallback>
               </Avatar>
               <div className="flex-grow">
-                <FormLabel>{t('form.profilePicture')}</FormLabel>
+                <p className="text-sm font-medium">{t('form.profilePicture')}</p>
                 <div className="flex items-center gap-2 mt-2">
                   <Button type="button" variant="outline" onClick={() => fileInputRef.current?.click()} disabled={isSaving}>
                     <Upload className="mr-2 h-4 w-4" />
@@ -242,7 +242,7 @@ export default function ProfilePage() {
             />
             <FormItem>
               <div className="flex items-center justify-between">
-                <FormLabel>{t('form.role')}</FormLabel>
+                <p className="text-sm font-medium">{t('form.role')}</p>
               </div>
               <div>
                 <Badge variant={isAdmin ? 'default' : 'secondary'}>

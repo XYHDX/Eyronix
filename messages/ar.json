@@ -347,5 +347,141 @@
             "updatedDesc": "تم تحديث ملفك الشخصي بنجاح.",
             "error": "فشل التحديث"
         }
+    },
+    "ServicesPage": {
+        "title": "الخدمات",
+        "description": "إدارة عروض الخدمات الخاصة بشركتك.",
+        "addService": "إضافة خدمة",
+        "table": {
+            "image": "صورة",
+            "name": "اسم الخدمة",
+            "description": "الوصف",
+            "actions": "إجراءات",
+            "noServices": "لا توجد خدمات."
+        },
+        "form": {
+            "editTitle": "تعديل الخدمة",
+            "addTitle": "إضافة خدمة جديدة",
+            "description": "املأ تفاصيل الخدمة.",
+            "name": "اسم الخدمة",
+            "desc": "الوصف",
+            "icon": "اسم الأيقونة",
+            "image": "صورة الخدمة",
+            "cancel": "إلغاء",
+            "save": "حفظ الخدمة",
+            "saving": "جاري الحفظ...",
+            "saveChanges": "حفظ التغييرات"
+        },
+        "toasts": {
+            "updated": "تم تحديث الخدمة",
+            "created": "تم إنشاء الخدمة",
+            "deleted": "تم حذف الخدمة",
+            "error": "خطأ"
+        },
+        "dialog": {
+            "title": "هل أنت متأكد تماماً؟",
+            "description": "هذا الإجراء لا يمكن التراجع عنه. سيتم حذف الخدمة {name} نهائياً."
+        },
+        "actions": {
+            "edit": "تعديل",
+            "delete": "حذف",
+            "cancel": "إلغاء",
+            "confirm": "حذف",
+            "deleting": "جاري الحذف..."
+        }
+    },
+    "PricingPage": {
+        "title": "الباقات",
+        "description": "إدارة الباقات الأمنية.",
+        "addPackage": "إضافة باقة",
+        "table": {
+            "name": "اسم الباقة",
+            "price": "السعر",
+            "features": "الميزات",
+            "status": "الحالة",
+            "actions": "إجراءات",
+            "noPackages": "لا توجد باقات."
+        },
+        "form": {
+            "editTitle": "تعديل الباقة",
+            "addTitle": "إضافة باقة جديدة",
+            "description": "املأ تفاصيل الباقة.",
+            "name": "اسم الباقة",
+            "price": "السعر",
+            "features": "الميزات (مفصولة بفواصل)",
+            "status": "الحالة",
+            "popular": "تمييز كأكثر شعبية",
+            "cancel": "إلغاء",
+            "save": "حفظ الباقة",
+            "saving": "جاري الحفظ...",
+            "saveChanges": "حفظ التغييرات",
+            "selectStatus": "اختر الحالة"
+        },
+        "toasts": {
+            "updated": "تم تحديث الباقة",
+            "created": "تم إضافة الباقة",
+            "deleted": "تم حذف الباقة",
+            "error": "خطأ"
+        },
+        "dialog": {
+            "title": "هل أنت متأكد تماماً؟",
+            "description": "هذا الإجراء لا يمكن التراجع عنه. سيتم حذف الباقة {name} نهائياً."
+        },
+        "actions": {
+            "edit": "تعديل",
+            "delete": "حذف",
+            "cancel": "إلغاء",
+            "confirm": "حذف",
+            "deleting": "جاري الحذف..."
+        }
+    },
+    "MyOrdersPage": {
+        "title": "طلباتي",
+        "description": "تتبع مشترياتك السابقة واشتراكات الباقات.",
+        "table": {
+            "date": "التاريخ",
+            "item": "العنصر",
+            "type": "النوع",
+            "amount": "المبلغ",
+            "status": "الحالة",
+            "action": "إجراء",
+            "noOrders": "لم تقم بأي طلبات بعد.",
+            "unknownItem": "عنصر غير معروف"
+        },
+        "completeOrderDialog": {
+            "trigger": "إكمال الطلب",
+            "title": "إكمال طلبك",
+            "desc": "يرجى تقديم تفاصيل التوصيل للمتابعة.",
+            "address": "عنوان الشحن",
+            "phone": "رقم الهاتف",
+            "submit": "إرسال الطلب"
+        },
+        "cancelDialog": {
+            "trigger": "إلغاء",
+            "title": "إلغاء الطلب",
+            "desc": "هل أنت متأكد أنك تريد إلغاء هذا الطلب؟ هذا الإجراء لا يمكن التراجع عنه.",
+            "keep": "إبقاء الطلب",
+            "confirm": "نعم، إلغاء الطلب"
+        },
+        "toasts": {
+            "orderUpdated": "تم تحديث الطلب",
+            "orderUpdatedDesc": "تم إرسال تفاصيل طلبك للموافقة.",
+            "cancelled": "تم الإلغاء",
+            "cancelledDesc": "تم إلغاء طلبك واستعادة المخزون.",
+            "error": "خطأ",
+            "submitError": "تعذر إرسال تفاصيل الطلب.",
+            "cancelError": "تعذر إلغاء الطلب."
+        },
+        "status": {
+            "pendingInfo": "بانتظار معلومات",
+            "actionRequired": "إجراء مطلوب",
+            "pendingApproval": "بانتظار الموافقة",
+            "waitingApproval": "بانتظار الموافقة",
+            "preparing": "جاري التجهيز",
+            "shipping": "جاري الشحن",
+            "completed": "مكتمل",
+            "rejected": "مرفوض",
+            "cancelled": "ملغى"
+        }
     }
 }

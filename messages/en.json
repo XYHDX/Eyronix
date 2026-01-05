@@ -347,5 +347,141 @@
             "updatedDesc": "Your profile has been successfully updated.",
             "error": "Update Failed"
         }
+    },
+    "ServicesPage": {
+        "title": "Services",
+        "description": "Manage your company's service offerings.",
+        "addService": "Add Service",
+        "table": {
+            "image": "Image",
+            "name": "Service Name",
+            "description": "Description",
+            "actions": "Actions",
+            "noServices": "No services found."
+        },
+        "form": {
+            "editTitle": "Edit Service",
+            "addTitle": "Add New Service",
+            "description": "Fill in the details for the service.",
+            "name": "Service Name",
+            "desc": "Description",
+            "icon": "Icon Name",
+            "image": "Service Image",
+            "cancel": "Cancel",
+            "save": "Save Service",
+            "saving": "Saving...",
+            "saveChanges": "Save Changes"
+        },
+        "toasts": {
+            "updated": "Service Updated",
+            "created": "Service Created",
+            "deleted": "Service Deleted",
+            "error": "Error"
+        },
+        "dialog": {
+            "title": "Are you absolutely sure?",
+            "description": "This action cannot be undone. This will permanently delete the {name} service."
+        },
+        "actions": {
+            "edit": "Edit",
+            "delete": "Delete",
+            "cancel": "Cancel",
+            "confirm": "Delete",
+            "deleting": "Deleting..."
+        }
+    },
+    "PricingPage": {
+        "title": "Packages",
+        "description": "Manage your security packages.",
+        "addPackage": "Add Package",
+        "table": {
+            "name": "Package Name",
+            "price": "Price",
+            "features": "Features",
+            "status": "Status",
+            "actions": "Actions",
+            "noPackages": "No pricing packages found."
+        },
+        "form": {
+            "editTitle": "Edit Pricing Package",
+            "addTitle": "Add New Pricing Package",
+            "description": "Fill in the details for the pricing package.",
+            "name": "Package Name",
+            "price": "Price",
+            "features": "Features (comma-separated)",
+            "status": "Status",
+            "popular": "Mark as Popular",
+            "cancel": "Cancel",
+            "save": "Save Package",
+            "saving": "Saving...",
+            "saveChanges": "Save Changes",
+            "selectStatus": "Select status"
+        },
+        "toasts": {
+            "updated": "Package Updated",
+            "created": "Package Added",
+            "deleted": "Package Deleted",
+            "error": "Error"
+        },
+        "dialog": {
+            "title": "Are you absolutely sure?",
+            "description": "This action cannot be undone. This will permanently delete the {name} package."
+        },
+        "actions": {
+            "edit": "Edit",
+            "delete": "Delete",
+            "cancel": "Cancel",
+            "confirm": "Delete",
+            "deleting": "Deleting..."
+        }
+    },
+    "MyOrdersPage": {
+        "title": "My Orders",
+        "description": "Track your past purchases and package subscriptions.",
+        "table": {
+            "date": "Date",
+            "item": "Item",
+            "type": "Type",
+            "amount": "Amount",
+            "status": "Status",
+            "action": "Action",
+            "noOrders": "You haven't placed any orders yet.",
+            "unknownItem": "Unknown Item"
+        },
+        "completeOrderDialog": {
+            "trigger": "Complete Order",
+            "title": "Complete Your Order",
+            "desc": "Please provide your delivery details to proceed.",
+            "address": "Shipping Address",
+            "phone": "Phone Number",
+            "submit": "Submit Order"
+        },
+        "cancelDialog": {
+            "trigger": "Cancel",
+            "title": "Cancel Order",
+            "desc": "Are you sure you want to cancel this order? This action cannot be undone.",
+            "keep": "Keep Order",
+            "confirm": "Yes, Cancel Order"
+        },
+        "toasts": {
+            "orderUpdated": "Order Updated",
+            "orderUpdatedDesc": "Your order details have been submitted for approval.",
+            "cancelled": "Order Cancelled",
+            "cancelledDesc": "Your order has been cancelled and stock restored.",
+            "error": "Error",
+            "submitError": "Could not submit order details.",
+            "cancelError": "Could not cancel order."
+        },
+        "status": {
+            "pendingInfo": "Pending Info",
+            "actionRequired": "Action Required",
+            "pendingApproval": "Pending Approval",
+            "waitingApproval": "Waiting Approval",
+            "preparing": "Preparing",
+            "shipping": "Shipping",
+            "completed": "Completed",
+            "rejected": "Rejected",
+            "cancelled": "Cancelled"
+        }
     }
 }

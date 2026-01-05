@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useCallback } from 'react';
+import { useTranslations } from 'next-intl';
 import {
     Card,
     CardContent,
@@ -73,6 +74,7 @@ const checkoutSchema = z.object({
 })
 
 function CompleteOrderDialog({ orderId, onSuccess }: { orderId: string, onSuccess: () => void }) {
+    const t = useTranslations('MyOrdersPage');
     const [open, setOpen] = useState(false);
     const { toast } = useToast();
     const form = useForm<z.infer<typeof checkoutSchema>>({
@@ -94,16 +96,16 @@ function CompleteOrderDialog({ orderId, onSuccess }: { orderId: string, onSucces
                 }, { count: 'exact' })
                 .eq('id', orderId);
 
-            if (count === 0) throw new Error("Access denied: Cannot update this order.");
+            if (count === 0) throw new Error("Access denied");
 
             if (error) throw error;
 
-            toast({ title: "Order Updated", description: "Your order details have been submitted for approval." });
+            toast({ title: t('toasts.orderUpdated'), description: t('toasts.orderUpdatedDesc') });
             setOpen(false);
             onSuccess();
         } catch (error: any) {
             console.error("Failed to update order", error);
-            toast({ variant: "destructive", title: "Error", description: error.message || "Could not submit order details." });
+            toast({ variant: "destructive", title: t('toasts.error'), description: error.message || t('toasts.submitError') });
         }
     }
 
@@ -111,14 +113,14 @@ function CompleteOrderDialog({ orderId, onSuccess }: { orderId: string, onSucces
         <Dialog open={open} onOpenChange={setOpen}>
             <DialogTrigger asChild>
                 <Button size="sm" variant="default" className="bg-red-600 hover:bg-red-700 text-white animate-pulse">
-                    Complete Order
+                    {t('completeOrderDialog.trigger')}
                 </Button>
             </DialogTrigger>
             <DialogContent className="sm:max-w-[425px]">
                 <DialogHeader>
-                    <DialogTitle>Complete Your Order</DialogTitle>
+                    <DialogTitle>{t('completeOrderDialog.title')}</DialogTitle>
                     <DialogDescription>
-                        Please provide your delivery details to proceed.
+                        {t('completeOrderDialog.desc')}
                     </DialogDescription>
                 </DialogHeader>
                 <Form {...form}>
@@ -128,7 +130,7 @@ function CompleteOrderDialog({ orderId, onSuccess }: { orderId: string, onSucces
                             name="address"
                             render={({ field }) => (
                                 <FormItem>
-                                    <FormLabel>Shipping Address</FormLabel>
+                                    <FormLabel>{t('completeOrderDialog.address')}</FormLabel>
                                     <FormControl>
                                         <Input placeholder="123 Main St, City" {...field} />
                                     </FormControl>
@@ -141,7 +143,7 @@ function CompleteOrderDialog({ orderId, onSuccess }: { orderId: string, onSucces
                             name="phone"
                             render={({ field }) => (
                                 <FormItem>
-                                    <FormLabel>Phone Number</FormLabel>
+                                    <FormLabel>{t('completeOrderDialog.phone')}</FormLabel>
                                     <FormControl>
                                         <Input placeholder="+963 9..." {...field} />
                                     </FormControl>
@@ -150,7 +152,7 @@ function CompleteOrderDialog({ orderId, onSuccess }: { orderId: string, onSucces
                             )}
                         />
                         <DialogFooter>
-                            <Button type="submit">Submit Order</Button>
+                            <Button type="submit">{t('completeOrderDialog.submit')}</Button>
                         </DialogFooter>
                     </form>
                 </Form>
@@ -160,6 +162,7 @@ function CompleteOrderDialog({ orderId, onSuccess }: { orderId: string, onSucces
 }
 
 export default function MyOrdersPage() {
+    const t = useTranslations('MyOrdersPage');
     const [sales, setSales] = useState<Sale[]>([]);
     const [loading, setLoading] = useState(true);
     const { toast } = useToast();
@@ -235,12 +238,12 @@ export default function MyOrdersPage() {
                 console.warn("Soft delete fallback: Delete count was 0 (RLS restricted hard delete)");
             }
 
-            toast({ title: "Order Cancelled", description: "Your order has been cancelled and stock restored." });
+            toast({ title: t('toasts.cancelled'), description: t('toasts.cancelledDesc') });
             fetchOrders();
 
         } catch (error: any) {
             console.error("Failed to cancel order", error);
-            toast({ variant: "destructive", title: "Error", description: error.message || "Could not cancel order." });
+            toast({ variant: "destructive", title: t('toasts.error'), description: error.message || t('toasts.cancelError') });
         }
     };
 
@@ -268,19 +271,19 @@ export default function MyOrdersPage() {
     const getStatusBadge = (status: string) => {
         switch (status) {
             case 'Pending Info':
-                return <Badge variant="outline" className="border-red-200 text-red-600 bg-red-50">Action Required</Badge>;
+                return <Badge variant="outline" className="border-red-200 text-red-600 bg-red-50">{t('status.pendingInfo')}</Badge>;
             case 'Pending Approval':
-                return <Badge variant="outline" className="border-yellow-200 text-yellow-700 bg-yellow-50">Waiting Approval</Badge>;
+                return <Badge variant="outline" className="border-yellow-200 text-yellow-700 bg-yellow-50">{t('status.pendingApproval')}</Badge>;
             case 'Preparing':
-                return <Badge variant="outline" className="border-blue-200 text-blue-700 bg-blue-50">Preparing</Badge>;
+                return <Badge variant="outline" className="border-blue-200 text-blue-700 bg-blue-50">{t('status.preparing')}</Badge>;
             case 'Shipping':
-                return <Badge variant="outline" className="border-indigo-200 text-indigo-700 bg-indigo-50">Shipping</Badge>;
+                return <Badge variant="outline" className="border-indigo-200 text-indigo-700 bg-indigo-50">{t('status.shipping')}</Badge>;
             case 'Completed':
-                return <Badge variant="outline" className="border-green-200 text-green-700 bg-green-50">Completed</Badge>;
+                return <Badge variant="outline" className="border-green-200 text-green-700 bg-green-50">{t('status.completed')}</Badge>;
             case 'Rejected':
-                return <Badge variant="destructive">Rejected</Badge>;
+                return <Badge variant="destructive">{t('status.rejected')}</Badge>;
             case 'Cancelled':
-                return <Badge variant="outline" className="text-gray-500 border-gray-300">Cancelled</Badge>;
+                return <Badge variant="outline" className="text-gray-500 border-gray-300">{t('status.cancelled')}</Badge>;
             default:
                 return <Badge variant="secondary">{status}</Badge>;
         }
@@ -289,19 +292,19 @@ export default function MyOrdersPage() {
     return (
         <Card>
             <CardHeader>
-                <CardTitle>My Orders</CardTitle>
-                <CardDescription>Track your past purchases and package subscriptions.</CardDescription>
+                <CardTitle>{t('title')}</CardTitle>
+                <CardDescription>{t('description')}</CardDescription>
             </CardHeader>
             <CardContent>
                 <Table>
                     <TableHeader>
                         <TableRow>
-                            <TableHead>Date</TableHead>
-                            <TableHead>Item</TableHead>
-                            <TableHead>Type</TableHead>
-                            <TableHead>Amount</TableHead>
-                            <TableHead>Status</TableHead>
-                            <TableHead className="text-right">Action</TableHead>
+                            <TableHead>{t('table.date')}</TableHead>
+                            <TableHead>{t('table.item')}</TableHead>
+                            <TableHead>{t('table.type')}</TableHead>
+                            <TableHead>{t('table.amount')}</TableHead>
+                            <TableHead>{t('table.status')}</TableHead>
+                            <TableHead className="text-right">{t('table.action')}</TableHead>
                         </TableRow>
                     </TableHeader>
                     <TableBody>
@@ -321,7 +324,7 @@ export default function MyOrdersPage() {
                                 <TableRow key={sale.id}>
                                     <TableCell>{format(new Date(sale.created_at), 'MMM dd, yyyy')}</TableCell>
                                     <TableCell className="font-medium">
-                                        {sale.item_details?.name || 'Unknown Item'}
+                                        {sale.item_details?.name || t('table.unknownItem')}
                                     </TableCell>
                                     <TableCell className="capitalize">{sale.type}</TableCell>
                                     <TableCell>${sale.amount.toLocaleString()}</TableCell>
@@ -336,20 +339,20 @@ export default function MyOrdersPage() {
                                             <AlertDialog>
                                                 <AlertDialogTrigger asChild>
                                                     <Button variant="ghost" size="sm" className="text-red-600 hover:text-red-700 hover:bg-red-50">
-                                                        Cancel
+                                                        {t('cancelDialog.trigger')}
                                                     </Button>
                                                 </AlertDialogTrigger>
                                                 <AlertDialogContent>
                                                     <AlertDialogHeader>
-                                                        <AlertDialogTitle>Cancel Order</AlertDialogTitle>
+                                                        <AlertDialogTitle>{t('cancelDialog.title')}</AlertDialogTitle>
                                                         <AlertDialogDescription>
-                                                            Are you sure you want to cancel this order? This action cannot be undone.
+                                                            {t('cancelDialog.desc')}
                                                         </AlertDialogDescription>
                                                     </AlertDialogHeader>
                                                     <AlertDialogFooter>
-                                                        <AlertDialogCancel>Keep Order</AlertDialogCancel>
+                                                        <AlertDialogCancel>{t('cancelDialog.keep')}</AlertDialogCancel>
                                                         <AlertDialogAction onClick={() => handleCancelOrder(sale)} className="bg-red-600 hover:bg-red-700">
-                                                            Yes, Cancel Order
+                                                            {t('cancelDialog.confirm')}
                                                         </AlertDialogAction>
                                                     </AlertDialogFooter>
                                                 </AlertDialogContent>
@@ -361,7 +364,7 @@ export default function MyOrdersPage() {
                         ) : (
                             <TableRow>
                                 <TableCell colSpan={6} className="h-24 text-center text-muted-foreground">
-                                    You haven't placed any orders yet.
+                                    {t('table.noOrders')}
                                 </TableCell>
                             </TableRow>
                         )}

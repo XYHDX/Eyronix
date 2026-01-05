@@ -1,6 +1,7 @@
 'use client';
 
 import * as React from 'react';
+import { useTranslations } from 'next-intl';
 import { Button } from '@/components/ui/button';
 import {
   Card,
@@ -97,6 +98,7 @@ function PackageForm({
   onSuccess: () => void;
   pkg?: PricingPackage;
 }) {
+  const t = useTranslations('PricingPage');
   const { toast } = useToast();
   const [isSaving, setIsSaving] = React.useState(false);
 
@@ -148,16 +150,16 @@ function PackageForm({
       if (error) throw error;
 
       toast({
-        title: `Package ${initialPkgData ? 'Updated' : 'Added'}`,
-        description: `${values.name} has been successfully ${initialPkgData ? 'updated' : 'added'}.`,
+        title: initialPkgData ? t('toasts.updated') : t('toasts.created'),
+        description: `${values.name} ${initialPkgData ? t('toasts.updated') : t('toasts.created')}`,
       });
       onSuccess();
     } catch (error: any) {
       console.error('Failed to save package:', error);
       toast({
         variant: 'destructive',
-        title: 'Error',
-        description: 'Failed to save package.',
+        title: t('toasts.error'),
+        description: t('toasts.error'),
       });
     } finally {
       setIsSaving(false);
@@ -168,9 +170,9 @@ function PackageForm({
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
         <DialogHeader>
-          <DialogTitle>{initialPkgData ? 'Edit' : 'Add New'} Pricing Package</DialogTitle>
+          <DialogTitle>{initialPkgData ? t('form.editTitle') : t('form.addTitle')}</DialogTitle>
           <DialogDescription>
-            Fill in the details for the pricing package.
+            {t('form.description')}
           </DialogDescription>
         </DialogHeader>
         <div className="space-y-4 py-4 max-h-[60vh] overflow-y-auto pr-4">
@@ -179,7 +181,7 @@ function PackageForm({
             name="name"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Package Name</FormLabel>
+                <FormLabel>{t('form.name')}</FormLabel>
                 <FormControl>
                   <Input placeholder="e.g., Basic, Standard" {...field} disabled={isSaving} />
                 </FormControl>
@@ -192,7 +194,7 @@ function PackageForm({
             name="price"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Price</FormLabel>
+                <FormLabel>{t('form.price')}</FormLabel>
                 <FormControl>
                   <Input type="number" placeholder="499" {...field} disabled={isSaving} />
                 </FormControl>
@@ -205,9 +207,9 @@ function PackageForm({
             name="features"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Features (comma-separated)</FormLabel>
+                <FormLabel>{t('form.features')}</FormLabel>
                 <FormControl>
-                  <Textarea placeholder="e.g., 2 Full HD Cameras, 1 TB Storage" {...field} disabled={isSaving} />
+                  <Input placeholder="e.g., 2 Full HD Cameras" {...field} disabled={isSaving} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -218,7 +220,7 @@ function PackageForm({
             name="status"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Status</FormLabel>
+                <FormLabel>{t('form.status')}</FormLabel>
                 <Select
                   onValueChange={field.onChange}
                   defaultValue={field.value}
@@ -226,7 +228,7 @@ function PackageForm({
                 >
                   <FormControl>
                     <SelectTrigger>
-                      <SelectValue placeholder="Select status" />
+                      <SelectValue placeholder={t('form.selectStatus')} />
                     </SelectTrigger>
                   </FormControl>
                   <SelectContent>
@@ -252,7 +254,7 @@ function PackageForm({
                 </FormControl>
                 <div className="space-y-1 leading-none">
                   <FormLabel>
-                    Mark as Popular
+                    {t('form.popular')}
                   </FormLabel>
                 </div>
               </FormItem>
@@ -261,10 +263,10 @@ function PackageForm({
         </div>
         <DialogFooter>
           <Button type="button" variant="outline" onClick={onSuccess} disabled={isSaving}>
-            Cancel
+            {t('form.cancel')}
           </Button>
           <Button type="submit" disabled={isSaving}>
-            {isSaving ? 'Saving...' : `Save ${initialPkgData ? 'Changes' : 'Package'}`}
+            {isSaving ? t('form.saving') : (initialPkgData ? t('form.saveChanges') : t('form.save'))}
           </Button>
         </DialogFooter>
       </form>
@@ -274,11 +276,11 @@ function PackageForm({
 
 
 export default function PricingPage() {
+  const t = useTranslations('PricingPage');
   const { toast } = useToast();
   const [packages, setPackages] = React.useState<PricingPackage[]>([]);
   const [loading, setLoading] = React.useState(true);
 
-  const [isSeeding, setIsSeeding] = React.useState(false);
   const [isDeleting, setIsDeleting] = React.useState(false);
   const [isFormOpen, setFormOpen] = React.useState(false);
   const [itemToEdit, setItemToEdit] = React.useState<PricingPackage | undefined>(undefined);
@@ -314,27 +316,7 @@ export default function PricingPage() {
     }
   }, [fetchPackages]);
 
-  const samplePackages = [
-    { name: 'Basic', price: 499, features: ['2 Full HD Cameras', '1 TB Storage', 'Mobile Viewing', 'Basic Installation'], status: 'Active' as const, popular: false },
-    { name: 'Standard', price: 999, features: ['4 Full HD Cameras', '2 TB Storage', 'Mobile Viewing', 'AI Motion Alerts', 'Professional Installation'], status: 'Active' as const, popular: true },
-    { name: 'Pro', price: 1899, features: ['8 4K UHD Cameras', '4 TB Storage', 'Advanced AI Analytics', '24/7 Support', 'Custom Installation'], status: 'Active' as const, popular: false },
-    { name: 'Enterprise', price: 0, features: ['Custom Solution'], status: 'Draft' as const, popular: false },
-  ];
 
-  const handleSeedData = async () => {
-    setIsSeeding(true);
-    try {
-      const { error } = await supabase.from('pricing').insert(samplePackages);
-      if (error) throw error;
-      toast({ title: 'Success', description: 'Sample pricing packages have been added.' });
-      fetchPackages();
-    } catch (error: any) {
-      console.error("Error seeding pricing:", error);
-      toast({ variant: 'destructive', title: 'Error', description: 'Failed to seed data.' });
-    } finally {
-      setIsSeeding(false);
-    }
-  };
 
   const handleDelete = async () => {
     if (!itemToDelete) return;
@@ -349,14 +331,14 @@ export default function PricingPage() {
       if (error) throw error;
 
       toast({
-        title: 'Package Deleted',
-        description: `${itemToDelete.name} has been successfully deleted.`,
+        title: t('toasts.deleted'),
+        description: t('toasts.deleted'),
       });
       setItemToDelete(null);
       fetchPackages();
     } catch (error: any) {
       console.error("Error deleting package:", error);
-      toast({ variant: 'destructive', title: 'Error', description: 'Failed to delete package.' });
+      toast({ variant: 'destructive', title: t('toasts.error'), description: t('toasts.error') });
     } finally {
       setIsDeleting(false);
     }
@@ -378,22 +360,17 @@ export default function PricingPage() {
       <Card>
         <CardHeader className="flex flex-row items-center justify-between">
           <div>
-            <CardTitle>Packages</CardTitle>
-            <CardDescription>Manage your security packages.</CardDescription>
+            <CardTitle>{t('title')}</CardTitle>
+            <CardDescription>{t('description')}</CardDescription>
           </div>
           <div className="flex gap-2">
-            <Button size="sm" className="gap-1" onClick={handleSeedData} disabled={isSeeding || (packages && packages.length > 0) || loading}>
-              <Database className="h-3.5 w-3.5" />
-              <span className="sr-only sm:not-sr-only sm:whitespace-nowrap">
-                {isSeeding ? 'Seeding...' : 'Seed Sample Data'}
-              </span>
-            </Button>
+
             <Dialog open={isFormOpen} onOpenChange={setFormOpen}>
               <DialogTrigger asChild>
                 <Button size="sm" className="gap-1" onClick={() => handleOpenForm()}>
                   <PlusCircle className="h-3.5 w-3.5" />
                   <span className="sr-only sm:not-sr-only sm:whitespace-nowrap">
-                    Add Package
+                    {t('addPackage')}
                   </span>
                 </Button>
               </DialogTrigger>
@@ -407,12 +384,12 @@ export default function PricingPage() {
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Package Name</TableHead>
-                <TableHead>Price</TableHead>
-                <TableHead className="hidden md:table-cell">Features</TableHead>
-                <TableHead>Status</TableHead>
+                <TableHead>{t('table.name')}</TableHead>
+                <TableHead>{t('table.price')}</TableHead>
+                <TableHead className="hidden md:table-cell">{t('table.features')}</TableHead>
+                <TableHead>{t('table.status')}</TableHead>
                 <TableHead>
-                  <span className="sr-only">Actions</span>
+                  <span className="sr-only">{t('table.actions')}</span>
                 </TableHead>
               </TableRow>
             </TableHeader>
@@ -448,27 +425,26 @@ export default function PricingPage() {
                             </Button>
                           </DropdownMenuTrigger>
                           <DropdownMenuContent align="end">
-                            <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                            <DropdownMenuItem onSelect={(e) => { e.preventDefault(); handleOpenForm(pkg) }}>Edit</DropdownMenuItem>
+                            <DropdownMenuLabel>{t('table.actions')}</DropdownMenuLabel>
+                            <DropdownMenuItem onSelect={(e) => { e.preventDefault(); handleOpenForm(pkg) }}>{t('actions.edit')}</DropdownMenuItem>
                             <DropdownMenuSeparator />
                             <AlertDialogTrigger asChild>
-                              <DropdownMenuItem className="text-red-600" onSelect={(e) => { e.preventDefault(); setItemToDelete(pkg); }}>Delete</DropdownMenuItem>
+                              <DropdownMenuItem className="text-red-600" onSelect={(e) => { e.preventDefault(); setItemToDelete(pkg); }}>{t('actions.delete')}</DropdownMenuItem>
                             </AlertDialogTrigger>
                           </DropdownMenuContent>
                         </DropdownMenu>
                         {itemToDelete && itemToDelete.id === pkg.id && (
                           <AlertDialogContent>
                             <AlertDialogHeader>
-                              <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+                              <AlertDialogTitle>{t('dialog.title')}</AlertDialogTitle>
                               <AlertDialogDescription>
-                                This action cannot be undone. This will permanently delete the
-                                <span className="font-bold"> {itemToDelete?.name} </span> package.
+                                {t('dialog.description', { name: itemToDelete.name })}
                               </AlertDialogDescription>
                             </AlertDialogHeader>
                             <AlertDialogFooter>
-                              <AlertDialogCancel onClick={() => setItemToDelete(null)} disabled={isDeleting}>Cancel</AlertDialogCancel>
+                              <AlertDialogCancel onClick={() => setItemToDelete(null)} disabled={isDeleting}>{t('actions.cancel')}</AlertDialogCancel>
                               <AlertDialogAction onClick={handleDelete} className="bg-red-600 hover:bg-red-700" disabled={isDeleting}>
-                                {isDeleting ? 'Deleting...' : 'Delete'}
+                                {isDeleting ? t('actions.deleting') : t('actions.confirm')}
                               </AlertDialogAction>
                             </AlertDialogFooter>
                           </AlertDialogContent>
@@ -480,7 +456,7 @@ export default function PricingPage() {
               ) : (
                 <TableRow>
                   <TableCell colSpan={5} className="h-24 text-center">
-                    No pricing packages found. Try seeding sample data or add a new package.
+                    {t('table.noPackages')}
                   </TableCell>
                 </TableRow>
               )}

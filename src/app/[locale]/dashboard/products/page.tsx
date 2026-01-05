@@ -331,7 +331,6 @@ export default function ProductsPage() {
   const [loading, setLoading] = React.useState(true);
   const { toast } = useToast();
 
-  const [isSeeding, setIsSeeding] = React.useState(false);
   const [isDeleting, setIsDeleting] = React.useState(false);
   const [isFormOpen, setFormOpen] = React.useState(false);
   const [itemToEdit, setItemToEdit] = React.useState<Product | undefined>(undefined);
@@ -374,27 +373,7 @@ export default function ProductsPage() {
     return PlaceHolderImages.find((img) => img.id === product.image_id);
   }
 
-  const sampleProducts = [
-    { name: 'Dome Security Camera', sku: 'CAM-DOME-HD', price: 199.99, net_price: 120.00, stock: 50, status: 'In Stock' as const, image_id: 'product-1' },
-    { name: 'Bullet Outdoor Camera', sku: 'CAM-BULL-4K', price: 249.50, net_price: 150.00, stock: 8, status: 'Low Stock' as const, image_id: 'product-2' },
-    { name: '8-Channel NVR', sku: 'NVR-08CH-2TB', price: 499.00, net_price: 300.00, stock: 20, status: 'In Stock' as const, image_id: 'product-3' },
-    { name: 'Micro Dashcam', sku: 'DASH-MICRO-1080P', price: 99.00, net_price: 60.00, stock: 0, status: 'Out of Stock' as const, image_id: 'dashcam-service' },
-  ];
 
-  const handleSeedData = async () => {
-    setIsSeeding(true);
-    try {
-      const { error } = await supabase.from('products').insert(sampleProducts);
-      if (error) throw error;
-      toast({ title: t('toasts.created'), description: 'Sample products have been added.' });
-      fetchProducts();
-    } catch (error: any) {
-      console.error("Error seeding products:", error);
-      toast({ variant: 'destructive', title: t('toasts.error'), description: 'Failed to seed products.' });
-    } finally {
-      setIsSeeding(false);
-    }
-  };
 
   const handleDelete = async () => {
     if (!itemToDelete) return;
@@ -438,12 +417,7 @@ export default function ProductsPage() {
             <CardDescription>{t('description')}</CardDescription>
           </div>
           <div className="flex gap-2">
-            <Button size="sm" className="gap-1" onClick={handleSeedData} disabled={isSeeding || (products && products.length > 0) || loading}>
-              {isSeeding ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Database className="h-3.5 w-3.5" />}
-              <span className="sr-only sm:not-sr-only sm:whitespace-nowrap">
-                {isSeeding ? t('seeding') : t('seedData')}
-              </span>
-            </Button>
+
             <Dialog open={isFormOpen} onOpenChange={setFormOpen}>
               <DialogTrigger asChild>
                 <Button size="sm" className="gap-1" onClick={() => handleOpenForm()}>

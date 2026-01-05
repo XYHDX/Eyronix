@@ -86,6 +86,7 @@ function ServiceForm({
   onSuccess: () => void;
   service?: Service;
 }) {
+  const t = useTranslations('ServicesPage');
   const { toast } = useToast();
   const [isSaving, setIsSaving] = React.useState(false);
 
@@ -156,8 +157,8 @@ function ServiceForm({
       if (error) throw error;
 
       toast({
-        title: `Service ${initialServiceData ? 'Updated' : 'Added'}`,
-        description: `${values.name} has been successfully ${initialServiceData ? 'updated' : 'added'}.`,
+        title: initialServiceData ? t('toasts.updated') : t('toasts.created'),
+        description: `${values.name} ${initialServiceData ? t('toasts.updated') : t('toasts.created')}`, // Simplified desc for now or use complex key
       });
       onSuccess();
 
@@ -165,8 +166,8 @@ function ServiceForm({
       console.error('Failed to save service:', error);
       toast({
         variant: 'destructive',
-        title: 'Error',
-        description: error.message || 'Failed to save service.',
+        title: t('toasts.error'),
+        description: error.message || t('toasts.error'),
       });
     } finally {
       setIsSaving(false);
@@ -177,9 +178,9 @@ function ServiceForm({
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
         <DialogHeader>
-          <DialogTitle>{initialServiceData ? 'Edit' : 'Add New'} Service</DialogTitle>
+          <DialogTitle>{initialServiceData ? t('form.editTitle') : t('form.addTitle')}</DialogTitle>
           <DialogDescription>
-            Fill in the details for the service.
+            {t('form.description')}
           </DialogDescription>
         </DialogHeader>
         <div className="space-y-4 py-4 max-h-[60vh] overflow-y-auto pr-4">
@@ -188,9 +189,9 @@ function ServiceForm({
             name="name"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Service Name</FormLabel>
+                <FormLabel>{t('form.name')}</FormLabel>
                 <FormControl>
-                  <Input placeholder="e.g., CCTV Systems" {...field} disabled={isSaving} />
+                  <Input placeholder={t('form.name')} {...field} disabled={isSaving} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -201,9 +202,9 @@ function ServiceForm({
             name="description"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Description</FormLabel>
+                <FormLabel>{t('form.desc')}</FormLabel>
                 <FormControl>
-                  <Input placeholder="A short description of the service" {...field} disabled={isSaving} />
+                  <Input placeholder={t('form.desc')} {...field} disabled={isSaving} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -214,9 +215,9 @@ function ServiceForm({
             name="icon"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Icon Name</FormLabel>
+                <FormLabel>{t('form.icon')}</FormLabel>
                 <FormControl>
-                  <Input placeholder="e.g., Camera" {...field} disabled={isSaving} />
+                  <Input placeholder={t('form.icon')} {...field} disabled={isSaving} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -227,7 +228,7 @@ function ServiceForm({
             name="image"
             render={({ field: { onChange, value, ...rest } }) => (
               <FormItem>
-                <FormLabel>Service Image</FormLabel>
+                <FormLabel>{t('form.image')}</FormLabel>
                 <FormControl>
                   <Input
                     type="file"
@@ -244,10 +245,10 @@ function ServiceForm({
         </div>
         <DialogFooter>
           <Button type="button" variant="outline" onClick={onSuccess} disabled={isSaving}>
-            Cancel
+            {t('form.cancel')}
           </Button>
           <Button type="submit" disabled={isSaving}>
-            {isSaving ? 'Saving...' : `Save ${initialServiceData ? 'Changes' : 'Service'}`}
+            {isSaving ? t('form.saving') : (initialServiceData ? t('form.saveChanges') : t('form.save'))}
           </Button>
         </DialogFooter>
       </form>
@@ -257,11 +258,11 @@ function ServiceForm({
 
 
 export default function ServicesPage() {
+  const t = useTranslations('ServicesPage');
   const { toast } = useToast();
   const [services, setServices] = React.useState<Service[]>([]);
   const [loading, setLoading] = React.useState(true);
 
-  const [isSeeding, setIsSeeding] = React.useState(false);
   const [isDeleting, setIsDeleting] = React.useState(false);
   const [isFormOpen, setFormOpen] = React.useState(false);
   const [itemToEdit, setItemToEdit] = React.useState<Service | undefined>(undefined);
@@ -299,26 +300,7 @@ export default function ServicesPage() {
     }
   }, [fetchServices]);
 
-  const sampleServices = [
-    { name: 'CCTV Systems', description: 'High-definition surveillance solutions for homes and businesses. Secure your premises with our reliable CCTV technology.', icon: 'Camera', image_url: PlaceHolderImages.find(i => i.id === 'cctv-service')?.imageUrl },
-    { name: 'Dashcam Installation', description: 'Capture every moment on the road. Protect yourself from false claims with crystal-clear dashcam footage.', icon: 'Car', image_url: PlaceHolderImages.find(i => i.id === 'dashcam-service')?.imageUrl },
-    { name: 'System Maintenance', description: 'Ensure your security systems are always running at peak performance with our expert maintenance services.', icon: 'Wrench', image_url: PlaceHolderImages.find(i => i.id === 'maintenance-service')?.imageUrl },
-  ];
 
-  const handleSeedData = async () => {
-    setIsSeeding(true);
-    try {
-      const { error } = await supabase.from('services').insert(sampleServices);
-      if (error) throw error;
-      toast({ title: 'Success', description: 'Sample services have been added.' });
-      fetchServices();
-    } catch (error: any) {
-      console.error("Error seeding services:", error);
-      toast({ variant: 'destructive', title: 'Error', description: 'Failed to seed data.' });
-    } finally {
-      setIsSeeding(false);
-    }
-  };
 
   const handleDelete = async () => {
     if (!itemToDelete) return;
@@ -333,14 +315,14 @@ export default function ServicesPage() {
       if (error) throw error;
 
       toast({
-        title: 'Service Deleted',
-        description: `${itemToDelete.name} has been successfully deleted.`,
+        title: t('toasts.deleted'),
+        description: t('toasts.deleted'),
       });
       setItemToDelete(null);
       fetchServices();
     } catch (error: any) {
       console.error("Error deleting service:", error);
-      toast({ variant: 'destructive', title: 'Error', description: 'Failed to delete service.' });
+      toast({ variant: 'destructive', title: t('toasts.error'), description: t('toasts.error') });
     } finally {
       setIsDeleting(false);
     }
@@ -362,22 +344,17 @@ export default function ServicesPage() {
       <Card>
         <CardHeader className="flex flex-row items-center justify-between">
           <div>
-            <CardTitle>Services</CardTitle>
-            <CardDescription>Manage your company's service offerings.</CardDescription>
+            <CardTitle>{t('title')}</CardTitle>
+            <CardDescription>{t('description')}</CardDescription>
           </div>
           <div className="flex gap-2">
-            <Button size="sm" className="gap-1" onClick={handleSeedData} disabled={isSeeding || (services && services.length > 0) || loading}>
-              <Database className="h-3.5 w-3.5" />
-              <span className="sr-only sm:not-sr-only sm:whitespace-nowrap">
-                {isSeeding ? 'Seeding...' : 'Seed Sample Data'}
-              </span>
-            </Button>
+
             <Dialog open={isFormOpen} onOpenChange={setFormOpen}>
               <DialogTrigger asChild>
                 <Button size="sm" className="gap-1" onClick={() => handleOpenForm()}>
                   <PlusCircle className="h-3.5 w-3.5" />
                   <span className="sr-only sm:not-sr-only sm:whitespace-nowrap">
-                    Add Service
+                    {t('addService')}
                   </span>
                 </Button>
               </DialogTrigger>
@@ -391,11 +368,11 @@ export default function ServicesPage() {
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead className="hidden w-[100px] sm:table-cell">Image</TableHead>
-                <TableHead>Service Name</TableHead>
-                <TableHead className="hidden md:table-cell">Description</TableHead>
+                <TableHead className="hidden w-[100px] sm:table-cell">{t('table.image')}</TableHead>
+                <TableHead>{t('table.name')}</TableHead>
+                <TableHead className="hidden md:table-cell">{t('table.description')}</TableHead>
                 <TableHead>
-                  <span className="sr-only">Actions</span>
+                  <span className="sr-only">{t('table.actions')}</span>
                 </TableHead>
               </TableRow>
             </TableHeader>
@@ -439,27 +416,26 @@ export default function ServicesPage() {
                             </Button>
                           </DropdownMenuTrigger>
                           <DropdownMenuContent align="end">
-                            <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                            <DropdownMenuItem onSelect={(e) => { e.preventDefault(); handleOpenForm(service) }}>Edit</DropdownMenuItem>
+                            <DropdownMenuLabel>{t('table.actions')}</DropdownMenuLabel>
+                            <DropdownMenuItem onSelect={(e) => { e.preventDefault(); handleOpenForm(service) }}>{t('actions.edit')}</DropdownMenuItem>
                             <DropdownMenuSeparator />
                             <AlertDialogTrigger asChild>
-                              <DropdownMenuItem className="text-red-600" onSelect={(e) => { e.preventDefault(); setItemToDelete(service); }}>Delete</DropdownMenuItem>
+                              <DropdownMenuItem className="text-red-600" onSelect={(e) => { e.preventDefault(); setItemToDelete(service); }}>{t('actions.delete')}</DropdownMenuItem>
                             </AlertDialogTrigger>
                           </DropdownMenuContent>
                         </DropdownMenu>
                         {itemToDelete && itemToDelete.id === service.id && (
                           <AlertDialogContent>
                             <AlertDialogHeader>
-                              <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+                              <AlertDialogTitle>{t('dialog.title')}</AlertDialogTitle>
                               <AlertDialogDescription>
-                                This action cannot be undone. This will permanently delete the
-                                <span className="font-bold"> {itemToDelete?.name} </span> service.
+                                {t('dialog.description', { name: itemToDelete.name })}
                               </AlertDialogDescription>
                             </AlertDialogHeader>
                             <AlertDialogFooter>
-                              <AlertDialogCancel onClick={() => setItemToDelete(null)} disabled={isDeleting}>Cancel</AlertDialogCancel>
+                              <AlertDialogCancel onClick={() => setItemToDelete(null)} disabled={isDeleting}>{t('actions.cancel')}</AlertDialogCancel>
                               <AlertDialogAction onClick={handleDelete} className="bg-red-600 hover:bg-red-700" disabled={isDeleting}>
-                                {isDeleting ? 'Deleting...' : 'Delete'}
+                                {isDeleting ? t('actions.deleting') : t('actions.confirm')}
                               </AlertDialogAction>
                             </AlertDialogFooter>
                           </AlertDialogContent>
@@ -471,7 +447,7 @@ export default function ServicesPage() {
               ) : (
                 <TableRow>
                   <TableCell colSpan={4} className="h-24 text-center">
-                    No services found. Try seeding sample data or add a new service.
+                    {t('table.noServices')}
                   </TableCell>
                 </TableRow>
               )}

@@ -110,12 +110,16 @@ export default function UsersPage() {
       // Warning: This only deletes the profile. Auth user deletion requires Service Role key on server.
       // For client-side, we can only update role to 'banned' or delete profile row (which might break auth sync).
       // Let's just delete the profile row for now as requested.
-      const { error } = await supabase
+      const { error, count } = await supabase
         .from('profiles')
-        .delete()
+        .delete({ count: 'exact' })
         .eq('id', itemToDelete.id);
 
       if (error) throw error;
+
+      if (count === 0) {
+        throw new Error("Access denied: You do not have permission to delete this user, or the user does not exist.");
+      }
 
       toast({
         title: t('toasts.deleted'),

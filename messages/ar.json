@@ -107,7 +107,8 @@
         "realizedRevenue": "الإيرادات المحققة",
         "realizedRevenueDesc": "إجمالي الأرباح من المبيعات",
         "revenueOverview": "نظرة عامة على الإيرادات",
-        "revenueOverviewDesc": "الإيرادات الشهرية للسنة الحالية (بيانات تجريبية)"
+        "revenueOverviewDesc": "الإيرادات الشهرية للسنة الحالية (بيانات تجريبية)",
+        "downloadReport": "تحميل تقرير Excel"
     },
     "Auth": {
         "welcomeBack": "مرحباً بعودتك",

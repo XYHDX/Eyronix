@@ -107,7 +107,8 @@
         "realizedRevenue": "Realized Revenue",
         "realizedRevenueDesc": "Total earnings from sales",
         "revenueOverview": "Revenue Overview",
-        "revenueOverviewDesc": "Monthly revenue for the current year (demo data)"
+        "revenueOverviewDesc": "Monthly revenue for the current year (demo data)",
+        "downloadReport": "Download Excel Report"
     },
     "Auth": {
         "welcomeBack": "Welcome Back",

@@ -7,7 +7,9 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { supabase } from '@/lib/supabase/client';
 import { useTranslations } from 'next-intl';
 import { getInitials } from '@/lib/utils';
-import { Wrench, Package, DollarSign, Mail, Users } from 'lucide-react';
+import { Wrench, Package, DollarSign, Mail, Users, Download } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { utils, writeFile } from 'xlsx';
 import { Bar, BarChart, ResponsiveContainer, XAxis, YAxis, Tooltip } from 'recharts';
 
 export default function AdminDashboard() {
@@ -18,6 +20,36 @@ export default function AdminDashboard() {
   const [services, setServices] = useState<any[]>([]);
   const [pricing, setPricing] = useState<any[]>([]);
   const [sales, setSales] = useState<any[]>([]);
+
+  const handleDownloadReport = () => {
+    // Products Sheet
+    const productsData = products.map(p => ({
+      Name: p.name,
+      SKU: p.sku,
+      Price: p.price,
+      "Net Price": p.net_price,
+      Stock: p.stock,
+      Status: p.status,
+    }));
+
+    // Packages Sheet
+    const packagesData = pricing.map(pkg => ({
+      Name: pkg.name,
+      Price: pkg.price,
+      Features: Array.isArray(pkg.features) ? pkg.features.join(", ") : pkg.features,
+      Status: pkg.status,
+      Popular: pkg.popular ? "Yes" : "No"
+    }));
+
+    const wb = utils.book_new();
+    const wsProducts = utils.json_to_sheet(productsData);
+    const wsPackages = utils.json_to_sheet(packagesData);
+
+    utils.book_append_sheet(wb, wsProducts, "Products");
+    utils.book_append_sheet(wb, wsPackages, "Packages");
+
+    writeFile(wb, "Eyronix_Admin_Report.xlsx");
+  };
 
   useEffect(() => {
     async function fetchData() {
@@ -72,9 +104,15 @@ export default function AdminDashboard() {
   return (
     <div className="space-y-6">
       <Card>
-        <CardHeader>
-          <CardTitle>{t('welcomeTitle')}</CardTitle>
-          <CardDescription>{t('welcomeDesc')}</CardDescription>
+        <CardHeader className="flex flex-row items-center justify-between">
+          <div>
+            <CardTitle>{t('welcomeTitle')}</CardTitle>
+            <CardDescription>{t('welcomeDesc')}</CardDescription>
+          </div>
+          <Button onClick={handleDownloadReport} variant="outline" className="gap-2">
+            <Download className="h-4 w-4" />
+            {t('downloadReport')}
+          </Button>
         </CardHeader>
         <CardContent>
           {loading ? (

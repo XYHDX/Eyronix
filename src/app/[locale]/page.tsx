@@ -72,8 +72,8 @@ type Product = {
   price: number;
   stock: number;
   status: 'In Stock' | 'Low Stock' | 'Out of Stock';
-  imageUrl?: string | null;
-  imageId?: string | null;
+  image_url?: string | null;
+  image_id?: string | null;
 };
 
 type PricingPackage = {
@@ -227,8 +227,8 @@ export default function Home() {
   }, []);
 
   const getProductImage = (product: Product): ImagePlaceholder | undefined => {
-    if (!product.imageId) return undefined;
-    return PlaceHolderImages.find((img) => img.id === product.imageId);
+    if (!product.image_id) return undefined;
+    return PlaceHolderImages.find((img) => img.id === product.image_id);
   }
 
   const heroImage = PlaceHolderImages.find(img => img.id === 'hero-background');
@@ -336,7 +336,7 @@ export default function Home() {
                   </Card>
                 ))
               ) : featuredProducts.map((product) => {
-                const image = product.imageUrl ? { imageUrl: product.imageUrl, imageHint: product.name } : getProductImage(product);
+                const image = product.image_url ? { imageUrl: product.image_url, imageHint: product.name } : getProductImage(product);
                 return (
                   <Card key={product.id} className="text-start overflow-hidden flex flex-col">
                     <div className="relative h-48 w-full">

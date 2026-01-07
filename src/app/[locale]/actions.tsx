@@ -3,7 +3,8 @@
 import { z } from "zod";
 import { aiMotionDetectionAlert } from "@/ai/flows/ai-motion-detection-alert";
 import { revalidatePath } from "next/cache";
-import { createClient } from "@supabase/supabase-js";
+import { createClient as createSupabaseClient } from "@supabase/supabase-js";
+import { createClient } from "@/lib/supabase/server";
 
 export async function analyzeImage(imageDataUri: string) {
     try {
@@ -39,19 +40,44 @@ export async function revalidatePricing() {
     revalidatePath('/');
 }
 
-// Helper for admin client
+// Helper for admin client - ONLY defines the potential to be admin
 const getSupabaseAdmin = () => {
     const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
     if (!serviceRoleKey) throw new Error("Missing SUPABASE_SERVICE_ROLE_KEY");
 
-    return createClient(
+    return createSupabaseClient(
         process.env.NEXT_PUBLIC_EYRONIX_URL || process.env.NEXT_PUBLIC_SUPABASE_URL!,
         serviceRoleKey
     );
 }
 
+// Helper: Ensure the current user is an admin
+async function requireAdmin() {
+    const supabase = createClient();
+    const { data: { user }, error: userError } = await supabase.auth.getUser();
+
+    if (userError || !user) {
+        throw new Error("Unauthorized: Not logged in");
+    }
+
+    const { data: profile, error: profileError } = await supabase
+        .from('profiles')
+        .select('role')
+        .eq('id', user.id)
+        .single();
+
+    if (profileError || !profile || profile.role !== 'admin') {
+        throw new Error("Forbidden: Admin access required");
+    }
+
+    return user;
+}
+
 export async function setAdminRole(uid: string, isAdminRole: boolean) {
     try {
+        // SECURITY CHECK
+        await requireAdmin();
+
         const supabase = getSupabaseAdmin();
         const role = isAdminRole ? 'admin' : 'user';
 
@@ -75,6 +101,9 @@ export async function setAdminRole(uid: string, isAdminRole: boolean) {
 
 export async function updateUserRole(uid: string, newRole: 'admin' | 'user') {
     try {
+        // SECURITY CHECK
+        await requireAdmin();
+
         const supabase = getSupabaseAdmin();
 
         // Server-side check to prevent removing the last admin

@@ -84,21 +84,30 @@ export default function AdminDashboard() {
     fetchData();
   }, []);
 
-  // Prepare chart data (dummy data for now, or aggregated from sales if possible)
-  // For simplicity matching the previous structure, using a mock or simple aggregation
+  // Process sales data for the chart
+  const currentYear = new Date().getFullYear();
+  const monthlyRevenue = sales.reduce((acc: any, sale: any) => {
+    const date = new Date(sale.created_at);
+    if (date.getFullYear() === currentYear && sale.status !== 'Rejected' && sale.status !== 'Cancelled') {
+      const month = date.getMonth(); // 0-11
+      acc[month] = (acc[month] || 0) + (sale.amount || 0);
+    }
+    return acc;
+  }, {});
+
   const chartData = [
-    { name: 'Jan', total: Math.floor(Math.random() * 5000) + 1000 },
-    { name: 'Feb', total: Math.floor(Math.random() * 5000) + 1000 },
-    { name: 'Mar', total: Math.floor(Math.random() * 5000) + 1000 },
-    { name: 'Apr', total: Math.floor(Math.random() * 5000) + 1000 },
-    { name: 'May', total: Math.floor(Math.random() * 5000) + 1000 },
-    { name: 'Jun', total: Math.floor(Math.random() * 5000) + 1000 },
-    { name: 'Jul', total: Math.floor(Math.random() * 5000) + 1000 },
-    { name: 'Aug', total: Math.floor(Math.random() * 5000) + 1000 },
-    { name: 'Sep', total: Math.floor(Math.random() * 5000) + 1000 },
-    { name: 'Oct', total: Math.floor(Math.random() * 5000) + 1000 },
-    { name: 'Nov', total: Math.floor(Math.random() * 5000) + 1000 },
-    { name: 'Dec', total: Math.floor(Math.random() * 5000) + 1000 },
+    { name: 'Jan', total: monthlyRevenue[0] || 0 },
+    { name: 'Feb', total: monthlyRevenue[1] || 0 },
+    { name: 'Mar', total: monthlyRevenue[2] || 0 },
+    { name: 'Apr', total: monthlyRevenue[3] || 0 },
+    { name: 'May', total: monthlyRevenue[4] || 0 },
+    { name: 'Jun', total: monthlyRevenue[5] || 0 },
+    { name: 'Jul', total: monthlyRevenue[6] || 0 },
+    { name: 'Aug', total: monthlyRevenue[7] || 0 },
+    { name: 'Sep', total: monthlyRevenue[8] || 0 },
+    { name: 'Oct', total: monthlyRevenue[9] || 0 },
+    { name: 'Nov', total: monthlyRevenue[10] || 0 },
+    { name: 'Dec', total: monthlyRevenue[11] || 0 },
   ];
 
   return (

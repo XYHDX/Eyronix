@@ -1,56 +1,20 @@
-'use client';
-
-import React, { useState } from 'react';
+import { cookies } from 'next/headers';
 import Image from 'next/image';
 import { useTranslations } from 'next-intl';
 import { ShieldCheck, Sun, Server, Lock, ChevronRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
-import { useToast } from '@/hooks/use-toast';
 import Header from '@/components/header';
 import Footer from '@/components/footer';
+import GovLoginForm from './gov-login-form';
 
 export default function GovernmentPage() {
-    const [isAuthenticated, setIsAuthenticated] = useState(false);
-    const [accessCode, setAccessCode] = useState('');
-    const { toast } = useToast();
-    // const t = useTranslations('Government'); // Assuming we might add translations later, but hardcoding for now as verified content
+    const cookieStore = cookies();
+    const hasAccess = cookieStore.get('gov_access')?.value === 'true';
 
-    const handleLogin = (e: React.FormEvent) => {
-        e.preventDefault();
-        const validCode = process.env.NEXT_PUBLIC_GOV_ACCESS_CODE || 'yahyademeriah';
-        if (accessCode === validCode || accessCode === 'admin') { // Simple client-side check
-            setIsAuthenticated(true);
-            toast({ title: "Access Granted", description: "Welcome to the Strategic Infrastructure Portal." });
-        } else {
-            toast({ variant: "destructive", title: "Access Denied", description: "Invalid authorization code." });
-        }
-    };
-
-    if (!isAuthenticated) {
-        return (
-            <div className="min-h-screen flex flex-col items-center justify-center bg-slate-950 text-white p-4">
-                <div className="max-w-md w-full space-y-8 text-center">
-                    <div className="flex flex-col items-center">
-                        <ShieldCheck className="w-16 h-16 text-dahua-red mb-4" />
-                        <h1 className="text-3xl font-bold tracking-tight">Restricted Access</h1>
-                        <p className="text-slate-400 mt-2">Strategic Infrastructure Solutions Portal</p>
-                    </div>
-                    <form onSubmit={handleLogin} className="space-y-4">
-                        <Input
-                            type="password"
-                            placeholder="Enter Clearance Code"
-                            value={accessCode}
-                            onChange={(e) => setAccessCode(e.target.value)}
-                            className="bg-slate-900 border-slate-700 text-white placeholder:text-slate-500"
-                        />
-                        <Button type="submit" className="w-full bg-dahua-red hover:bg-red-700">Verify Credentials</Button>
-                    </form>
-                    <p className="text-xs text-slate-600">Authorized Personnel Only. All access is logged.</p>
-                </div>
-            </div>
-        );
+    if (!hasAccess) {
+        return <GovLoginForm />;
     }
 
     return (
@@ -58,6 +22,7 @@ export default function GovernmentPage() {
             <Header />
 
             <main>
+
                 {/* Strategic Header */}
                 <section className="bg-slate-900 text-white py-20 relative overflow-hidden">
                     <div className="absolute inset-0 z-0 opacity-20 bg-[url('https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?q=80&w=2670&auto=format&fit=crop')] bg-cover bg-center"></div>

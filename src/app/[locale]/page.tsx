@@ -17,11 +17,6 @@ import {
   ArrowRight,
   Upload,
 } from 'lucide-react';
-import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import * as z from 'zod';
-
-
 import { useTranslations } from 'next-intl';
 import { supabase } from '@/lib/supabase/client';
 
@@ -32,15 +27,12 @@ import Chatbot from '@/components/chatbot';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { useToast } from '@/hooks/use-toast';
 import { PlaceHolderImages, ImagePlaceholder } from '@/lib/placeholder-images';
 import { analyzeImage } from './actions';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Badge } from '@/components/ui/badge';
-import { mockDb } from '@/lib/mock-db';
 import {
   Dialog,
   DialogContent,
@@ -84,15 +76,7 @@ type PricingPackage = {
   popular: boolean;
 };
 
-const formSchema = z.object({
-  name: z.string().min(2, { message: 'Name must be at least 2 characters.' }),
-  email: z.string().email({ message: 'Please enter a valid email.' }),
-  phone: z.string().min(8, { message: 'Please enter a valid phone number.' }),
-  message: z.string().min(10, { message: 'Message must be at least 10 characters.' }).max(500),
-});
-
-const defaultAiImage = PlaceHolderImages.find(img => img.id === 'ai-motion-detection');
-
+// const defaultAiImage = PlaceHolderImages.find(img => img.id === 'ai-motion-detection');
 
 export default function Home() {
   const t = useTranslations('HomePage');
@@ -100,7 +84,7 @@ export default function Home() {
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [analysisResult, setAnalysisResult] = useState('');
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
-  const [previewUrl, setPreviewUrl] = useState<string | null>(defaultAiImage?.imageUrl || null);
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
   const [forceReflow, setForceReflow] = useState(false);
@@ -136,16 +120,6 @@ export default function Home() {
 
   const featuredProducts = useMemo(() => products?.slice(0, 4) || [], [products]);
 
-  const form = useForm<z.infer<typeof formSchema>>({
-    resolver: zodResolver(formSchema),
-    defaultValues: {
-      name: '',
-      email: '',
-      phone: '',
-      message: '',
-    },
-  });
-
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (file) {
@@ -154,33 +128,6 @@ export default function Home() {
       setAnalysisResult('');
     }
   };
-
-  async function onSurveySubmit(values: z.infer<typeof formSchema>) {
-    try {
-      const { error } = await supabase.from('survey_requests').insert([{
-        name: values.name,
-        email: values.email,
-        phone: values.phone,
-        message: values.message,
-        status: 'New'
-      }]);
-
-      if (error) throw error;
-
-      toast({
-        title: 'Request Sent!',
-        description: "We've received your request and will contact you shortly.",
-      });
-      form.reset();
-    } catch (error) {
-      console.error("Survey submission error:", error);
-      toast({
-        variant: 'destructive',
-        title: 'Submission Failed',
-        description: 'Could not send your request. Please try again.',
-      });
-    }
-  }
 
   const fileToDataUri = (file: File): Promise<string> => {
     return new Promise((resolve, reject) => {
@@ -273,9 +220,11 @@ export default function Home() {
               {t('subText')}
             </p>
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-              <Button size="lg" className="bg-dahua-red hover:bg-red-700 text-white border-none shadow-lg shadow-red-900/20" onClick={() => document.getElementById('survey')?.scrollIntoView({ behavior: 'smooth' })}>
-                <ShieldCheck className="me-2 h-5 w-5" />
-                {t('requestSurvey')}
+              <Button size="lg" className="bg-dahua-red hover:bg-red-700 text-white border-none shadow-lg shadow-red-900/20" asChild>
+                <Link href="/contact">
+                  <ShieldCheck className="me-2 h-5 w-5" />
+                  {t('requestSurvey')}
+                </Link>
               </Button>
               <Button size="lg" asChild variant="outline" className="text-white border-slate-600 hover:bg-slate-800 hover:text-white">
                 <Link href="/products">
@@ -617,80 +566,8 @@ export default function Home() {
           </div>
         </section>
 
-        {/* Survey Form Section */}
-        <section id="survey" className="py-16 md:py-24 bg-background">
-          <div ref={scrollRef} className="container mx-auto max-w-3xl">
-            <div className="text-center mb-12">
-              <h2 className="text-3xl md:text-4xl font-bold mb-2 font-headline">{t('surveyTitle')}</h2>
-              <p className="text-muted-foreground">
-                {t('surveySubtext')}
-              </p>
-            </div>
-            <Form {...form}>
-              <form onSubmit={form.handleSubmit(onSurveySubmit)} className="space-y-6">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <FormField
-                    control={form.control}
-                    name="name"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>{t('formLabels.fullName')}</FormLabel>
-                        <FormControl>
-                          <Input placeholder={t('formLabels.fullName')} {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <FormField
-                    control={form.control}
-                    name="email"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>{t('formLabels.email')}</FormLabel>
-                        <FormControl>
-                          <Input placeholder="you@example.com" {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                </div>
-                <FormField
-                  control={form.control}
-                  name="phone"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>{t('formLabels.phone')}</FormLabel>
-                      <FormControl>
-                        <Input placeholder="(123) 456-7890" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name="message"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>{t('formLabels.message')}</FormLabel>
-                      <FormControl>
-                        <Textarea placeholder={t('formLabels.messagePlaceholder')} className="min-h-[120px]" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <div className="text-center">
-                  <Button type="submit" size="lg" disabled={form.formState.isSubmitting}>
-                    {form.formState.isSubmitting ? t('sending') : t('submitRequest')}
-                  </Button>
-                </div>
-              </form>
-            </Form>
-          </div>
-        </section>
+        {/* Survey Form Section Removed - Moved to /contact */}
+
       </main>
       <Footer />
       <Chatbot />

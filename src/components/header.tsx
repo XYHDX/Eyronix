@@ -147,9 +147,9 @@ export default function Header() {
 
   const NavLinks = () => (
     <>
-      <Link href="/government" className="transition-colors font-bold text-dahua-red hover:text-dahua-red/80 w-full py-2" onClick={() => { }}>{t('government')}</Link>
+      <Link href="/projects" className="transition-colors hover:text-foreground/80 text-foreground/60 w-full py-2" onClick={() => { }}>{t('projects') || 'Projects'}</Link>
       <Link href="/products" className="transition-colors hover:text-foreground/80 text-foreground/60 w-full py-2" onClick={() => { }}>{t('products')}</Link>
-      <Link href="/#survey" className="transition-colors hover:text-foreground/80 text-foreground/60 w-full py-2" onClick={() => { }}>{t('contact')}</Link>
+      <Link href="/contact" className="transition-colors hover:text-foreground/80 text-foreground/60 w-full py-2" onClick={() => { }}>{t('contact')}</Link>
     </>
   );
 
@@ -167,9 +167,9 @@ export default function Header() {
 
         {/* Desktop Nav */}
         <nav className="hidden md:flex absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 items-center justify-center space-x-6 rtl:space-x-reverse text-sm font-medium">
-          <Link href="/government" className="transition-colors font-bold text-dahua-red hover:text-dahua-red/80">{t('government')}</Link>
+          <Link href="/projects" className="transition-colors hover:text-foreground/80 text-foreground/60">{t('projects') || 'Projects'}</Link>
           <Link href="/products" className="transition-colors hover:text-foreground/80 text-foreground/60">{t('products')}</Link>
-          <Link href="/#survey" className="transition-colors hover:text-foreground/80 text-foreground/60">{t('contact')}</Link>
+          <Link href="/contact" className="transition-colors hover:text-foreground/80 text-foreground/60">{t('contact')}</Link>
         </nav>
 
         <div className="flex ms-auto items-center justify-end space-x-2 rtl:space-x-reverse">

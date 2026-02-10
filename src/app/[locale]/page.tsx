@@ -240,11 +240,27 @@ export default function Home() {
       <Header />
       <main className="flex-grow">
         {/* Hero Section */}
-        <section id="home" className="relative text-center py-20 md:py-32 bg-slate-900 border-b-4 border-dahua-red overflow-hidden">
-          {/* Dashboard Background Simulation */}
-          <div className="absolute inset-0 z-0 opacity-20 bg-[url('https://images.unsplash.com/photo-1573164713714-d95e436ab8d6?q=80&w=2669&auto=format&fit=crop')] bg-cover bg-center"></div>
-          <div className="absolute inset-0 z-0 bg-gradient-to-b from-slate-950/80 via-slate-900/50 to-slate-950/90"></div>
-
+        <section id="home" className="relative text-center py-16 md:py-28 bg-card overflow-hidden">
+          <div className="absolute inset-0 z-0">
+            <video
+              autoPlay
+              loop
+              muted
+              playsInline
+              className="absolute inset-0 w-full h-full object-cover opacity-40"
+              poster={heroImage?.imageUrl}
+            >
+              <source src="/dahua-dss-dashboard.mp4" type="video/mp4" />
+              {/* Fallback to image if video fails or is missing */}
+              <Image
+                src={heroImage?.imageUrl || "https://images.unsplash.com/photo-1518770660439-4636190af475?q=80&w=2070&auto=format&fit=crop"}
+                alt="Smart City Dashboard"
+                fill
+                style={{ objectFit: 'cover' }}
+              />
+            </video>
+            <div className="absolute inset-0 bg-gradient-to-t from-background via-background/80 to-transparent"></div>
+          </div>
           <div className="container mx-auto relative z-10 px-4">
             <div className="inline-block mb-4 px-3 py-1 border border-dahua-red/50 rounded-full bg-dahua-red/10 animate-pulse">
               <span className="text-dahua-red text-sm font-mono tracking-widest uppercase">Official Strategic Partner</span>

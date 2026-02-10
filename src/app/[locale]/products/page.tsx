@@ -81,15 +81,7 @@ export default function ProductsPage() {
                 </Card>
               ))
             ) : products && products.length > 0 ? (
-              products.filter(p => {
-                const name = p.name.toLowerCase();
-                // Filter Logic: Only show Dahua/WizSense/TiOC or assume everything else is legacy
-                // For this strict transformation, we hide anything that DOESN'T look like a camera/recorder if we can't be sure, 
-                // but simpler is to just filter for our target keywords OR since the prompt says "Identify all products... NOT brand Dahua",
-                // we'll assume the current mock data might not have "Dahua" in the name. 
-                // Filter Logic: Only show Dahua/WizSense/TiOC
-                return name.includes('camera') || name.includes('nvr') || name.includes('dvr') || name.includes('xvr') || name.includes('kit') || name.includes('dahua');
-              }).map((product) => {
+              products.map((product) => {
                 let solutionName = product.name;
                 const lowerName = product.name.toLowerCase();
                 let customDescription = product.description || "High-performance security solution.";
@@ -98,7 +90,7 @@ export default function ProductsPage() {
                 if (lowerName.includes('camera') || lowerName.includes('4mp')) {
                   solutionName = "Solar-Powered Border Monitoring System";
                   customDescription = "Zero Electricity Required. Deploy military-grade surveillance in remote areas with integrated solar and 4G connectivity.";
-                } else if (lowerName.includes('nvr') || lowerName.includes('recorder')) {
+                } else if (lowerName.includes('nvr') || lowerName.includes('recorder') || lowerName.includes('dvr') || lowerName.includes('xvr')) {
                   solutionName = "Centralized Data Processing Unit";
                   customDescription = "Enterprise-grade video retention and AI processing hub for municipal-scale deployments.";
                 } else if (lowerName.includes('traffic') || lowerName.includes('anpr') || lowerName.includes('kit')) {

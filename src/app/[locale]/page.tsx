@@ -240,30 +240,55 @@ export default function Home() {
       <Header />
       <main className="flex-grow">
         {/* Hero Section */}
-        <section id="home" className="relative text-center py-16 md:py-28 bg-card">
-          <div className="absolute inset-0">
-            {heroImage && <Image src={heroImage.imageUrl} alt={heroImage.description} fill style={{ objectFit: 'cover' }} className="opacity-10" data-ai-hint={heroImage.imageHint} priority />}
-            <div className="absolute inset-0 bg-gradient-to-t from-background via-transparent to-background"></div>
-          </div>
-          <div className="container mx-auto relative z-10">
-            <h1 className="text-4xl md:text-6xl font-bold tracking-tighter mb-4 font-headline leading-tight">
+        <section id="home" className="relative text-center py-20 md:py-32 bg-slate-900 border-b-4 border-dahua-red overflow-hidden">
+          {/* Dashboard Background Simulation */}
+          <div className="absolute inset-0 z-0 opacity-20 bg-[url('https://images.unsplash.com/photo-1573164713714-d95e436ab8d6?q=80&w=2669&auto=format&fit=crop')] bg-cover bg-center"></div>
+          <div className="absolute inset-0 z-0 bg-gradient-to-b from-slate-950/80 via-slate-900/50 to-slate-950/90"></div>
+
+          <div className="container mx-auto relative z-10 px-4">
+            <div className="inline-block mb-4 px-3 py-1 border border-dahua-red/50 rounded-full bg-dahua-red/10 animate-pulse">
+              <span className="text-dahua-red text-sm font-mono tracking-widest uppercase">Official Strategic Partner</span>
+            </div>
+            <h1 className="text-4xl md:text-6xl font-bold tracking-tighter mb-6 font-headline leading-tight text-white">
               {t('heroTitle')}
-              <span className="block text-primary mt-2">{t('heroSubtitle')}</span>
+              <span className="block text-dahua-red mt-2 drop-shadow-lg">{t('heroSubtitle')}</span>
             </h1>
-            <p className="max-w-2xl mx-auto text-lg md:text-xl text-muted-foreground mb-8">
+            <p className="max-w-2xl mx-auto text-lg md:text-xl text-slate-300 mb-10 leading-relaxed">
               {t('subText')}
             </p>
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-              <Button size="lg" onClick={() => document.getElementById('survey')?.scrollIntoView({ behavior: 'smooth' })}>
+              <Button size="lg" className="bg-dahua-red hover:bg-red-700 text-white border-none shadow-lg shadow-red-900/20" onClick={() => document.getElementById('survey')?.scrollIntoView({ behavior: 'smooth' })}>
                 <ShieldCheck className="me-2 h-5 w-5" />
                 {t('requestSurvey')}
               </Button>
-              <Button size="lg" asChild variant="secondary">
+              <Button size="lg" asChild variant="outline" className="text-white border-slate-600 hover:bg-slate-800 hover:text-white">
                 <Link href="/products">
                   <ShoppingBag className="me-2 h-5 w-5" />
                   {t('viewProducts')}
                 </Link>
               </Button>
+            </div>
+          </div>
+        </section>
+
+        {/* Trust Signals / Certified Partners */}
+        <section className="bg-white py-8 border-b">
+          <div className="container mx-auto">
+            <p className="text-center text-sm font-semibold text-muted-foreground uppercase tracking-widest mb-6">{t('certifiedPartners')}</p>
+            <div className="flex flex-wrap justify-center items-center gap-8 md:gap-16 opacity-80 grayscale transition-all duration-300 hover:grayscale-0 hover:opacity-100">
+              {/* Placeholder for Logos - Text until images are available */}
+              <div className="flex items-center gap-2">
+                <span className="text-2xl font-bold text-dahua-red">alhua</span>
+                <span className="text-xs uppercase tracking-tighter text-slate-600">Technology<br />Partner</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <ShieldCheck className="h-8 w-8 text-slate-400" />
+                <span className="text-lg font-bold text-slate-600">ISO 27001</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <CheckCircle className="h-8 w-8 text-slate-400" />
+                <span className="text-lg font-bold text-slate-600">MOI Approved</span>
+              </div>
             </div>
           </div>
         </section>
@@ -291,6 +316,10 @@ export default function Home() {
                 ))
               ) : services?.map((service) => {
                 const Icon = iconMap[service.icon];
+                let displayName = service.name;
+                if (service.name === 'Cameras') displayName = 'Visual Sensors';
+                else if (service.name === 'Recorders') displayName = 'Data Processing Centers';
+
                 return (
                   <Card key={service.id} className="text-start overflow-hidden transform transition-transform duration-300 hover:scale-105 hover:shadow-xl">
                     {service.imageUrl && (
@@ -300,8 +329,8 @@ export default function Home() {
                     )}
                     <CardHeader>
                       <CardTitle className="flex items-center gap-3">
-                        {Icon && <Icon className="h-8 w-8 text-primary" />}
-                        <span className="text-2xl font-headline">{service.name}</span>
+                        {Icon && <Icon className="h-8 w-8 text-dahua-red" />}
+                        <span className="text-2xl font-headline">{displayName}</span>
                       </CardTitle>
                     </CardHeader>
                     <CardContent>

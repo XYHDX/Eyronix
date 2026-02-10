@@ -19,7 +19,8 @@ export default function GovernmentPage() {
 
     const handleLogin = (e: React.FormEvent) => {
         e.preventDefault();
-        if (accessCode === 'EYRONIX-GOV' || accessCode === 'admin') { // Simple client-side check
+        const validCode = process.env.NEXT_PUBLIC_GOV_ACCESS_CODE || 'EYRONIX-GOV';
+        if (accessCode === validCode || accessCode === 'admin') { // Simple client-side check
             setIsAuthenticated(true);
             toast({ title: "Access Granted", description: "Welcome to the Strategic Infrastructure Portal." });
         } else {

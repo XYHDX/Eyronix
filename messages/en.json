@@ -15,7 +15,10 @@
         "allOrders": "All Orders",
         "toggleTheme": "Toggle Theme",
         "myAccount": "My Account",
-        "manage": "Manage"
+        "manage": "Manage",
+        "projects": "Projects",
+        "services": "Services",
+        "packages": "Packages"
     },
     "HomePage": {
         "heroTitle": "Eyronix:",

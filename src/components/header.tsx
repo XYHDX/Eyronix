@@ -280,6 +280,14 @@ export default function Header() {
                     </Link>
                   </DropdownMenuItem>
                 )}
+                {hasPermission(isAdmin ? 'admin' : 'user', '/projects') && (
+                  <DropdownMenuItem asChild>
+                    <Link href="/projects">
+                      <LayoutDashboard className="me-2 h-4 w-4" />
+                      <span>{t('projects')}</span>
+                    </Link>
+                  </DropdownMenuItem>
+                )}
                 {hasPermission(isAdmin ? 'admin' : 'user', '/dashboard/pricing') && (
                   <DropdownMenuItem asChild>
                     <Link href="/dashboard/pricing">

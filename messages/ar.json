@@ -15,7 +15,10 @@
         "allOrders": "كل الطلبات",
         "toggleTheme": "تغيير المظهر",
         "myAccount": "حسابي",
-        "manage": "إدارة"
+        "manage": "إدارة",
+        "projects": "المشاريع",
+        "services": "الخدمات",
+        "packages": "الباقات"
     },
     "HomePage": {
         "heroTitle": "أيرونيكس:",

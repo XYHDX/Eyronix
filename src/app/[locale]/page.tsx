@@ -197,7 +197,7 @@ export default function Home() {
               className="absolute inset-0 w-full h-full object-cover opacity-40"
               poster={heroImage?.imageUrl}
             >
-              <source src="https://assets.mixkit.co/videos/preview/mixkit-aerial-view-of-city-traffic-at-night-11-large.mp4" type="video/mp4" />
+              <source src="/dahua-dss-dashboard.mp4" type="video/mp4" />
               {/* Fallback to image if video fails or is missing */}
               <Image
                 src={heroImage?.imageUrl || "https://images.unsplash.com/photo-1518770660439-4636190af475?q=80&w=2070&auto=format&fit=crop"}

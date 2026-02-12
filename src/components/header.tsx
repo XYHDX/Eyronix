@@ -4,7 +4,7 @@
 import { useTranslations } from 'next-intl';
 import { Link } from '@/i18n/routing';
 import { useRouter } from 'next/navigation';
-import { LogIn, LogOut, LayoutDashboard, Moon, Sun, User, Wrench, Package, DollarSign, Mail, Users, Settings, ShoppingBag, Activity, Menu } from 'lucide-react';
+import { LogIn, LogOut, LayoutDashboard, Moon, Sun, User, Wrench, Package, DollarSign, Mail, Users, Settings, ShoppingBag, Activity, Menu, ShieldCheck } from 'lucide-react';
 import { useTheme } from 'next-themes';
 import Image from 'next/image';
 import React, { useState, useEffect, useCallback } from 'react';

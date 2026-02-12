@@ -487,5 +487,89 @@
             "rejected": "Rejected",
             "cancelled": "Cancelled"
         }
+    },
+    "ProjectsPage": {
+        "title": "Projects Management",
+        "description": "Manage your strategic projects portfolio.",
+        "addProject": "Add Project",
+        "table": {
+            "image": "Image",
+            "title": "Title",
+            "status": "Status",
+            "actions": "Actions",
+            "noProjects": "No projects found."
+        },
+        "form": {
+            "editTitle": "Edit Project",
+            "addTitle": "Add New Project",
+            "description": "Fill in the details for the project.",
+            "title": "Project Title",
+            "titlePlaceholder": "e.g., City Traffic Control",
+            "desc": "Description",
+            "stats": "Key Stats (comma-separated)",
+            "status": "Status",
+            "selectStatus": "Select status",
+            "image": "Project Image",
+            "cancel": "Cancel",
+            "save": "Save Project",
+            "saving": "Saving...",
+            "saveChanges": "Save Changes"
+        },
+        "actions": {
+            "edit": "Edit",
+            "delete": "Delete"
+        },
+        "dialog": {
+            "title": "Are you absolutely sure?",
+            "description": "This action cannot be undone. This will permanently delete the {title} project."
+        },
+        "toasts": {
+            "updated": "Project updated",
+            "created": "Project created",
+            "deleted": "Project Deleted",
+            "error": "Error"
+        }
+    },
+    "GovPage": {
+        "title": "Government Solutions",
+        "description": "Manage traffic and security infrastructure items.",
+        "addItem": "Add Item",
+        "table": {
+            "image": "Image",
+            "title": "Title",
+            "type": "Type",
+            "actions": "Actions",
+            "noItems": "No items found."
+        },
+        "form": {
+            "editTitle": "Edit Item",
+            "addTitle": "Add New Item",
+            "description": "Fill in the details for the government solution item.",
+            "title": "Item Title",
+            "titlePlaceholder": "e.g., ANPR Camera",
+            "desc": "Description",
+            "type": "Type",
+            "selectType": "Select type",
+            "features": "Features (comma-separated)",
+            "image": "Item Image",
+            "cancel": "Cancel",
+            "save": "Save Item",
+            "saving": "Saving...",
+            "saveChanges": "Save Changes"
+        },
+        "actions": {
+            "edit": "Edit",
+            "delete": "Delete"
+        },
+        "dialog": {
+            "title": "Are you absolutely sure?",
+            "description": "This action cannot be undone. This will permanently delete the {title} item."
+        },
+        "toasts": {
+            "updated": "Item updated",
+            "created": "Item created",
+            "deleted": "Item Deleted",
+            "error": "Error"
+        }
     }
 }

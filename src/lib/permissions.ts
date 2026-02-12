@@ -16,6 +16,8 @@ export const ROUTE_PERMISSIONS: Record<string, Role[]> = {
     '/dashboard/requests': ['admin'],
     '/dashboard/services': ['admin'],
     '/dashboard/products': ['admin'],
+    '/dashboard/projects': ['admin'],
+    '/dashboard/gov': ['admin'],
     '/dashboard/settings': ['admin'], // Assuming settings is admin only for now
 
     // User & Admin

@@ -280,6 +280,22 @@ export default function Header() {
                     </Link>
                   </DropdownMenuItem>
                 )}
+                {hasPermission(isAdmin ? 'admin' : 'user', '/dashboard/projects') && (
+                  <DropdownMenuItem asChild>
+                    <Link href="/dashboard/projects">
+                      <Activity className="me-2 h-4 w-4" />
+                      <span>{t('projects')} Management</span>
+                    </Link>
+                  </DropdownMenuItem>
+                )}
+                {hasPermission(isAdmin ? 'admin' : 'user', '/dashboard/gov') && (
+                  <DropdownMenuItem asChild>
+                    <Link href="/dashboard/gov">
+                      <ShieldCheck className="me-2 h-4 w-4" />
+                      <span>{t('government')}</span>
+                    </Link>
+                  </DropdownMenuItem>
+                )}
                 {hasPermission(isAdmin ? 'admin' : 'user', '/projects') && (
                   <DropdownMenuItem asChild>
                     <Link href="/projects">
